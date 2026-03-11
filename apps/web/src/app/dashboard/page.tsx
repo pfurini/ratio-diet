@@ -8,7 +8,7 @@ import SignInForm from '@/components/sign-in-form';
 import SignUpForm from '@/components/sign-up-form';
 import UserMenu from '@/components/user-menu';
 
-export default function DashboardPage() {
+const DashboardPage = () => {
   const [showSignIn, setShowSignIn] = useState(false);
   const privateData = useQuery(api.privateData.get);
 
@@ -33,4 +33,6 @@ export default function DashboardPage() {
       </AuthLoading>
     </>
   );
-}
+};
+
+export default DashboardPage;

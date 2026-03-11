@@ -9,23 +9,51 @@ import { useMutation } from 'convex/react';
 import { Send, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { toast } from 'sonner';
 import { Streamdown } from 'streamdown';
 
-function MessageContent({ text, isStreaming }: { text: string; isStreaming: boolean }) {
+const MessageContent = ({ text, isStreaming }: { text: string; isStreaming: boolean }) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
   return <Streamdown>{visibleText}</Streamdown>;
-}
+};
 
-export default function AIPage() {
-  const [input, setInput] = useState('');
+const useChatActions = () => {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
+
+  const ensureThreadId = async () => {
+    if (threadId) {
+      return threadId;
+    }
+    const newThreadId = await createThread();
+    setThreadId(newThreadId);
+    return newThreadId;
+  };
+
+  const submitPrompt = async (prompt: string) => {
+    setIsLoading(true);
+    try {
+      const currentThreadId = await ensureThreadId();
+      await sendMessage({ prompt, threadId: currentThreadId });
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast.error('Failed to send message. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { isLoading, submitPrompt, threadId };
+};
+
+const AIPage = () => {
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { threadId, isLoading, submitPrompt } = useChatActions();
 
   const { results: messages } = useUIMessages(api.chat.listMessages, threadId ? { threadId } : 'skip', {
     initialNumItems: 50,
@@ -45,22 +73,8 @@ export default function AIPage() {
       return;
     }
 
-    setIsLoading(true);
     setInput('');
-
-    try {
-      let currentThreadId = threadId;
-      if (!currentThreadId) {
-        currentThreadId = await createThread();
-        setThreadId(currentThreadId);
-      }
-
-      await sendMessage({ prompt: text, threadId: currentThreadId });
-    } catch (error) {
-      console.error('Failed to send message:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    await submitPrompt(text);
   };
 
   return (
@@ -108,4 +122,6 @@ export default function AIPage() {
       </form>
     </div>
   );
-}
+};
+
+export default AIPage;

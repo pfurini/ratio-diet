@@ -4,7 +4,7 @@ import { Label } from '@ratio-diet/ui/components/label';
 import { useForm } from '@tanstack/react-form';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import z from 'zod';
+import { z } from 'zod';
 
 import { authClient } from '@/lib/auth-client';
 
@@ -26,7 +26,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         },
         {
           onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
+            toast.error(error?.error?.message ?? error?.error?.statusText ?? String(error));
           },
           onSuccess: () => {
             router.push('/dashboard');

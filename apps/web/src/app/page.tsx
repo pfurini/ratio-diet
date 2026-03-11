@@ -18,7 +18,27 @@ const TITLE_TEXT = `
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  `;
 
-export default function Home() {
+const getStatusColor = (status: string | undefined) => {
+  if (status === 'OK') {
+    return 'bg-green-500';
+  }
+  if (status === undefined) {
+    return 'bg-orange-400';
+  }
+  return 'bg-red-500';
+};
+
+const getStatusText = (status: string | undefined) => {
+  if (status === undefined) {
+    return 'Checking...';
+  }
+  if (status === 'OK') {
+    return 'Connected';
+  }
+  return 'Error';
+};
+
+const Home = () => {
   const healthCheck = useQuery(api.healthCheck.get);
 
   return (
@@ -28,15 +48,13 @@ export default function Home() {
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">API Status</h2>
           <div className="flex items-center gap-2">
-            <div
-              className={`h-2 w-2 rounded-full ${healthCheck === 'OK' ? 'bg-green-500' : healthCheck === undefined ? 'bg-orange-400' : 'bg-red-500'}`}
-            />
-            <span className="text-sm text-muted-foreground">
-              {healthCheck === undefined ? 'Checking...' : healthCheck === 'OK' ? 'Connected' : 'Error'}
-            </span>
+            <div className={`h-2 w-2 rounded-full ${getStatusColor(healthCheck)}`} />
+            <span className="text-sm text-muted-foreground">{getStatusText(healthCheck)}</span>
           </div>
         </section>
       </div>
     </div>
   );
-}
+};
+
+export default Home;

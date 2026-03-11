@@ -36,6 +36,45 @@ export default function TodosPage() {
     deleteTodoMutation({ id });
   };
 
+  const renderTodoList = () => {
+    if (todos === undefined) {
+      return (
+        <div className="flex justify-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      );
+    }
+
+    if (todos.length === 0) {
+      return <p className="py-4 text-center">No todos yet. Add one above!</p>;
+    }
+
+    return (
+      <ul className="space-y-2">
+        {todos.map((todo) => (
+          <li key={todo._id} className="flex items-center justify-between rounded-md border p-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={todo.completed}
+                onCheckedChange={() => handleToggleTodo(todo._id, todo.completed)}
+                id={`todo-${todo._id}`}
+              />
+              <label
+                htmlFor={`todo-${todo._id}`}
+                className={`${todo.completed ? 'line-through text-muted-foreground' : ''}`}
+              >
+                {todo.text}
+              </label>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => handleDeleteTodo(todo._id)} aria-label="Delete todo">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
     <div className="mx-auto w-full max-w-md py-10">
       <Card>
@@ -55,41 +94,7 @@ export default function TodosPage() {
             </Button>
           </form>
 
-          {todos === undefined ? (
-            <div className="flex justify-center py-4">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          ) : todos.length === 0 ? (
-            <p className="py-4 text-center">No todos yet. Add one above!</p>
-          ) : (
-            <ul className="space-y-2">
-              {todos.map((todo) => (
-                <li key={todo._id} className="flex items-center justify-between rounded-md border p-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={todo.completed}
-                      onCheckedChange={() => handleToggleTodo(todo._id, todo.completed)}
-                      id={`todo-${todo._id}`}
-                    />
-                    <label
-                      htmlFor={`todo-${todo._id}`}
-                      className={`${todo.completed ? 'line-through text-muted-foreground' : ''}`}
-                    >
-                      {todo.text}
-                    </label>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteTodo(todo._id)}
-                    aria-label="Delete todo"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
+          {renderTodoList()}
         </CardContent>
       </Card>
     </div>

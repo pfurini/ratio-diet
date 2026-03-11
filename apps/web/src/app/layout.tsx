@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 
-import '../index.css';
+import '@/index.css';
 import Header from '@/components/header';
 import Providers from '@/components/providers';
 import { getToken } from '@/lib/auth-server';
@@ -21,11 +21,11 @@ export const metadata: Metadata = {
   title: 'ratio-diet',
 };
 
-export default async function RootLayout({
+const RootLayout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   const token = await getToken();
   return (
     <html lang="en" suppressHydrationWarning>
@@ -39,4 +39,6 @@ export default async function RootLayout({
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

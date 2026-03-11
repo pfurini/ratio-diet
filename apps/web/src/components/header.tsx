@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { ModeToggle } from './mode-toggle';
 
-export default function Header() {
+const Header = () => {
   const links = [
     { label: 'Home', to: '/' },
     { label: 'Dashboard', to: '/dashboard' },
@@ -28,4 +28,6 @@ export default function Header() {
       <hr />
     </div>
   );
-}
+};
+
+export default Header;
