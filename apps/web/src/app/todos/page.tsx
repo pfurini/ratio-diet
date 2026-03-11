@@ -18,7 +18,7 @@ export default function TodosPage() {
   const toggleTodoMutation = useMutation(api.todos.toggle);
   const deleteTodoMutation = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e) => {
+  const handleAddTodo = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (!text) {

@@ -8,7 +8,7 @@ import { Input } from '@ratio-diet/ui/components/input';
 import { useMutation } from 'convex/react';
 import { Send, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { ComponentProps } from 'react';
 import { toast } from 'sonner';
 import { Streamdown } from 'streamdown';
 
@@ -22,16 +22,33 @@ const MessageContent = ({ text, isStreaming }: { text: string; isStreaming: bool
 const useChatActions = () => {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const threadIdRef = useRef<string | null>(null);
+  const threadPromiseRef = useRef<Promise<string> | null>(null);
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
 
-  const ensureThreadId = async () => {
-    if (threadId) {
-      return threadId;
+  const ensureThreadId = () => {
+    if (threadIdRef.current) {
+      return Promise.resolve(threadIdRef.current);
     }
-    const newThreadId = await createThread();
-    setThreadId(newThreadId);
-    return newThreadId;
+
+    if (threadPromiseRef.current) {
+      return threadPromiseRef.current;
+    }
+
+    const threadPromise = (async () => {
+      try {
+        const newThreadId = await createThread();
+        threadIdRef.current = newThreadId;
+        setThreadId(newThreadId);
+        return newThreadId;
+      } finally {
+        threadPromiseRef.current = null;
+      }
+    })();
+
+    threadPromiseRef.current = threadPromise;
+    return threadPromise;
   };
 
   const submitPrompt = async (prompt: string) => {
@@ -66,7 +83,7 @@ const AIPage = () => {
 
   const hasStreamingMessage = messages?.some((m: UIMessage) => m.status === 'streaming');
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit: ComponentProps<'form'>['onSubmit'] = async (e) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) {

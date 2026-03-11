@@ -1,8 +1,12 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 language: en
 early_access: false
-learnings:
-  scope: "local"
+inheritance: false
+knowledge_base:
+  learnings:
+    scope: local
+  pull_requests: local
+  issues: local
 reviews:
   high_level_summary: true
   sequence_diagrams: true
