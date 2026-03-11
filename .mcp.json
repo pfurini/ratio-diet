@@ -4,10 +4,6 @@
       "command": "pnpm",
       "args": ["dlx", "create-better-t-stack@latest", "mcp"]
     },
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
-    },
     "convex": {
       "command": "npx",
       "args": ["-y", "convex@latest", "mcp", "start"]

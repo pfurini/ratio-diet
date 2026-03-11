@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en
+early_access: false
+learnings:
+  scope: "local"
+reviews:
+  high_level_summary: true
+  sequence_diagrams: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  path_filters:
+    - "!**/.github/**"
+    - "!**/.vscode/**"
+    - "!**/.cursor/**"
+    - "!**/.junie/**"
+    - "!**/.claude/**"
+    - "!**/.gemini/**"
+    - "!**/.prompts/**"
+    - "!**/.prds/**"
+    - "!**/.temp/**" # Exclude temporary files
+    - "!**/node_modules/**" # Exclude dependencies
+    - "!**/supabase/migrations/**" # Exclude migrations
+    - "!**/turbo/**" # Exclude turbo
+    - "!**/.turbo/**" # Exclude turbo cache
+    - "!**/tooling/**" # Exclude tooling
+    - "!**/dev-tool/**" # Exclude dev tool
+    - "!**/*.md" # Exclude markdown files
+    - "!**/*.yaml" # Exclude yaml files
+    - "!**/*.html" # Exclude html files
+    - "!**/*.css" # Exclude css files
+    - "!**/playwright-report/**" # Exclude playwright report
+    - "!**/test-results/**" # Exclude test results
+    - "!**/coolify/**" # Exclude coolify
+chat:
+  auto_reply: true
+issue_enrichment:
+  auto_enrich:
+    enabled: true

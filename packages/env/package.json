@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@ratio-diet/config": "workspace:*",
+    "@types/node": "^25.4.0",
     "typescript": "^5"
   }
 }

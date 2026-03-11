@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@ratio-diet/config": "workspace:*",
+    "@types/node": "^25.4.0",
     "husky": "latest",
     "lint-staged": "latest",
     "oxfmt": "latest",
@@ -34,7 +35,7 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
-      "pnpm dlx ultracite fix"
+      "ultracite fix ."
     ]
   },
   "packageManager": "pnpm@10.19.0"

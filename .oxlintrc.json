@@ -3,5 +3,29 @@
   "extends": [
     "./node_modules/ultracite/config/oxlint/core/.oxlintrc.json",
     "./node_modules/ultracite/config/oxlint/next/.oxlintrc.json"
+  ],
+  "ignorePatterns": [
+    ".*/**",
+    "**/.*/**",
+    "**/_generated/**",
+    "**/*.js",
+    "**/*.jsonc",
+    "**/*.d.ts",
+    ".coderabbit.yaml",
+    ".gitignore",
+    ".mcp.json",
+    ".oxlintrc.json",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "README.md",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "packages/ui/src/components/**",
+    "skills-lock.json",
+    "tsconfig.*.json",
+    "tsconfig.json",
+    "turbo.json",
+    "components.json"
   ]
 }
