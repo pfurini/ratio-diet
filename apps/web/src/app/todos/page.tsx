@@ -1,23 +1,17 @@
-"use client";
+'use client';
 
-import { api } from "@ratio-diet/backend/convex/_generated/api";
-import type { Id } from "@ratio-diet/backend/convex/_generated/dataModel";
-import { Button } from "@ratio-diet/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@ratio-diet/ui/components/card";
-import { Checkbox } from "@ratio-diet/ui/components/checkbox";
-import { Input } from "@ratio-diet/ui/components/input";
-import { useMutation, useQuery } from "convex/react";
-import { Loader2, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { api } from '@ratio-diet/backend/convex/_generated/api';
+import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
+import { Button } from '@ratio-diet/ui/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ratio-diet/ui/components/card';
+import { Checkbox } from '@ratio-diet/ui/components/checkbox';
+import { Input } from '@ratio-diet/ui/components/input';
+import { useMutation, useQuery } from 'convex/react';
+import { Loader2, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 export default function TodosPage() {
-  const [newTodoText, setNewTodoText] = useState("");
+  const [newTodoText, setNewTodoText] = useState('');
 
   const todos = useQuery(api.todos.getAll);
   const createTodoMutation = useMutation(api.todos.create);
@@ -27,16 +21,18 @@ export default function TodosPage() {
   const handleAddTodo = async (e) => {
     e.preventDefault();
     const text = newTodoText.trim();
-    if (!text) return;
+    if (!text) {
+      return;
+    }
     await createTodoMutation({ text });
-    setNewTodoText("");
+    setNewTodoText('');
   };
 
-  const handleToggleTodo = (id: Id<"todos">, currentCompleted: boolean) => {
-    toggleTodoMutation({ id, completed: !currentCompleted });
+  const handleToggleTodo = (id: Id<'todos'>, currentCompleted: boolean) => {
+    toggleTodoMutation({ completed: !currentCompleted, id });
   };
 
-  const handleDeleteTodo = (id: Id<"todos">) => {
+  const handleDeleteTodo = (id: Id<'todos'>) => {
     deleteTodoMutation({ id });
   };
 
@@ -68,10 +64,7 @@ export default function TodosPage() {
           ) : (
             <ul className="space-y-2">
               {todos.map((todo) => (
-                <li
-                  key={todo._id}
-                  className="flex items-center justify-between rounded-md border p-2"
-                >
+                <li key={todo._id} className="flex items-center justify-between rounded-md border p-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       checked={todo.completed}
@@ -80,7 +73,7 @@ export default function TodosPage() {
                     />
                     <label
                       htmlFor={`todo-${todo._id}`}
-                      className={`${todo.completed ? "line-through text-muted-foreground" : ""}`}
+                      className={`${todo.completed ? 'line-through text-muted-foreground' : ''}`}
                     >
                       {todo.text}
                     </label>

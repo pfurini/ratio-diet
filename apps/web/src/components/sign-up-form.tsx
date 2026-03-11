@@ -1,45 +1,45 @@
-import { Button } from "@ratio-diet/ui/components/button";
-import { Input } from "@ratio-diet/ui/components/input";
-import { Label } from "@ratio-diet/ui/components/label";
-import { useForm } from "@tanstack/react-form";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import z from "zod";
+import { Button } from '@ratio-diet/ui/components/button';
+import { Input } from '@ratio-diet/ui/components/input';
+import { Label } from '@ratio-diet/ui/components/label';
+import { useForm } from '@tanstack/react-form';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import z from 'zod';
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from '@/lib/auth-client';
 
 export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
   const router = useRouter();
 
   const form = useForm({
     defaultValues: {
-      email: "",
-      password: "",
-      name: "",
+      email: '',
+      name: '',
+      password: '',
     },
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
           email: value.email,
-          password: value.password,
           name: value.name,
+          password: value.password,
         },
         {
-          onSuccess: () => {
-            router.push("/dashboard");
-            toast.success("Sign up successful");
-          },
           onError: (error) => {
             toast.error(error.error.message || error.error.statusText);
           },
-        },
+          onSuccess: () => {
+            router.push('/dashboard');
+            toast.success('Sign up successful');
+          },
+        }
       );
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
+        email: z.email('Invalid email address'),
+        name: z.string().min(2, 'Name must be at least 2 characters'),
+        password: z.string().min(8, 'Password must be at least 8 characters'),
       }),
     },
   });
@@ -125,22 +125,21 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         </div>
 
         <form.Subscribe
-          selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}
+          selector={(state) => ({
+            canSubmit: state.canSubmit,
+            isSubmitting: state.isSubmitting,
+          })}
         >
           {({ canSubmit, isSubmitting }) => (
             <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Sign Up"}
+              {isSubmitting ? 'Submitting...' : 'Sign Up'}
             </Button>
           )}
         </form.Subscribe>
       </form>
 
       <div className="mt-4 text-center">
-        <Button
-          variant="link"
-          onClick={onSwitchToSignIn}
-          className="text-indigo-600 hover:text-indigo-800"
-        >
+        <Button variant="link" onClick={onSwitchToSignIn} className="text-indigo-600 hover:text-indigo-800">
           Already have an account? Sign In
         </Button>
       </div>

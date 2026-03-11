@@ -1,13 +1,15 @@
-"use client";
+'use client';
 
-import { useUIMessages, useSmoothText, type UIMessage } from "@convex-dev/agent/react";
-import { api } from "@ratio-diet/backend/convex/_generated/api";
-import { Button } from "@ratio-diet/ui/components/button";
-import { Input } from "@ratio-diet/ui/components/input";
-import { useMutation } from "convex/react";
-import { Send, Loader2 } from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Streamdown } from "streamdown";
+import { useUIMessages, useSmoothText } from '@convex-dev/agent/react';
+import type { UIMessage } from '@convex-dev/agent/react';
+import { api } from '@ratio-diet/backend/convex/_generated/api';
+import { Button } from '@ratio-diet/ui/components/button';
+import { Input } from '@ratio-diet/ui/components/input';
+import { useMutation } from 'convex/react';
+import { Send, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
+import { Streamdown } from 'streamdown';
 
 function MessageContent({ text, isStreaming }: { text: string; isStreaming: boolean }) {
   const [visibleText] = useSmoothText(text, {
@@ -17,7 +19,7 @@ function MessageContent({ text, isStreaming }: { text: string; isStreaming: bool
 }
 
 export default function AIPage() {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -25,25 +27,26 @@ export default function AIPage() {
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
 
-  const { results: messages } = useUIMessages(
-    api.chat.listMessages,
-    threadId ? { threadId } : "skip",
-    { initialNumItems: 50, stream: true },
-  );
+  const { results: messages } = useUIMessages(api.chat.listMessages, threadId ? { threadId } : 'skip', {
+    initialNumItems: 50,
+    stream: true,
+  });
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const hasStreamingMessage = messages?.some((m: UIMessage) => m.status === "streaming");
+  const hasStreamingMessage = messages?.some((m: UIMessage) => m.status === 'streaming');
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isLoading) {
+      return;
+    }
 
     setIsLoading(true);
-    setInput("");
+    setInput('');
 
     try {
       let currentThreadId = threadId;
@@ -52,9 +55,9 @@ export default function AIPage() {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: text });
+      await sendMessage({ prompt: text, threadId: currentThreadId });
     } catch (error) {
-      console.error("Failed to send message:", error);
+      console.error('Failed to send message:', error);
     } finally {
       setIsLoading(false);
     }
@@ -64,24 +67,15 @@ export default function AIPage() {
     <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
       <div className="overflow-y-auto space-y-4 pb-4">
         {!messages || messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
+          <div className="text-center text-muted-foreground mt-8">Ask me anything to get started!</div>
         ) : (
           messages.map((message: UIMessage) => (
             <div
               key={message.key}
-              className={`p-3 rounded-lg ${
-                message.role === "user" ? "bg-primary/10 ml-8" : "bg-secondary/20 mr-8"
-              }`}
+              className={`p-3 rounded-lg ${message.role === 'user' ? 'bg-primary/10 ml-8' : 'bg-secondary/20 mr-8'}`}
             >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              <MessageContent
-                text={message.text ?? ""}
-                isStreaming={message.status === "streaming"}
-              />
+              <p className="text-sm font-semibold mb-1">{message.role === 'user' ? 'You' : 'AI Assistant'}</p>
+              <MessageContent text={message.text ?? ''} isStreaming={message.status === 'streaming'} />
             </div>
           ))
         )}

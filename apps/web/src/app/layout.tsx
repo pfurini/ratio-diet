@@ -1,24 +1,24 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
 
-import "../index.css";
-import Header from "@/components/header";
-import Providers from "@/components/providers";
-import { getToken } from "@/lib/auth-server";
+import '../index.css';
+import Header from '@/components/header';
+import Providers from '@/components/providers';
+import { getToken } from '@/lib/auth-server';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  subsets: ['latin'],
+  variable: '--font-geist-sans',
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
 });
 
 export const metadata: Metadata = {
-  title: "ratio-diet",
-  description: "ratio-diet",
+  description: 'ratio-diet',
+  title: 'ratio-diet',
 };
 
 export default async function RootLayout({

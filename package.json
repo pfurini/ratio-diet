@@ -13,8 +13,14 @@
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F @ratio-diet/backend dev",
     "dev:setup": "turbo -F @ratio-diet/backend dev:setup",
-    "check": "ultracite check",
-    "fix": "ultracite fix",
+    "check": "pnpm run format:check && pnpm run lint",
+    "fix": "sh -c 'pnpm run format && pnpm run lint:fix; status=$?; pnpm run format; exit $status'",
+    "check:ultracite": "ultracite check",
+    "fix:ultracite": "ultracite fix",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
     "prepare": "husky"
   },
   "dependencies": {

@@ -73,11 +73,13 @@ If you want to add app-specific blocks instead of shared primitives, run the sha
 ## Git Hooks and Formatting
 
 - Initialize hooks: `pnpm run prepare`
-- Format and lint fix: `pnpm run check`
+- Auto-fix formatting and lint issues: `pnpm run fix`
+- Verify formatting and linting: `pnpm run check`
+- Ultracite aliases (parity/debugging): `pnpm run fix:ultracite`, `pnpm run check:ultracite`
 
 ## Project Structure
 
-```
+```text
 ratio-diet/
 ├── apps/
 │   ├── web/         # Frontend application (Next.js)
@@ -93,5 +95,12 @@ ratio-diet/
 - `pnpm run dev:web`: Start only the web application
 - `pnpm run dev:setup`: Setup and configure your Convex project
 - `pnpm run check-types`: Check TypeScript types across all apps
-- `pnpm run check`: Run Oxlint and Oxfmt
+- `pnpm run format`: Format with Oxfmt
+- `pnpm run format:check`: Check formatting with Oxfmt
+- `pnpm run lint`: Lint with Oxlint
+- `pnpm run lint:fix`: Auto-fix lint issues with Oxlint
+- `pnpm run check`: Run format check then lint
+- `pnpm run fix`: Run formatter then lint auto-fix
+- `pnpm run check:ultracite`: Run the original Ultracite check pipeline
+- `pnpm run fix:ultracite`: Run the original Ultracite fix pipeline
 - `cd apps/web && pnpm run generate-pwa-assets`: Generate PWA assets

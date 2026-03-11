@@ -1,5 +1,5 @@
-import { query } from "./_generated/server";
-import { authComponent } from "./auth";
+import { query } from './_generated/server';
+import { authComponent } from './auth';
 
 export const get = query({
   args: {},
@@ -7,11 +7,11 @@ export const get = query({
     const authUser = await authComponent.safeGetAuthUser(ctx);
     if (!authUser) {
       return {
-        message: "Not authenticated",
+        message: 'Not authenticated',
       };
     }
     return {
-      message: "This is private",
+      message: 'This is private',
     };
   },
 });

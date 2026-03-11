@@ -1,20 +1,20 @@
-import { Button } from "@ratio-diet/ui/components/button";
-import { Input } from "@ratio-diet/ui/components/input";
-import { Label } from "@ratio-diet/ui/components/label";
-import { useForm } from "@tanstack/react-form";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import z from "zod";
+import { Button } from '@ratio-diet/ui/components/button';
+import { Input } from '@ratio-diet/ui/components/input';
+import { Label } from '@ratio-diet/ui/components/label';
+import { useForm } from '@tanstack/react-form';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import z from 'zod';
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from '@/lib/auth-client';
 
 export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
   const router = useRouter();
 
   const form = useForm({
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
     onSubmit: async ({ value }) => {
       await authClient.signIn.email(
@@ -23,20 +23,20 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
           password: value.password,
         },
         {
-          onSuccess: () => {
-            router.push("/dashboard");
-            toast.success("Sign in successful");
-          },
           onError: (error) => {
             toast.error(error.error.message || error.error.statusText);
           },
-        },
+          onSuccess: () => {
+            router.push('/dashboard');
+            toast.success('Sign in successful');
+          },
+        }
       );
     },
     validators: {
       onSubmit: z.object({
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
+        email: z.email('Invalid email address'),
+        password: z.string().min(8, 'Password must be at least 8 characters'),
       }),
     },
   });
@@ -100,22 +100,21 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         </div>
 
         <form.Subscribe
-          selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}
+          selector={(state) => ({
+            canSubmit: state.canSubmit,
+            isSubmitting: state.isSubmitting,
+          })}
         >
           {({ canSubmit, isSubmitting }) => (
             <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Sign In"}
+              {isSubmitting ? 'Submitting...' : 'Sign In'}
             </Button>
           )}
         </form.Subscribe>
       </form>
 
       <div className="mt-4 text-center">
-        <Button
-          variant="link"
-          onClick={onSwitchToSignUp}
-          className="text-indigo-600 hover:text-indigo-800"
-        >
+        <Button variant="link" onClick={onSwitchToSignUp} className="text-indigo-600 hover:text-indigo-800">
           Need an account? Sign Up
         </Button>
       </div>

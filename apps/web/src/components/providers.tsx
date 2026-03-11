@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
-import { env } from "@ratio-diet/env/web";
-import { Toaster } from "@ratio-diet/ui/components/sonner";
-import { ConvexReactClient } from "convex/react";
+import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react';
+import { env } from '@ratio-diet/env/web';
+import { Toaster } from '@ratio-diet/ui/components/sonner';
+import { ConvexReactClient } from 'convex/react';
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from '@/lib/auth-client';
 
-import { ThemeProvider } from "./theme-provider";
+import { ThemeProvider } from './theme-provider';
 
 const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
 

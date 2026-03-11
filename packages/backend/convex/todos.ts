@@ -1,11 +1,9 @@
-import { v } from "convex/values";
+import { v } from 'convex/values';
 
-import { query, mutation } from "./_generated/server";
+import { query, mutation } from './_generated/server';
 
 export const getAll = query({
-  handler: async (ctx) => {
-    return await ctx.db.query("todos").collect();
-  },
+  handler: async (ctx) => await ctx.db.query('todos').collect(),
 });
 
 export const create = mutation({
@@ -13,31 +11,31 @@ export const create = mutation({
     text: v.string(),
   },
   handler: async (ctx, args) => {
-    const newTodoId = await ctx.db.insert("todos", {
-      text: args.text,
+    const newTodoId = await ctx.db.insert('todos', {
       completed: false,
+      text: args.text,
     });
-    return await ctx.db.get("todos", newTodoId);
+    return await ctx.db.get('todos', newTodoId);
   },
 });
 
 export const toggle = mutation({
   args: {
-    id: v.id("todos"),
     completed: v.boolean(),
+    id: v.id('todos'),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch("todos", args.id, { completed: args.completed });
+    await ctx.db.patch('todos', args.id, { completed: args.completed });
     return { success: true };
   },
 });
 
 export const deleteTodo = mutation({
   args: {
-    id: v.id("todos"),
+    id: v.id('todos'),
   },
   handler: async (ctx, args) => {
-    await ctx.db.delete("todos", args.id);
+    await ctx.db.delete('todos', args.id);
     return { success: true };
   },
 });

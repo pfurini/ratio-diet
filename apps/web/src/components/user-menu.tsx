@@ -1,5 +1,5 @@
-import { api } from "@ratio-diet/backend/convex/_generated/api";
-import { Button } from "@ratio-diet/ui/components/button";
+import { api } from '@ratio-diet/backend/convex/_generated/api';
+import { Button } from '@ratio-diet/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,11 +8,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@ratio-diet/ui/components/dropdown-menu";
-import { useQuery } from "convex/react";
-import { useRouter } from "next/navigation";
+} from '@ratio-diet/ui/components/dropdown-menu';
+import { useQuery } from 'convex/react';
+import { useRouter } from 'next/navigation';
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from '@/lib/auth-client';
 
 export default function UserMenu() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function UserMenu() {
               authClient.signOut({
                 fetchOptions: {
                   onSuccess: () => {
-                    router.push("/dashboard");
+                    router.push('/dashboard');
                   },
                 },
               });
