@@ -85,9 +85,7 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Avoid barrel files (index files that re-export everything)
 - Use proper image components (e.g., Next.js `<Image>`) over `<img>` tags
 
-### Framework-Specific Guidance
-
-**React 19+:**
+### React 19
 
 - Use ref as a prop instead of `React.forwardRef`
 
