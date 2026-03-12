@@ -66,8 +66,8 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={index} className="text-red-500">
                     {error?.message}
                   </p>
                 ))}
@@ -89,8 +89,8 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={index} className="text-red-500">
                     {error?.message}
                   </p>
                 ))}
