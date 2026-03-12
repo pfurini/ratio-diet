@@ -10,7 +10,7 @@
     "cssVariables": true,
     "prefix": ""
   },
-  "iconLibrary": "lucide",
+  "iconLibrary": "hugeicons",
   "aliases": {
     "components": "@ratio-diet/ui/components",
     "utils": "@ratio-diet/ui/lib/utils",
@@ -25,5 +25,6 @@
     "@shadcnblocks": "https://shadcnblocks.com/r/{name}",
     "@react-bits": "https://reactbits.dev/r/{name}.json",
     "@magicui": "https://magicui.design/r/{name}.json"
-  }
+  },
+  "rtl": false
 }

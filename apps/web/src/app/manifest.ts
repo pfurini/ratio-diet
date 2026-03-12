@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     background_color: '#ffffff',
-    description: 'my pwa app',
+    description: 'Ratio Diet - Your personalized diet plan',
     display: 'standalone',
     icons: [
       {
@@ -17,9 +17,9 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
       },
     ],
-    name: 'ratio-diet',
-    short_name: 'ratio-diet',
-    start_url: '/new',
+    name: 'Ratio Diet',
+    short_name: 'Ratio Diet',
+    start_url: '/',
     theme_color: '#000000',
   };
 }

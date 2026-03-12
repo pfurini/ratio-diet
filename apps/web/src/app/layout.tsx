@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 
 import '@/index.css';
-import Header from '@/components/header';
-import Providers from '@/components/providers';
+import Providers from '@/components/custom/providers';
 import { getToken } from '@/lib/auth-server';
 
 const geistSans = Geist({
@@ -17,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  description: 'ratio-diet',
-  title: 'ratio-diet',
+  description: 'Ratio Diet - Your personalized diet plan',
+  title: 'Ratio Diet',
 };
 
 const RootLayout = async ({
@@ -31,10 +30,7 @@ const RootLayout = async ({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers initialToken={token}>
-          <div className="grid grid-rows-[auto_1fr] h-svh">
-            <Header />
-            {children}
-          </div>
+          <main className="min-h-svh">{children}</main>
         </Providers>
       </body>
     </html>

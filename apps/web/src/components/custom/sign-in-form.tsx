@@ -27,7 +27,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
             toast.error(error?.error?.message || error?.error?.statusText || 'An unexpected error occurred');
           },
           onSuccess: () => {
-            router.push('/dashboard');
+            router.push('/');
             toast.success('Sign in successful');
           },
         }
