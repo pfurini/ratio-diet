@@ -1,0 +1,19 @@
+---
+description: Require explicit shadcn install target in monorepo
+globs: **/components.json
+alwaysApply: false
+---
+# shadcn Install Target (Monorepo)
+
+This repository contains multiple valid shadcn projects (`apps/web` and `packages/ui`), each with its own `components.json`.
+
+## Rules
+
+- Never assume install target when a shadcn install request is ambiguous.
+- If the user does not explicitly name a target package/path, ask which project should receive the component before running `shadcn add`.
+- If the user explicitly names the target, install only in that target.
+
+## Guidance when asking
+
+- Shared/reusable UI primitives and components -> `packages/ui`
+- App-specific blocks/composed sections/pages -> `apps/web`

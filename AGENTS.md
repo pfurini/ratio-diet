@@ -87,19 +87,9 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 
 ### Framework-Specific Guidance
 
-**Next.js:**
-
-- Use Next.js `<Image>` component for images
-- Use `next/head` or App Router metadata API for head elements
-- Use Server Components for async data fetching instead of async Client Components
-
 **React 19+:**
 
 - Use ref as a prop instead of `React.forwardRef`
-
-**Solid/Svelte/Vue/Qwik:**
-
-- Use `class` and `for` attributes (not `className` or `htmlFor`)
 
 ---
 
@@ -124,3 +114,33 @@ Oxlint + Oxfmt's linter will catch most issues automatically. Focus your attenti
 ---
 
 Most formatting and common issues are automatically fixed by Oxlint + Oxfmt. Run `pnpm dlx ultracite fix` before committing to ensure compliance.
+
+---
+
+## shadcn CLI
+
+Use `pnpm dlx shadcn@latest` for all shadcn commands. Never default to `npx`. If installed locally, use `pnpm shadcn`.
+
+### CLI operations
+
+| When you need to… | Command |
+| --- | --- |
+| List configured registries | `pnpm dlx shadcn@latest info --json` → read `config.registries` |
+| List all items in a registry | `pnpm dlx shadcn@latest list <registry...> --limit <n> --offset <n>` |
+| Search for a component by name/description | `pnpm dlx shadcn@latest search <registry...> --query "<q>" --limit <n> --offset <n>` |
+| Inspect a registry item's files before installing | `pnpm dlx shadcn@latest view <item...>` |
+| Build the install command for one or more items | Construct string: `pnpm dlx shadcn@latest add <item...>` — do not execute unless requested |
+| Find usage examples for a component | 1. `search` to resolve item; 2. `docs <component> --json` → fetch `results[].links.examples`; 3. fallback: `view <item>` for community registries |
+| Verify a component was added correctly | `info --json` + `add <item> --dry-run` + `--diff` per file + validate aliases/`base`/`iconLibrary` from config |
+
+---
+
+## Monorepo shadcn Install Target
+
+- This repo has multiple valid shadcn projects (`apps/web` and `packages/ui`), each with its own `components.json`.
+- Never assume install target when a request is ambiguous.
+- If the user does not explicitly name the target package/path, ask which project should receive the component before running any `shadcn add` command.
+- Suggested default guidance when asking:
+  - Shared/reusable UI primitives and components -> `packages/ui`
+  - App-specific blocks/composed sections/pages -> `apps/web`
+- When the user explicitly specifies a target, install only in that target.
