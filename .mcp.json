@@ -1,16 +1,41 @@
 {
   "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {}
+    },
     "convex": {
       "command": "npx",
-      "args": ["-y", "convex@latest", "mcp", "start"]
+      "args": [
+        "-y",
+        "convex@latest",
+        "mcp",
+        "start"
+      ]
     },
     "next-devtools": {
       "command": "npx",
-      "args": ["-y", "next-devtools-mcp@latest"]
+      "args": [
+        "-y",
+        "next-devtools-mcp@latest"
+      ]
     },
     "better-auth": {
       "type": "http",
       "url": "https://mcp.inkeep.com/better-auth/mcp"
+    },
+    "auggie": {
+      "type": "stdio",
+      "command": "auggie",
+      "args": [
+        "--mcp",
+        "--mcp-auto-workspace"
+      ]
     }
   }
 }

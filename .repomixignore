@@ -1,0 +1,17 @@
+# Add patterns to ignore here, one per line
+# Example:
+# *.log
+# tmp/
+.agents/
+.augment/
+.codex/
+.cursor/
+.husky/
+.junie/
+.vscode/
+.augmentignore
+.windsurfrules
+.cursorignore
+.aiignore
+CLAUDE.md
+pnpm-lock.yaml

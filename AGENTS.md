@@ -1,3 +1,35 @@
+# Ratio Diet — Project Rules
+
+## Monorepo Structure & Responsibilities
+
+### Packages
+- `packages/backend` — ALL business logic: Convex functions, AI SDK + OpenRouter provider, database schema, nutritional calculations. No business logic goes in `apps/web`.
+- `packages/ui` — Shared/reusable shadcn components (installed via `pnpm dlx shadcn@latest`)
+- `packages/env` — Environment variable validation (t3-env)
+- `packages/config` — Shared TypeScript/tooling configurations
+
+### Apps
+- `apps/web` — Next.js frontend (PWA mobile-first)
+  - `src/app/(marketing)/` — Public pages (landing, pricing, etc.), including homepage
+  - `src/app/(user)/` — Private pages behind authentication
+  - `src/components/custom/` — App-specific components NOT from shadcn registries
+  - shadcn components specific to app pages → `apps/web` (via `components.json`)
+
+### Key Rules
+- Business logic NEVER goes in `apps/web` — it stays in `packages/backend`
+- Shared/reusable UI primitives → `packages/ui`
+- App-specific blocks/composed sections → `apps/web`
+- Components downloaded from shadcn registry → appropriate `components.json` target
+- Components built manually → `apps/web/src/components/custom/`
+
+### AI Provider
+- Use **Vercel AI SDK** (`ai` package) as the unified interface
+- Use **`@openrouter/ai-sdk-provider`** as the provider (NOT `@ai-sdk/google` or other direct providers)
+- AI model configurable via env var (e.g., `OPENROUTER_MODEL=google/gemini-2.0-flash-001`)
+- All AI calls happen in `packages/backend` (Convex Actions)
+
+---
+
 # Ultracite Code Standards
 
 This project uses **Ultracite**, a zero-config preset that enforces strict code quality standards through automated formatting and linting.

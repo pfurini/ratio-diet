@@ -1,5 +1,16 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{const fp=(JSON.parse(d).file_path||''); if(/(\\.env(\\.\\w+)?$|pnpm-lock\\.yaml$)/.test(fp)){process.stderr.write('Blocked: '+fp+'\\n');process.exit(2);}})\""
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
@@ -13,6 +24,9 @@
     ]
   },
   "enabledPlugins": {
-    "stripe@claude-plugins-official": true
+    "stripe@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true
   }
 }

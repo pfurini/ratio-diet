@@ -44,5 +44,8 @@
       "ultracite fix ."
     ]
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "engines": {
+    "node": ">=24"
+  }
 }
