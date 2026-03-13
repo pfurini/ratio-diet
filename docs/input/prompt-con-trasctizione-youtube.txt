@@ -1,0 +1,85 @@
+ti allego la trascrizione di un video di youtube da cui mi è venuta in mente un app in ambito nutrizionista alimentazione.
+
+l’app deve aiutare le persone a mangiare sano secondo quanto definito nella trascrizione del video con un po’ di modifiche.
+infatti come input dell’utente oltre ai soliti dati anagrafici mettiamo anche altezza tipo di fisico (snello robusto asciutto in carne ecc) e poi se ci sono allergie particolari.
+ti vengono in mente altri dati interessanti da chiedere? Se si proponimi il questionario.
+
+poi in base a questi dati di input il sistema calcola il fabbisogno energetico e quello legato alle proteine ai carboidrati e ai grassi.
+
+successivamente si chiede alla persona cosa vuole mangiare nella giornata in termini di cibi per colazione pranzo e cena e in base a quello che inserisce dai quantitativi come spiegato nel video di cosa può mangiare .
+
+poi voglio delle funzioni a pagamento (con stripe) per creare piani alimentari legati a quello che una persona vuole mangiare nella settimana e in base a quello che vuole mangiare creare un piano alimentare settimanale manche mettendo una lista della spesa per quello che deve comprare . Ad esempio se decide di mangiare pesce carne bianca formaggi magri prosciutto crudo pomodori mozzarella e uova Allora tu crei il piano alimentare settimanale per colazione pranzo e cena e poi sommi tutti i cibi per una spesa cumulativa che deve fare al supermercato per rispettare tutti quei parametri.
+
+TRANSCRIPT:
+Come fa un over 50 a restare in forma e mantenere il controllo del peso? e capire come mangiare per dimagrire?
+
+Vi faccio vedere come faccio io
+
+Premessa: Questo è un video dedicato a persone che non hanno patologie, che non hanno problematiche particolari, per le persone sane che hanno mangiato troppo, che hanno mangiato male e che vogliono rientrare in forma.
+Altra premessa i conti li faccio all'incirca perché tanto le calorie non sono mai perfette e non mangeremo mai alla virgola, anche perché noi non siamo atleti e non dobbiamo fare gare
+
+Io vi faccio vedere come faccio io se vi piace lo fate anche voi se lo continuate come volete
+
+io parto dal concetto che ci dice che il corpo consuma:
+-> Una caloria al kg per ogni ora del giorno
+-> io peso 95 kg
+Quindi Una caloria ogni kg sono 95 calorie per 24 ore
+quindi 95 per 24 fa 2.280 circa 2.300 calorie
+
+Poi io so che alla mia età per il fatto che mi alleno devo stare intorno ai 2 grammi di proteine per chilo corporeo
+Quindi 95 kg per 2 sono 190 grammi di proteine
+95 kg per 2 gr. di proteine / kg = 190 gr
+
+Mentre per i grassi abbiamo un grammo di grassi per kg di peso, quindi 95 gr
+95 kg per 1 gr. di grassi / kg = 95 gr
+
+Ho calcolato prima le proteine e i grassi perché mi interessa sapere esattamente quanti grammi di proteine metto dentro per il mio peso
+
+190 grammi di proteine, poiché un grammo di proteine fa 4 calorie, ottengo così 760 calorie
+190 gr x 4 cal/gr = 760 Cal
+
+Invece un grammo di grassi fa 9 calorie fa circa 860 kcal
+95 gr x 9 cal/gr = 860 Cal
+
+faccio la somma delle calorie dei grassi e delle proteine
+760 + 860 = 1620 calorie arrivano dalle proteine dei grassi
+
+Sicome ne voglio mettere 2.300
+allora 2.300 - 1.620 uguale 700 circa calorie
+
+Ora calcoliamo i carboidrati -> 700 calorie diviso 4 che sono le calorie che fa un grammo di carboidrati viene fuori 175 grammi di carboidrati
+700 cal / 4 gr. di carbo per cal = 175 Cal
+
+Io cos’ mi calcolo quante calorie devo mettere dentro e partizionate in che modo nei vari macronutrienti
+
+so che voglio
+190 grammi di proteine
+95 grammi di grassi più o meno e poi mi calcolo per differenza Quanti grammi di carboidrati
+nel mio caso 175
+che faranno all'incirca 2.300 calorie
+
+Questo è il mio metabolismo basale teorico. Meno di questo per me non bisogna andare, se vivo con meno calorie di 2300 con il mio peso vuol dire che ho qualche problema metabolico.
+
+A questo punto una volta che io so, quanti grammi di ogni macronutriente, decido Da quali alimenti li voglio introdurre sapendo che è chiaro che gli alimenti devono essere i più naturali e più sani possibili
+
+Siccome viviamo nell epoca dell’intelligenza artificiale, Io prima mi scelgo gli alimenti che voglio mangiare e poi chiedo a lei quanti grammi degli alimenti che voglio mangiare io devo mangiare per introdurre i vari macronutrienti.
+
+Per i carboidrati mi scelgo riso pasta pane crackers patate, poi faccio la domanda: se devo introdurre 175 grammi di carboidrati in un giorno voglio mangiare pasta riso marmellata all'80% però non più di 50 grammi banane ed eventualmente pane quanti grammi per alimento dovrei mangiare?
+
+L’intelligenza artificiale mi fa tutto quanto il calcolo e mi dice:
+-> Ecco una suddivisione bilanciata che rispetto il tuo limite di 50 g di marmellata e distribuisce il resto in porzioni standard indicativamente 80 g di pasta o riso per tutto crudo, di 50 g di marmellata che il limite che ho dato io, banane di circa due banane piccole o una banana e mezza grande, pane 90 grammi e quindi ho  il totale dei miei cibi dei quali ricevo i carboidrati definiti
+
+La stessa cosa la faccio con le proteine.
+Quindi chiedo all’AI: devo introdurre 190 grammi di proteine e voglio mangiare carne rossa macinata uova tonno (solo in vetro) le proteine in polvere ma non più di 40 grammi al giorno, prosciutto cotto non più di 50 grammi e lo voglio distribuire in modo equo?
+
+L’AI mi risponde e fa il calcolo e mi dice 40 g di proteine in polvere che sono i limiti che ho dato io, 50 g di prosciutto cotto che è il limite che ho dato io, carne rossa macinata 250 grammi, tonno in vetro 200 g, uova intere mi dice 8 uova però poi gli dico però io non posso mangiare più di 3 uova al giorno e calcola tutto -> Aumenta il tono e aumenta la carne ovviamente.
+
+A quel punto dico all’AI: con quello che ti ho chiesto finora, cioè cibi per i carboidrati e di cibi di proteine: quanti Grassi ho e metto dentro contemporaneamente e mi fa il calcolo E mi dice mi metti dentro 88 . È molto vicino ai 95
+
+ora che cosa ci portiamo a casa da Questo ragionamento?
+che una persona normale non starà mai attenta al 100% quello che mangia ma deve avere più o meno dei Binari da seguire Quindi se io più o meno so quanti carboidrati devo mangiare Quante proteine quanti grassi e so da dove me li voglio andare a prendere, so più o meno di ogni cibo che voglio io, quanto ne devo mangiare, sarà molto più semplice per me mantenere la retta via.
+
+Voi che ne pensate?
+Scrivetemi nei commenti e mi raccomando Questo video mi sono velleità di trasformarmi in un nutrizionista”
+
+Fine trascrizione.

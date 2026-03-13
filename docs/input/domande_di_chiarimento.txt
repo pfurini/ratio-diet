@@ -1,0 +1,78 @@
+Domande di chiarimento:
+1. Livello di attività fisica
+Oltre ai dati che hai menzionato (età, peso, altezza, tipo di fisico, allergie), suggerisco di chiedere anche:
+
+Livello di attività fisica (sedentario, moderatamente attivo, molto attivo)
+Obiettivo (mantenimento, dimagrimento, aumento massa)
+Sesso (per calcoli più precisi del metabolismo basale)
+2. Integrazione con AI per suggerimenti alimentari
+Nella trascrizione si menziona l'uso dell'AI per calcolare le porzioni. Vuoi che l'app:
+
+Usi un'AI (come OpenRouter che hai selezionato) per generare suggerimenti personalizzati e calcolare le porzioni?
+Oppure preferisci calcoli algoritmici predefiniti?
+3. Funzionalità premium con Stripe
+Per le funzionalità a pagamento, stai pensando a:
+
+Un pagamento una tantum per sbloccare le funzionalità premium?
+Un abbonamento mensile/annuale?
+Crediti da consumare (es. X piani alimentari settimanali)?
+4. Database degli alimenti
+Preferisci:
+
+Un database predefinito di alimenti comuni italiani?
+La possibilità per l'utente di aggiungere alimenti personalizzati?
+Entrambe le opzioni?
+Fammi sapere le tue preferenze su questi punti e procederò subito con la creazione delle specifiche complete e lo sviluppo dell'applicazione!
+
+
+RISPOSTE CHE AVEVO DATO:
+
+questo quello che ho risposto io:
+
+si chiedi tutto quello che suggerisci, l'importante è che i calcoli siano più precisi possibile
+usa AI, e fai una ricerca e poi suggeriscimi il/i modelli migliori da utilizzare, e se è il caso di combinare calcoli algoritmici E poi rielaborazioni con l'AI (forse è meglio questa opzione?)
+crediti da consumare, un credito = un piano settimanale, ma alla registrazione ogni utente ha 3 crediti gratuiti da consumare (fai in modo che questa sia una variabile configurabile, in un secondo momento voglio creare una sezione admin dell'app riservata a me e collaboratori)
+entrambe le opzioni - è possibile reperire un database free aggiornato e valido in rete?
+
+
+RISPOSTE DI CRISTIANO:
+
+Domande di chiarimento:
+1. Livello di attività fisica
+Oltre ai dati che hai menzionato (età, peso, altezza, tipo di fisico, allergie), suggerisco di chiedere anche:
+
+Livello di attività fisica (sedentario, moderatamente attivo, molto attivo)
+Obiettivo (mantenimento, dimagrimento, aumento massa)
+Sesso (per calcoli più precisi del metabolismo basale)
+
+Ok. Se queste variabili impattano sui dosaggi.
+L’output del modello una volta che la persona sceglie gli alimenti saranno proprio le quantità che può mangiare con gli alimenti scelti dalla persona. Se queste variabili aggiuntive modificano le quantità, allora ok.
+
+2. Integrazione con AI per suggerimenti alimentari
+Nella trascrizione si menziona l'uso dell'AI per calcolare le porzioni. Vuoi che l'app:
+
+Usi un'AI (come OpenRouter che hai selezionato) per generare suggerimenti personalizzati e calcolare le porzioni? 
+No. Preferisco usare l’ai per valutare le calorie dei piatti che mangia effettivamente per tenere traccia di un diario alimentare reale rispetto a quanto suggerito dal modello.  
+
+Oppure preferisci calcoli algoritmici predefiniti?
+Si infatti, sono questi per definire le porzioni
+
+3. Funzionalità premium con Stripe
+Per le funzionalità a pagamento, stai pensando a:
+
+Un pagamento una tantum per sbloccare le funzionalità premium? 
+No
+
+Un abbonamento mensile/annuale?
+Sì. Due settimane gratis e poi abbonamento.
+
+Crediti da consumare (es. X piani alimentari settimanali)?
+No
+
+4. Database degli alimenti
+Preferisci:
+
+Un database predefinito di alimenti comuni italiani?
+La possibilità per l'utente di aggiungere alimenti personalizzati?
+Entrambe le opzioni?
+Sì, meglio entrambe le opzioni
