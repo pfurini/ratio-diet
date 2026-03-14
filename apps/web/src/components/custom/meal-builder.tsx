@@ -58,7 +58,7 @@ const FoodItemRow = ({ item, index, onConstraintChange, onRemove }: FoodItemRowP
         {food ? (
           <FoodName
             name={food.name}
-            source={food.source as 'crea' | 'custom'}
+            source={food.source}
             className="text-sm font-medium"
           />
         ) : (

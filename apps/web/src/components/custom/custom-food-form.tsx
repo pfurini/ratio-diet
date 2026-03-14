@@ -44,20 +44,27 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const [error, setError] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addCustomFood({
-      allergenTags: [],
-      carbPer100g: parseNum(form.carbs),
-      category: form.category,
-      fatPer100g: parseNum(form.fat),
-      foodType: form.foodType,
-      kcalPer100g: parseNum(form.kcal),
-      name: form.name,
-      proteinPer100g: parseNum(form.protein),
-    });
-    setForm(initialState);
-    onAdded();
+    setError('');
+    try {
+      await addCustomFood({
+        allergenTags: [],
+        carbPer100g: parseNum(form.carbs),
+        category: form.category,
+        fatPer100g: parseNum(form.fat),
+        foodType: form.foodType,
+        kcalPer100g: parseNum(form.kcal),
+        name: form.name,
+        proteinPer100g: parseNum(form.protein),
+      });
+      setForm(initialState);
+      onAdded();
+    } catch {
+      setError('Impossibile aggiungere alimento');
+    }
   };
 
   const toggleFoodType = () => {
@@ -144,6 +151,7 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
         </Button>
         <span className="text-muted-foreground text-xs">Tipo alimento</span>
       </div>
+      {error && <p className="text-destructive text-xs">{error}</p>}
       <Button type="submit" size="sm" className="w-full">
         Aggiungi alimento
       </Button>

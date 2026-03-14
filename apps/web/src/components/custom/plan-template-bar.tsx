@@ -37,10 +37,14 @@ const TemplateSaveForm = ({ meals }: { meals: MealState[] }) => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    await saveTemplate({ meals, name: name.trim() });
-    setName('');
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      await saveTemplate({ meals, name: name.trim() });
+      setName('');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      setSaved(false);
+    }
   };
 
   return (
@@ -65,10 +69,16 @@ interface CompleteButtonProps {
 
 const CompleteButton = ({ planId }: CompleteButtonProps) => {
   const completePlan = useMutation(api.dailyPlans.complete);
+  const [done, setDone] = useState(false);
 
   const handleComplete = async () => {
     if (!planId) return;
-    await completePlan({ planId });
+    try {
+      await completePlan({ planId });
+      setDone(true);
+    } catch {
+      setDone(false);
+    }
   };
 
   return (
@@ -76,10 +86,10 @@ const CompleteButton = ({ planId }: CompleteButtonProps) => {
       type="button"
       variant="default"
       className="w-full"
-      disabled={!planId}
+      disabled={!planId || done}
       onClick={handleComplete}
     >
-      Completa giornata
+      {done ? 'Completato!' : 'Completa giornata'}
     </Button>
   );
 };
@@ -103,20 +113,24 @@ const PlanTemplateBar = ({ meals, onLoadTemplate, planId }: PlanTemplateBarProps
     <div className="space-y-3">
       {templates && templates.length > 0 && (
         <div className="space-y-1">
-          <p className="text-sm font-medium">Carica template</p>
-          <div className="flex flex-wrap gap-2">
+          <label htmlFor="template-select" className="text-sm font-medium">
+            Carica template
+          </label>
+          <select
+            id="template-select"
+            className="border-input bg-background w-full rounded-md border px-3 py-1.5 text-sm"
+            defaultValue=""
+            onChange={(e) => {
+              const t = (templates as TemplateDoc[]).find((tpl) => tpl._id === e.target.value);
+              if (t) handleLoadTemplate(t);
+              e.target.value = '';
+            }}
+          >
+            <option value="" disabled>Seleziona template...</option>
             {(templates as TemplateDoc[]).map((t) => (
-              <Button
-                key={t._id}
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleLoadTemplate(t)}
-              >
-                {t.name}
-              </Button>
+              <option key={t._id} value={t._id}>{t.name}</option>
             ))}
-          </div>
+          </select>
         </div>
       )}
       <div className="space-y-1">

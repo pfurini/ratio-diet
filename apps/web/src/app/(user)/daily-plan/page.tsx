@@ -77,9 +77,12 @@ const OptimizeButton = ({ meals, date, onOptimized }: OptimizeButtonProps) => {
 
   const handleOptimize = async () => {
     setLoading(true);
-    const id = await optimize({ date, meals });
-    onOptimized(id);
-    setLoading(false);
+    try {
+      const id = await optimize({ date, meals });
+      onOptimized(id);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
