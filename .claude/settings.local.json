@@ -1,7 +1,24 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm dlx:*)"
+      "Bash(pnpm dlx:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:docs.openclaw.ai)",
+      "Bash(gh api:*)",
+      "Bash(npm show:*)",
+      "Bash(gh search:*)",
+      "Bash(gh issue:*)",
+      "WebFetch(domain:www.npmjs.com)"
     ]
+  },
+  "enabledMcpjsonServers": [
+    "convex",
+    "next-devtools",
+    "better-auth"
+  ],
+  "enabledPlugins": {
+    "claude-code-setup@claude-plugins-official": true
   }
 }

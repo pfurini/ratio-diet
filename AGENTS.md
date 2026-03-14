@@ -22,6 +22,18 @@
 - Components downloaded from shadcn registry → appropriate `components.json` target
 - Components built manually → `apps/web/src/components/custom/`
 
+### Stripe
+- A Stripe MCP server is connected to the project's **test account**. Use it freely to create/manage products, prices, coupons, and other Stripe resources during development.
+- Use **Stripe-hosted Checkout** (CheckoutSessions API) for payments — never the Charges API or legacy Card Element.
+- Use **dynamic payment methods** (configured in Stripe Dashboard) — never pass `payment_method_types` explicitly.
+- Use **Customer Portal** for subscription management.
+- Use **Billing/Subscription APIs** combined with Checkout for recurring revenue.
+- Follow the [Go Live Checklist](https://docs.stripe.com/get-started/checklist/go-live) before production launch.
+
+### Code Size Limits
+- **Max 500 lines per source file.** If a file approaches this limit, split it into focused sub-modules.
+- **Max 10 statements per function** (ESLint `max-statements` rule). Extract helpers, compose smaller functions, or split into multiple focused functions. This applies to all function blocks including handlers, callbacks, and arrow functions.
+
 ### AI Provider
 - Use **Vercel AI SDK** (`ai` package) as the unified interface
 - Use **`@openrouter/ai-sdk-provider`** as the provider (NOT `@ai-sdk/google` or other direct providers)
