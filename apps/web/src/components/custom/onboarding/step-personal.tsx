@@ -1,0 +1,127 @@
+'use client';
+
+import type { AnyFormApi } from '@tanstack/react-form';
+
+import { Input } from '@ratio-diet/ui/components/input';
+import { Label } from '@ratio-diet/ui/components/label';
+
+import type { FormValues } from './types';
+
+type Props = {
+  form: AnyFormApi<FormValues>;
+};
+
+const SEX_OPTIONS = [
+  { value: 'M', label: 'Maschio' },
+  { value: 'F', label: 'Femmina' },
+] as const;
+
+const BODY_BUILD_OPTIONS = [
+  { value: 'snello', label: 'Snello' },
+  { value: 'medio', label: 'Medio' },
+  { value: 'robusto', label: 'Robusto' },
+] as const;
+
+const StepPersonal = ({ form }: Props) => (
+  <div className="space-y-6">
+    <div>
+      <h2 className="text-xl font-semibold">Dati personali</h2>
+      <p className="text-muted-foreground mt-1 text-sm">
+        Questi dati vengono usati per calcolare il tuo fabbisogno calorico.
+      </p>
+    </div>
+
+    <form.Field name="sex">
+      {(field) => (
+        <div className="space-y-2">
+          <Label>Sesso</Label>
+          <div className="flex gap-4">
+            {SEX_OPTIONS.map((opt) => (
+              <label key={opt.value} className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="sex"
+                  value={opt.value}
+                  checked={field.state.value === opt.value}
+                  onChange={() => field.handleChange(opt.value)}
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </form.Field>
+
+    <form.Field name="dateOfBirth">
+      {(field) => (
+        <div className="space-y-2">
+          <Label htmlFor="dateOfBirth">Data di nascita</Label>
+          <Input
+            id="dateOfBirth"
+            type="date"
+            value={field.state.value}
+            onChange={(e) => field.handleChange(e.target.value)}
+          />
+        </div>
+      )}
+    </form.Field>
+
+    <form.Field name="heightCm">
+      {(field) => (
+        <div className="space-y-2">
+          <Label htmlFor="heightCm">Altezza (cm)</Label>
+          <Input
+            id="heightCm"
+            type="number"
+            min={100}
+            max={250}
+            value={field.state.value || ''}
+            onChange={(e) => field.handleChange(Number(e.target.value))}
+          />
+        </div>
+      )}
+    </form.Field>
+
+    <form.Field name="weightKg">
+      {(field) => (
+        <div className="space-y-2">
+          <Label htmlFor="weightKg">Peso (kg)</Label>
+          <Input
+            id="weightKg"
+            type="number"
+            min={30}
+            max={300}
+            step={0.1}
+            value={field.state.value || ''}
+            onChange={(e) => field.handleChange(Number(e.target.value))}
+          />
+        </div>
+      )}
+    </form.Field>
+
+    <form.Field name="bodyBuild">
+      {(field) => (
+        <div className="space-y-2">
+          <Label>Corporatura</Label>
+          <div className="flex gap-4">
+            {BODY_BUILD_OPTIONS.map((opt) => (
+              <label key={opt.value} className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="bodyBuild"
+                  value={opt.value}
+                  checked={field.state.value === opt.value}
+                  onChange={() => field.handleChange(opt.value)}
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </form.Field>
+  </div>
+);
+
+export default StepPersonal;

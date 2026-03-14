@@ -1,0 +1,42 @@
+'use client';
+
+import { api } from '@ratio-diet/backend/convex/_generated/api';
+import { useQuery } from 'convex/react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
+import DashboardActions from '@/components/custom/dashboard-actions';
+import DashboardHero from '@/components/custom/dashboard-hero';
+import DashboardProgress from '@/components/custom/dashboard-progress';
+
+const [today] = new Date().toISOString().split('T');
+
+const DashboardPage = () => {
+  const profile = useQuery(api.userProfiles.get);
+  const todayPlan = useQuery(api.dailyPlans.get, profile ? { date: today } : 'skip');
+  const router = useRouter();
+
+  useEffect(() => {
+    if (profile === null) {
+      router.replace('/onboarding');
+    }
+  }, [profile, router]);
+
+  if (!profile) {
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <p className="text-muted-foreground">Caricamento...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-md px-4 py-8">
+      <DashboardHero macros={profile.macros} />
+      <DashboardProgress macros={profile.macros} plan={todayPlan ?? null} />
+      <DashboardActions hasTodayPlan={!!todayPlan} />
+    </div>
+  );
+};
+
+export default DashboardPage;
