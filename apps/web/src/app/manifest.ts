@@ -1,25 +1,17 @@
 import type { MetadataRoute } from 'next';
 
-export default function manifest(): MetadataRoute.Manifest {
-  return {
-    background_color: '#ffffff',
-    description: 'Ratio Diet - Your personalized diet plan',
-    display: 'standalone',
-    icons: [
-      {
-        sizes: '192x192',
-        src: '/favicon/web-app-manifest-192x192.png',
-        type: 'image/png',
-      },
-      {
-        sizes: '512x512',
-        src: '/favicon/web-app-manifest-512x512.png',
-        type: 'image/png',
-      },
-    ],
-    name: 'Ratio Diet',
-    short_name: 'Ratio Diet',
-    start_url: '/',
-    theme_color: '#000000',
-  };
-}
+const manifest = (): MetadataRoute.Manifest => ({
+  name: 'Ratio Diet',
+  short_name: 'RatioDiet',
+  description: 'La tua alimentazione basata su numeri, proporzioni e metodo.',
+  start_url: '/dashboard',
+  display: 'standalone',
+  background_color: '#ffffff',
+  theme_color: '#4a1d6a',
+  icons: [
+    { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+  ],
+});
+
+export default manifest;

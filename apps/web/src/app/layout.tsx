@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  description: 'Ratio Diet - Your personalized diet plan',
+  description: 'Ratio Diet — La tua alimentazione basata su numeri, proporzioni e metodo.',
   title: 'Ratio Diet',
 };
 
@@ -27,7 +27,7 @@ const RootLayout = async ({
 }>) => {
   const token = await getToken();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="it" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers initialToken={token}>
           <main className="min-h-svh">{children}</main>
