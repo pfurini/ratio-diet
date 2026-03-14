@@ -15,6 +15,7 @@
     "better-auth": "catalog:",
     "convex": "catalog:",
     "dotenv": "catalog:",
+    "stripe": "20.4.1",
     "zod": "catalog:"
   },
   "devDependencies": {
