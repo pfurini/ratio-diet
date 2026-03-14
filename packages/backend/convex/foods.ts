@@ -122,13 +122,16 @@ export const search = query({
   args: {
     term: v.optional(v.string()),
     category: v.optional(v.string()),
-    dietaryPreference: v.optional(v.string()),
-    excludeAllergens: v.optional(v.array(v.string())),
-    userId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { term, category, dietaryPreference, excludeAllergens, userId } =
-      args;
+    const user = await authComponent.safeGetAuthUser(ctx);
+    const profile = user
+      ? await ctx.db.query('userProfiles').withIndex('by_userId', (q) => q.eq('userId', user._id)).unique()
+      : null;
+
+    const { term, category } = args;
+    const dietaryPreference = profile?.dietaryPreference ?? 'onnivoro';
+    const excludeAllergens = profile?.allergies ?? [];
 
     const creaResults = term
       ? await ctx.db
@@ -142,10 +145,9 @@ export const search = query({
           .withIndex('by_source', (q) => q.eq('source', 'crea'))
           .collect();
 
-    const customResults =
-      userId !== undefined
-        ? await fetchCustomFoods(ctx, userId, term)
-        : [];
+    const customResults = user
+      ? await fetchCustomFoods(ctx, user._id, term)
+      : [];
 
     const combined = [...creaResults, ...customResults] as FoodDoc[];
     const byCat = filterFoodsByCategory(combined, category);
@@ -182,9 +184,9 @@ export const addCustomFood = mutation({
   },
   handler: async (ctx, args) => {
     const authUser = await authComponent.safeGetAuthUser(ctx);
-    if (authUser === null) throw new Error('Unauthenticated');
+    if (!authUser) throw new Error('Non autenticato');
 
-    const userId = authUser.user.id;
+    const userId = authUser._id;
     const existingCount = await ctx.db
       .query('foods')
       .withIndex('by_userId', (q) => q.eq('userId', userId))
@@ -205,11 +207,14 @@ export const addCustomFood = mutation({
 });
 
 export const getCustomFoodCount = query({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) return { count: 0, limit: CUSTOM_FOOD_LIMIT };
+
     const foods = await ctx.db
       .query('foods')
-      .withIndex('by_userId', (q) => q.eq('userId', userId))
+      .withIndex('by_userId', (q) => q.eq('userId', user._id))
       .collect();
 
     return { count: foods.length, limit: CUSTOM_FOOD_LIMIT };
