@@ -4,6 +4,8 @@ import { useConvexAuth } from 'convex/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
+import AppNav from '@/components/custom/app-nav';
+
 const UserLayout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const router = useRouter();
@@ -26,7 +28,12 @@ const UserLayout = ({ children }: { children: React.ReactNode }) => {
     return null;
   }
 
-  return <div className="min-h-svh pb-16">{children}</div>;
+  return (
+    <div className="min-h-svh pb-16">
+      {children}
+      <AppNav />
+    </div>
+  );
 };
 
 export default UserLayout;
