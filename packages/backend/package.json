@@ -20,6 +20,7 @@
   "devDependencies": {
     "@ratio-diet/config": "workspace:*",
     "@types/node": "^24.3.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "4.1.0"
   }
 }
