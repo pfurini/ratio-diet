@@ -1,53 +1,24 @@
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { generateObject } from 'ai';
 import { v } from 'convex/values';
-import { z } from 'zod';
 
 import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
-import { action, internalMutation, query } from './_generated/server';
-import type { ActionCtx } from './_generated/server';
+import { action, internalMutation, mutation, query } from './_generated/server';
+import type { ActionCtx, MutationCtx } from './_generated/server';
 import { authComponent } from './auth';
+import { addFoodToShoppingMap, buildShoppingList, buildShoppingListFromMap } from './lib/shoppingList';
+import {
+  type DayPlan,
+  type FoodDoc,
+  type MacroTarget,
+  type MealItem,
+  type WeeklyPlanResult,
+  calcItemsMacros,
+  findFood,
+  generateWithRetry,
+} from './lib/weeklyPlanGenerator';
 import { buildWeeklyPlanPrompt } from './lib/weeklyPlanPrompt';
 
-// --- Zod schemas ---
-
-const mealItemSchema = z.object({
-  foodName: z.string(),
-  grams: z.number(),
-});
-
-const dayPlanSchema = z.object({
-  cena: z.array(mealItemSchema),
-  colazione: z.array(mealItemSchema),
-  day: z.string(),
-  pranzo: z.array(mealItemSchema),
-});
-
-const weeklyPlanSchema = z.object({
-  days: z.array(dayPlanSchema).length(7),
-});
-
 // --- Interfaces ---
-
-interface FoodDoc {
-  _id: Id<'foods'>;
-  name: string;
-  category: string;
-  kcalPer100g: number;
-  proteinPer100g: number;
-  carbPer100g: number;
-  fatPer100g: number;
-  allergenTags: string[];
-}
-
-interface MacroTarget {
-  calorieTarget: number;
-  proteinGrams: number;
-  carbGrams: number;
-  fatGrams: number;
-  tdee: number;
-}
 
 interface ShoppingEntry {
   foodId: Id<'foods'>;
@@ -55,18 +26,6 @@ interface ShoppingEntry {
   totalGrams: number;
   category: string;
 }
-
-interface MacroSnapshot {
-  calorieTarget: number;
-  proteinGrams: number;
-  carbGrams: number;
-  fatGrams: number;
-  tdee: number;
-}
-
-type MealItem = z.infer<typeof mealItemSchema>;
-type DayPlan = z.infer<typeof dayPlanSchema>;
-type WeeklyPlanResult = z.infer<typeof weeklyPlanSchema>;
 
 // --- Date helpers ---
 
@@ -85,110 +44,7 @@ const addDays = (dateStr: string, days: number): string => {
   return date.toISOString().split('T')[0] as string;
 };
 
-// --- AI helpers ---
-
-const getOpenRouterModel = () => {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY is not set');
-  }
-  const modelId = process.env.OPENROUTER_MODEL ?? 'google/gemini-2.0-flash-001';
-  const openrouter = createOpenRouter({ apiKey });
-  return openrouter(modelId);
-};
-
-const runAiGeneration = (prompt: string): Promise<WeeklyPlanResult> => {
-  const model = getOpenRouterModel();
-  return generateObject({ model, prompt, schema: weeklyPlanSchema }).then(({ object }) => object);
-};
-
-// --- Food lookup ---
-
-const findFood = (foods: FoodDoc[], foodName: string): FoodDoc | undefined =>
-  foods.find((f) => f.name.toLowerCase() === foodName.toLowerCase());
-
-// --- Validation helpers ---
-
-interface MacroAccumulator {
-  kcal: number;
-  protein: number;
-  carb: number;
-  fat: number;
-}
-
-const addItemToAccumulator = (acc: MacroAccumulator, item: MealItem, food: FoodDoc): void => {
-  const ratio = item.grams / 100;
-  acc.kcal += food.kcalPer100g * ratio;
-  acc.protein += food.proteinPer100g * ratio;
-  acc.carb += food.carbPer100g * ratio;
-  acc.fat += food.fatPer100g * ratio;
-};
-
-const calcDayMacros = (
-  day: DayPlan,
-  foods: FoodDoc[],
-): MacroAccumulator => {
-  const allItems = [...day.colazione, ...day.pranzo, ...day.cena];
-  const acc: MacroAccumulator = { carb: 0, fat: 0, kcal: 0, protein: 0 };
-
-  for (const item of allItems) {
-    const food = findFood(foods, item.foodName);
-    if (food) { addItemToAccumulator(acc, item, food); }
-  }
-
-  return acc;
-};
-
-const isDayMacroValid = (
-  macros: { kcal: number; protein: number; carb: number; fat: number },
-  target: MacroTarget,
-): boolean => {
-  const TOLERANCE = 0.05;
-  const kcalOk = Math.abs(macros.kcal - target.calorieTarget) / target.calorieTarget <= TOLERANCE;
-  const proteinOk = Math.abs(macros.protein - target.proteinGrams) / target.proteinGrams <= TOLERANCE;
-  const carbOk = Math.abs(macros.carb - target.carbGrams) / target.carbGrams <= TOLERANCE;
-  const fatOk = Math.abs(macros.fat - target.fatGrams) / target.fatGrams <= TOLERANCE;
-  return kcalOk && proteinOk && carbOk && fatOk;
-};
-
-const validateWeeklyPlan = (plan: WeeklyPlanResult, foods: FoodDoc[], target: MacroTarget): boolean => {
-  for (const day of plan.days) {
-    const macros = calcDayMacros(day, foods);
-    if (!isDayMacroValid(macros, target)) { return false; }
-  }
-  return true;
-};
-
-// --- AI with retry ---
-
-const generateWithRetry = async (
-  prompt: string,
-  foods: FoodDoc[],
-  macros: MacroTarget,
-  maxRetries = 3,
-): Promise<WeeklyPlanResult> => {
-  let lastResult: WeeklyPlanResult | null = null;
-
-  for (let attempt = 0; attempt < maxRetries; attempt += 1) {
-    const result = await runAiGeneration(prompt);
-    if (validateWeeklyPlan(result, foods, macros)) { return result; }
-    lastResult = result;
-  }
-
-  return lastResult as WeeklyPlanResult;
-};
-
 // --- Shopping list helpers ---
-
-const addFoodToShoppingMap = (food: FoodDoc, grams: number, map: Map<string, ShoppingEntry>): void => {
-  const key = food._id;
-  const existing = map.get(key);
-  if (existing) {
-    existing.totalGrams += grams;
-  } else {
-    map.set(key, { category: food.category, foodId: food._id, name: food.name, totalGrams: grams });
-  }
-};
 
 const addMealItemsToMap = (
   items: MealItem[],
@@ -201,9 +57,6 @@ const addMealItemsToMap = (
   }
 };
 
-const buildShoppingListFromMap = (map: Map<string, ShoppingEntry>): ShoppingEntry[] =>
-  [...map.values()];
-
 const buildMealItems = (
   items: MealItem[],
   foods: FoodDoc[],
@@ -214,25 +67,6 @@ const buildMealItems = (
     if (food) { result.push({ foodId: food._id, quantityGrams: item.grams }); }
   }
   return result;
-};
-
-const accToMacroSnapshot = (acc: MacroAccumulator): MacroSnapshot => ({
-  calorieTarget: acc.kcal,
-  carbGrams: acc.carb,
-  fatGrams: acc.fat,
-  proteinGrams: acc.protein,
-  tdee: acc.kcal,
-});
-
-const calcItemsMacros = (items: MealItem[], foods: FoodDoc[]): MacroSnapshot => {
-  const acc: MacroAccumulator = { carb: 0, fat: 0, kcal: 0, protein: 0 };
-
-  for (const item of items) {
-    const food = findFood(foods, item.foodName);
-    if (food) { addItemToAccumulator(acc, item, food); }
-  }
-
-  return accToMacroSnapshot(acc);
 };
 
 const buildDayMeals = (day: DayPlan, foods: FoodDoc[]) => [
@@ -457,5 +291,88 @@ export const list = query({
       .withIndex('by_userId', (q) => q.eq('userId', user._id))
       .order('desc')
       .collect();
+  },
+});
+
+// --- Edit mutations ---
+
+const verifyEditAccess = async (ctx: MutationCtx, weeklyPlanId: Id<'weeklyPlans'>) => {
+  const user = await authComponent.safeGetAuthUser(ctx);
+  if (!user) { throw new Error('Non autenticato'); }
+
+  const sub = await ctx.db
+    .query('subscriptions')
+    .withIndex('by_userId', (q) => q.eq('userId', user._id))
+    .unique();
+  if (!sub || sub.status !== 'active') {
+    throw new Error('Abbonamento attivo richiesto per modificare il piano');
+  }
+
+  const plan = await ctx.db.get(weeklyPlanId);
+  if (!plan || plan.userId !== user._id) { throw new Error('Piano non trovato'); }
+
+  return { user, plan };
+};
+
+export const updateMealItem = mutation({
+  args: {
+    dailyPlanId: v.id('dailyPlans'),
+    foodId: v.id('foods'),
+    mealType: v.string(),
+    quantityGrams: v.number(),
+    weeklyPlanId: v.id('weeklyPlans'),
+  },
+  handler: async (ctx, args) => {
+    await verifyEditAccess(ctx, args.weeklyPlanId);
+
+    const daily = await ctx.db.get(args.dailyPlanId);
+    if (!daily) { throw new Error('Piano giornaliero non trovato'); }
+
+    const meals = daily.meals.map((meal) => {
+      if (meal.type !== args.mealType) { return meal; }
+      const items = meal.items.map((item) =>
+        item.foodId === args.foodId ? { ...item, quantityGrams: args.quantityGrams } : item,
+      );
+      return { ...meal, items };
+    });
+
+    await ctx.db.patch(args.dailyPlanId, { meals });
+    await ctx.db.patch(args.weeklyPlanId, { status: 'modificato' });
+  },
+});
+
+const fetchFoodLookup = async (
+  ctx: MutationCtx,
+  foodIds: string[],
+): Promise<Map<string, { _id: string; name: string; category: string }>> => {
+  const unique = [...new Set(foodIds)];
+  const foods = await Promise.all(unique.map((id) => ctx.db.get(id as Id<'foods'>)));
+  const map = new Map<string, { _id: string; name: string; category: string }>();
+  for (const food of foods) {
+    if (food) { map.set(String(food._id), food); }
+  }
+  return map;
+};
+
+export const recalculateShoppingList = mutation({
+  args: { weeklyPlanId: v.id('weeklyPlans') },
+  handler: async (ctx, args) => {
+    const { plan } = await verifyEditAccess(ctx, args.weeklyPlanId);
+
+    const dailyPlans = await Promise.all(plan.dailyPlanIds.map((id) => ctx.db.get(id)));
+    const allFoodIds = dailyPlans.flatMap((dp) =>
+      dp ? dp.meals.flatMap((m) => m.items.map((i) => String(i.foodId))) : [],
+    );
+
+    const foodLookup = await fetchFoodLookup(ctx, allFoodIds);
+    const rawList = buildShoppingList(dailyPlans, foodLookup);
+    const shoppingList = rawList.map((i) => ({
+      category: i.category,
+      foodId: i.foodId as Id<'foods'>,
+      name: i.name,
+      totalGrams: i.totalGrams,
+    }));
+
+    await ctx.db.patch(args.weeklyPlanId, { shoppingList });
   },
 });
