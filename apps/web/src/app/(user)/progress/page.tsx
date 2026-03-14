@@ -1,0 +1,145 @@
+'use client';
+
+import { api } from '@ratio-diet/backend/convex/_generated/api';
+import { Button } from '@ratio-diet/ui/components/button';
+import { Input } from '@ratio-diet/ui/components/input';
+import { Label } from '@ratio-diet/ui/components/label';
+import { useMutation, useQuery } from 'convex/react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import WeightChart from '@/components/custom/weight-chart';
+
+const getTodayDate = (): string => new Date().toISOString().split('T')[0];
+
+interface MacroResult {
+  proteinGrams: number;
+  carbGrams: number;
+  fatGrams: number;
+  calorieTarget: number;
+  tdee: number;
+}
+
+interface MacroSnapshot {
+  proteinGrams: number;
+  carbGrams: number;
+  fatGrams: number;
+  calorieTarget: number;
+  tdee: number;
+}
+
+const buildRecalcToast = (newMacros: MacroResult) => ({
+  description: `Proteine: ${newMacros.proteinGrams}g · Carbo: ${Math.round(newMacros.carbGrams)}g · Grassi: ${newMacros.fatGrams}g`,
+});
+
+const WeightLogForm = () => {
+  const [weightKg, setWeightKg] = useState('');
+  const [date, setDate] = useState(getTodayDate());
+  const [submitting, setSubmitting] = useState(false);
+  const logWeight = useMutation(api.weightLogs.log);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const kg = Number.parseFloat(weightKg);
+    if (Number.isNaN(kg) || kg <= 0) {return;}
+    setSubmitting(true);
+    try {
+      const result = await logWeight({ date, weightKg: kg });
+      if (result.recalculated && result.newMacros) {
+        toast.success('I tuoi target sono stati aggiornati in base al nuovo peso', buildRecalcToast(result.newMacros));
+      } else {
+        toast.success('Peso registrato');
+      }
+      setWeightKg('');
+      setDate(getTodayDate());
+    } catch {
+      toast.error('Impossibile registrare il peso');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border p-4">
+      <h2 className="font-semibold">Registra peso</h2>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label htmlFor="weight-kg">Peso (kg)</Label>
+          <Input
+            id="weight-kg"
+            type="number"
+            step="0.1"
+            min="20"
+            max="300"
+            placeholder="Es. 75.5"
+            value={weightKg}
+            onChange={(e) => setWeightKg(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="weight-date">Data</Label>
+          <Input id="weight-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+        </div>
+      </div>
+      <Button type="submit" className="w-full" disabled={submitting}>
+        Registra
+      </Button>
+    </form>
+  );
+};
+
+const MacroRow = ({ label, value, unit }: { label: string; value: number; unit: string }) => (
+  <div className="flex justify-between text-sm">
+    <span className="text-muted-foreground">{label}</span>
+    <span className="font-medium">
+      {Math.round(value)} {unit}
+    </span>
+  </div>
+);
+
+const MacroTargets = ({ macros }: { macros: MacroSnapshot }) => (
+  <section className="space-y-2 rounded-xl border p-4">
+    <h2 className="font-semibold">Target attuali</h2>
+    <MacroRow label="Calorie" value={macros.calorieTarget} unit="kcal" />
+    <MacroRow label="Proteine" value={macros.proteinGrams} unit="g" />
+    <MacroRow label="Carboidrati" value={macros.carbGrams} unit="g" />
+    <MacroRow label="Grassi" value={macros.fatGrams} unit="g" />
+    <MacroRow label="TDEE" value={macros.tdee} unit="kcal" />
+  </section>
+);
+
+const WeightHistorySection = () => {
+  const logs = useQuery(api.weightLogs.list, {});
+  const chartData = (logs ?? []).map((l) => ({ date: l.date, weightKg: l.weightKg }));
+
+  return (
+    <section className="space-y-2 rounded-xl border p-4">
+      <h2 className="font-semibold">Storico peso</h2>
+      <WeightChart data={chartData} />
+    </section>
+  );
+};
+
+const ProgressPage = () => {
+  const profile = useQuery(api.userProfiles.get);
+
+  if (profile === undefined) {
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <p className="text-muted-foreground">Caricamento...</p>
+      </div>
+    );
+  }
+
+  return (
+    <main className="mx-auto max-w-md space-y-6 px-4 py-8">
+      <h1 className="text-2xl font-bold">Progresso</h1>
+      <WeightLogForm />
+      <WeightHistorySection />
+      {profile?.macros && <MacroTargets macros={profile.macros} />}
+    </main>
+  );
+};
+
+export default ProgressPage;
