@@ -69,9 +69,8 @@ const getAuthenticatedProfile = async (ctx: MutationCtx, userId: string) => {
   return profile;
 };
 
-const processWeightLog = async (ctx: MutationCtx, profile: Doc<'userProfiles'>, weightKg: number) => {
-  const [today] = new Date().toISOString().split('T');
-  await upsertWeightEntry(ctx, profile.userId, today, weightKg, profile.macros);
+const processWeightLog = async (ctx: MutationCtx, profile: Doc<'userProfiles'>, weightKg: number, date: string) => {
+  await upsertWeightEntry(ctx, profile.userId, date, weightKg, profile.macros);
 
   if (!shouldRecalculate(weightKg, profile.lastRecalcWeightKg)) {
     return { recalculated: false };
@@ -83,6 +82,7 @@ const processWeightLog = async (ctx: MutationCtx, profile: Doc<'userProfiles'>, 
 
 export const log = mutation({
   args: {
+    date: v.string(),
     weightKg: v.number(),
   },
   handler: async (ctx, args) => {
@@ -92,7 +92,7 @@ export const log = mutation({
     }
 
     const profile = await getAuthenticatedProfile(ctx, user._id);
-    return await processWeightLog(ctx, profile, args.weightKg);
+    return await processWeightLog(ctx, profile, args.weightKg, args.date);
   },
 });
 

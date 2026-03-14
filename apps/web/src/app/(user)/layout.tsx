@@ -1,12 +1,13 @@
 'use client';
 
-import { useConvexAuth } from 'convex/react';
-import { useRouter } from 'next/navigation';
+import { api } from '@ratio-diet/backend/convex/_generated/api';
+import { useConvexAuth, useQuery } from 'convex/react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import AppNav from '@/components/custom/app-nav';
 
-const UserLayout = ({ children }: { children: React.ReactNode }) => {
+const useAuthGuard = () => {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const router = useRouter();
 
@@ -16,7 +17,28 @@ const UserLayout = ({ children }: { children: React.ReactNode }) => {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  if (isLoading) {
+  return { isAuthenticated, isLoading };
+};
+
+const useProfileGuard = (isAuthenticated: boolean) => {
+  const profile = useQuery(api.userProfiles.get, isAuthenticated ? {} : 'skip');
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (profile === null && pathname !== '/onboarding') {
+      router.replace('/onboarding');
+    }
+  }, [profile, pathname, router]);
+
+  return { profileLoaded: profile !== undefined };
+};
+
+const UserLayout = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuthGuard();
+  const { profileLoaded } = useProfileGuard(isAuthenticated);
+
+  if (isLoading || (isAuthenticated && !profileLoaded)) {
     return (
       <div className="flex min-h-svh items-center justify-center">
         <p className="text-muted-foreground">Caricamento...</p>

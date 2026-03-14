@@ -45,7 +45,7 @@ const UpgradePrompt = () => {
           Genera piani settimanali personalizzati con l&apos;AI, lista della spesa inclusa.
         </p>
         <p className="mt-3 text-2xl font-semibold">
-          €9,99<span className="text-base font-normal text-muted-foreground">/mese</span>
+          €4,99<span className="text-base font-normal text-muted-foreground">/mese</span>
         </p>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}

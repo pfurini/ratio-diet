@@ -110,8 +110,12 @@ const parseStripeEvent = (
 };
 
 const buildStripeClient = async () => {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    throw new Error('STRIPE_SECRET_KEY is not set');
+  }
   const StripeLib = await importStripe();
-  return new StripeLib(process.env.STRIPE_SECRET_KEY ?? '');
+  return new StripeLib(key);
 };
 
 const validateWebhookRequest = async (

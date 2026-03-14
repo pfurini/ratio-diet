@@ -45,6 +45,10 @@ const DashboardHero = ({ macros }: Props) => (
     <p className="text-muted-foreground mt-4 text-xs">
       TDEE stimato: {Math.round(macros.tdee)} kcal/giorno
     </p>
+    <p className="text-muted-foreground mt-2 text-xs leading-relaxed">
+      Il tuo fabbisogno giornaliero è calcolato con la formula Mifflin-St Jeor
+      in base ai tuoi dati e obiettivo.
+    </p>
   </section>
 );
 

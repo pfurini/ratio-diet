@@ -9,11 +9,17 @@ import DashboardActions from '@/components/custom/dashboard-actions';
 import DashboardHero from '@/components/custom/dashboard-hero';
 import DashboardProgress from '@/components/custom/dashboard-progress';
 
-const [today] = new Date().toISOString().split('T');
+const getLocalDate = (): string => {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
 
 const DashboardPage = () => {
   const profile = useQuery(api.userProfiles.get);
-  const todayPlan = useQuery(api.dailyPlans.get, profile ? { date: today } : 'skip');
+  const todayPlan = useQuery(api.dailyPlans.get, profile ? { date: getLocalDate() } : 'skip');
   const router = useRouter();
 
   useEffect(() => {

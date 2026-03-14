@@ -12,7 +12,7 @@ import ProfileEditForm from '@/components/custom/profile-edit-form';
 import TemplateList from '@/components/custom/template-list';
 import { authClient } from '@/lib/auth-client';
 
-const formatRenewalDate = (timestamp: number): string => new Date(timestamp).toLocaleDateString('it-IT');
+const formatRenewalDate = (dateStr: string): string => new Date(dateStr).toLocaleDateString('it-IT');
 
 const SubscriptionSection = () => {
   const subscription = useQuery(api.subscriptions.getStatus);
