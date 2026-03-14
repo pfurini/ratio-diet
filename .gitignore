@@ -53,3 +53,4 @@ temp
 .pnpm-store
 settings.local.json
 .superpowers
+.worktrees
