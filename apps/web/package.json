@@ -8,7 +8,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@convex-dev/agent": "catalog:",
     "@convex-dev/better-auth": "catalog:",
     "@ratio-diet/backend": "workspace:*",
     "@ratio-diet/env": "workspace:*",

@@ -9,9 +9,8 @@
     "dev:setup": "convex dev --configure --until-success"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.52",
-    "@convex-dev/agent": "catalog:",
     "@convex-dev/better-auth": "catalog:",
+    "@openrouter/ai-sdk-provider": "1.5.4",
     "ai": "^5.0.117",
     "better-auth": "catalog:",
     "convex": "catalog:",
