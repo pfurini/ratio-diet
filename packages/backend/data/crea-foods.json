@@ -1,22 +1,202 @@
 [
-  {"name":"Petto di pollo","category":"carni","kcalPer100g":165,"proteinPer100g":31,"carbPer100g":0,"fatPer100g":3.6,"allergenTags":[],"foodType":"animale"},
-  {"name":"Riso bianco","category":"cereali","kcalPer100g":130,"proteinPer100g":2.7,"carbPer100g":28,"fatPer100g":0.3,"allergenTags":[],"foodType":"vegetale"},
-  {"name":"Pasta di semola","category":"cereali","kcalPer100g":353,"proteinPer100g":12.5,"carbPer100g":72,"fatPer100g":1.5,"allergenTags":["glutine"],"foodType":"vegetale"},
-  {"name":"Uovo intero","category":"uova","kcalPer100g":143,"proteinPer100g":12.4,"carbPer100g":0.7,"fatPer100g":9.5,"allergenTags":["uova"],"foodType":"animale"},
-  {"name":"Mozzarella","category":"latticini","kcalPer100g":280,"proteinPer100g":22.2,"carbPer100g":2.2,"fatPer100g":20.3,"allergenTags":["lattosio"],"foodType":"animale"},
-  {"name":"Tonno sott'olio sgocciolato","category":"pesce","kcalPer100g":198,"proteinPer100g":29.1,"carbPer100g":0,"fatPer100g":8.1,"allergenTags":[],"foodType":"animale"},
-  {"name":"Olio extravergine di oliva","category":"condimenti","kcalPer100g":884,"proteinPer100g":0,"carbPer100g":0,"fatPer100g":100,"allergenTags":[],"foodType":"vegetale"},
-  {"name":"Pane integrale","category":"cereali","kcalPer100g":243,"proteinPer100g":7.5,"carbPer100g":44,"fatPer100g":3.5,"allergenTags":["glutine"],"foodType":"vegetale"},
-  {"name":"Banana","category":"frutta","kcalPer100g":89,"proteinPer100g":1.1,"carbPer100g":23,"fatPer100g":0.3,"allergenTags":[],"foodType":"vegetale"},
-  {"name":"Prosciutto crudo","category":"salumi","kcalPer100g":224,"proteinPer100g":28,"carbPer100g":0,"fatPer100g":12,"allergenTags":[],"foodType":"animale"},
-  {"name":"Lenticchie secche","category":"legumi","kcalPer100g":325,"proteinPer100g":25,"carbPer100g":54,"fatPer100g":1,"allergenTags":[],"foodType":"vegetale"},
-  {"name":"Salmone fresco","category":"pesce","kcalPer100g":208,"proteinPer100g":20,"carbPer100g":0,"fatPer100g":13,"allergenTags":[],"foodType":"animale"},
-  {"name":"Yogurt greco 0%","category":"latticini","kcalPer100g":59,"proteinPer100g":10,"carbPer100g":3.6,"fatPer100g":0.7,"allergenTags":["lattosio"],"foodType":"animale"},
-  {"name":"Patate","category":"verdure","kcalPer100g":77,"proteinPer100g":2,"carbPer100g":17,"fatPer100g":0.1,"allergenTags":[],"foodType":"vegetale"},
-  {"name":"Pomodori","category":"verdure","kcalPer100g":18,"proteinPer100g":0.9,"carbPer100g":3.9,"fatPer100g":0.2,"allergenTags":[],"foodType":"vegetale"},
-  {"name":"Mandorle","category":"frutta_secca","kcalPer100g":575,"proteinPer100g":21,"carbPer100g":22,"fatPer100g":49,"allergenTags":["frutta_a_guscio"],"foodType":"vegetale"},
-  {"name":"Marmellata di frutta","category":"dolci","kcalPer100g":250,"proteinPer100g":0.5,"carbPer100g":60,"fatPer100g":0.1,"allergenTags":[],"foodType":"vegetale"},
-  {"name":"Crackers","category":"cereali","kcalPer100g":428,"proteinPer100g":9.5,"carbPer100g":72,"fatPer100g":11.5,"allergenTags":["glutine"],"foodType":"vegetale"},
-  {"name":"Bresaola","category":"salumi","kcalPer100g":151,"proteinPer100g":33,"carbPer100g":0,"fatPer100g":2.6,"allergenTags":[],"foodType":"animale"},
-  {"name":"Ricotta vaccina","category":"latticini","kcalPer100g":146,"proteinPer100g":11.2,"carbPer100g":3.5,"fatPer100g":10.1,"allergenTags":["lattosio"],"foodType":"animale"}
+  {
+    "name": "Petto di pollo",
+    "category": "carni",
+    "kcalPer100g": 165,
+    "proteinPer100g": 31,
+    "carbPer100g": 0,
+    "fatPer100g": 3.6,
+    "allergenTags": [],
+    "foodType": "animale"
+  },
+  {
+    "name": "Riso bianco",
+    "category": "cereali",
+    "kcalPer100g": 130,
+    "proteinPer100g": 2.7,
+    "carbPer100g": 28,
+    "fatPer100g": 0.3,
+    "allergenTags": [],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Pasta di semola",
+    "category": "cereali",
+    "kcalPer100g": 353,
+    "proteinPer100g": 12.5,
+    "carbPer100g": 72,
+    "fatPer100g": 1.5,
+    "allergenTags": ["glutine"],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Uovo intero",
+    "category": "uova",
+    "kcalPer100g": 143,
+    "proteinPer100g": 12.4,
+    "carbPer100g": 0.7,
+    "fatPer100g": 9.5,
+    "allergenTags": ["uova"],
+    "foodType": "animale"
+  },
+  {
+    "name": "Mozzarella",
+    "category": "latticini",
+    "kcalPer100g": 280,
+    "proteinPer100g": 22.2,
+    "carbPer100g": 2.2,
+    "fatPer100g": 20.3,
+    "allergenTags": ["lattosio"],
+    "foodType": "animale"
+  },
+  {
+    "name": "Tonno sott'olio sgocciolato",
+    "category": "pesce",
+    "kcalPer100g": 198,
+    "proteinPer100g": 29.1,
+    "carbPer100g": 0,
+    "fatPer100g": 8.1,
+    "allergenTags": [],
+    "foodType": "animale"
+  },
+  {
+    "name": "Olio extravergine di oliva",
+    "category": "condimenti",
+    "kcalPer100g": 884,
+    "proteinPer100g": 0,
+    "carbPer100g": 0,
+    "fatPer100g": 100,
+    "allergenTags": [],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Pane integrale",
+    "category": "cereali",
+    "kcalPer100g": 243,
+    "proteinPer100g": 7.5,
+    "carbPer100g": 44,
+    "fatPer100g": 3.5,
+    "allergenTags": ["glutine"],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Banana",
+    "category": "frutta",
+    "kcalPer100g": 89,
+    "proteinPer100g": 1.1,
+    "carbPer100g": 23,
+    "fatPer100g": 0.3,
+    "allergenTags": [],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Prosciutto crudo",
+    "category": "salumi",
+    "kcalPer100g": 224,
+    "proteinPer100g": 28,
+    "carbPer100g": 0,
+    "fatPer100g": 12,
+    "allergenTags": [],
+    "foodType": "animale"
+  },
+  {
+    "name": "Lenticchie secche",
+    "category": "legumi",
+    "kcalPer100g": 325,
+    "proteinPer100g": 25,
+    "carbPer100g": 54,
+    "fatPer100g": 1,
+    "allergenTags": [],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Salmone fresco",
+    "category": "pesce",
+    "kcalPer100g": 208,
+    "proteinPer100g": 20,
+    "carbPer100g": 0,
+    "fatPer100g": 13,
+    "allergenTags": [],
+    "foodType": "animale"
+  },
+  {
+    "name": "Yogurt greco 0%",
+    "category": "latticini",
+    "kcalPer100g": 59,
+    "proteinPer100g": 10,
+    "carbPer100g": 3.6,
+    "fatPer100g": 0.7,
+    "allergenTags": ["lattosio"],
+    "foodType": "animale"
+  },
+  {
+    "name": "Patate",
+    "category": "verdure",
+    "kcalPer100g": 77,
+    "proteinPer100g": 2,
+    "carbPer100g": 17,
+    "fatPer100g": 0.1,
+    "allergenTags": [],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Pomodori",
+    "category": "verdure",
+    "kcalPer100g": 18,
+    "proteinPer100g": 0.9,
+    "carbPer100g": 3.9,
+    "fatPer100g": 0.2,
+    "allergenTags": [],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Mandorle",
+    "category": "frutta_secca",
+    "kcalPer100g": 575,
+    "proteinPer100g": 21,
+    "carbPer100g": 22,
+    "fatPer100g": 49,
+    "allergenTags": ["frutta_a_guscio"],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Marmellata di frutta",
+    "category": "dolci",
+    "kcalPer100g": 250,
+    "proteinPer100g": 0.5,
+    "carbPer100g": 60,
+    "fatPer100g": 0.1,
+    "allergenTags": [],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Crackers",
+    "category": "cereali",
+    "kcalPer100g": 428,
+    "proteinPer100g": 9.5,
+    "carbPer100g": 72,
+    "fatPer100g": 11.5,
+    "allergenTags": ["glutine"],
+    "foodType": "vegetale"
+  },
+  {
+    "name": "Bresaola",
+    "category": "salumi",
+    "kcalPer100g": 151,
+    "proteinPer100g": 33,
+    "carbPer100g": 0,
+    "fatPer100g": 2.6,
+    "allergenTags": [],
+    "foodType": "animale"
+  },
+  {
+    "name": "Ricotta vaccina",
+    "category": "latticini",
+    "kcalPer100g": 146,
+    "proteinPer100g": 11.2,
+    "carbPer100g": 3.5,
+    "fatPer100g": 10.1,
+    "allergenTags": ["lattosio"],
+    "foodType": "animale"
+  }
 ]

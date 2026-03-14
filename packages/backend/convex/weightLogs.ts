@@ -1,10 +1,10 @@
 import { v } from 'convex/values';
 
+import type { Doc } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 import type { MutationCtx } from './_generated/server';
 import { authComponent } from './auth';
 import { calculateMacros, getAgeFromDateOfBirth } from './lib/calculations';
-import type { Doc } from './_generated/dataModel';
 
 const RECALC_THRESHOLD_KG = 2;
 
@@ -24,11 +24,7 @@ const buildNewMacros = (profile: Doc<'userProfiles'>, newWeight: number) => {
   });
 };
 
-const recalculateAndUpdateProfile = async (
-  ctx: MutationCtx,
-  profile: Doc<'userProfiles'>,
-  newWeight: number,
-) => {
+const recalculateAndUpdateProfile = async (ctx: MutationCtx, profile: Doc<'userProfiles'>, newWeight: number) => {
   const newMacros = buildNewMacros(profile, newWeight);
   await ctx.db.patch(profile._id, {
     lastRecalcWeightKg: newWeight,
@@ -43,7 +39,7 @@ const upsertWeightEntry = async (
   userId: string,
   date: string,
   weightKg: number,
-  macrosSnapshot: Doc<'userProfiles'>['macros'],
+  macrosSnapshot: Doc<'userProfiles'>['macros']
 ) => {
   const existing = await ctx.db
     .query('weightLogs')
@@ -73,11 +69,7 @@ const getAuthenticatedProfile = async (ctx: MutationCtx, userId: string) => {
   return profile;
 };
 
-const processWeightLog = async (
-  ctx: MutationCtx,
-  profile: Doc<'userProfiles'>,
-  weightKg: number,
-) => {
+const processWeightLog = async (ctx: MutationCtx, profile: Doc<'userProfiles'>, weightKg: number) => {
   const [today] = new Date().toISOString().split('T');
   await upsertWeightEntry(ctx, profile.userId, today, weightKg, profile.macros);
 

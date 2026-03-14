@@ -82,15 +82,14 @@ const calcDayMacros = (day: DayPlan, foods: FoodDoc[]): MacroAccumulator => {
   const acc: MacroAccumulator = { carb: 0, fat: 0, kcal: 0, protein: 0 };
   for (const item of allItems) {
     const food = findFood(foods, item.foodName);
-    if (food) { addItemToAccumulator(acc, item, food); }
+    if (food) {
+      addItemToAccumulator(acc, item, food);
+    }
   }
   return acc;
 };
 
-const isDayMacroValid = (
-  macros: MacroAccumulator,
-  target: MacroTarget,
-): boolean => {
+const isDayMacroValid = (macros: MacroAccumulator, target: MacroTarget): boolean => {
   const TOLERANCE = 0.05;
   const kcalOk = Math.abs(macros.kcal - target.calorieTarget) / target.calorieTarget <= TOLERANCE;
   const proteinOk = Math.abs(macros.protein - target.proteinGrams) / target.proteinGrams <= TOLERANCE;
@@ -102,7 +101,9 @@ const isDayMacroValid = (
 const validateWeeklyPlan = (plan: WeeklyPlanResult, foods: FoodDoc[], target: MacroTarget): boolean => {
   for (const day of plan.days) {
     const macros = calcDayMacros(day, foods);
-    if (!isDayMacroValid(macros, target)) { return false; }
+    if (!isDayMacroValid(macros, target)) {
+      return false;
+    }
   }
   return true;
 };
@@ -119,7 +120,9 @@ export const calcItemsMacros = (items: MealItem[], foods: FoodDoc[]): MacroSnaps
   const acc: MacroAccumulator = { carb: 0, fat: 0, kcal: 0, protein: 0 };
   for (const item of items) {
     const food = findFood(foods, item.foodName);
-    if (food) { addItemToAccumulator(acc, item, food); }
+    if (food) {
+      addItemToAccumulator(acc, item, food);
+    }
   }
   return accToMacroSnapshot(acc);
 };
@@ -128,7 +131,9 @@ export const calcItemsMacros = (items: MealItem[], foods: FoodDoc[]): MacroSnaps
 
 const getOpenRouterModel = () => {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) { throw new Error('OPENROUTER_API_KEY is not set'); }
+  if (!apiKey) {
+    throw new Error('OPENROUTER_API_KEY is not set');
+  }
   const modelId = process.env.OPENROUTER_MODEL ?? 'google/gemini-2.0-flash-001';
   const openrouter = createOpenRouter({ apiKey });
   return openrouter(modelId);
@@ -143,12 +148,14 @@ export const generateWithRetry = async (
   prompt: string,
   foods: FoodDoc[],
   macros: MacroTarget,
-  maxRetries = 3,
+  maxRetries = 3
 ): Promise<WeeklyPlanResult> => {
   let lastResult: WeeklyPlanResult | null = null;
   for (let attempt = 0; attempt < maxRetries; attempt += 1) {
     const result = await runAiGeneration(prompt);
-    if (validateWeeklyPlan(result, foods, macros)) { return result; }
+    if (validateWeeklyPlan(result, foods, macros)) {
+      return result;
+    }
     lastResult = result;
   }
   return lastResult as WeeklyPlanResult;

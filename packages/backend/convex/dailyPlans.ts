@@ -1,70 +1,70 @@
 import { v } from 'convex/values';
 
+import type { Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { authComponent } from './auth';
 import { distributeMacrosToMeals, optimizeMealQuantities } from './lib/optimizer';
-import type { Id } from './_generated/dataModel';
 
 // --- Validators ---
 
 const mealItemInput = v.object({
-  foodId: v.id('foods'),
-  constraintMin: v.optional(v.number()),
   constraintMax: v.optional(v.number()),
+  constraintMin: v.optional(v.number()),
+  foodId: v.id('foods'),
 });
 
 const mealInput = v.object({
+  items: v.array(mealItemInput),
   type: v.union(
     v.literal('colazione'),
     v.literal('pranzo'),
     v.literal('cena'),
     v.literal('spuntino_mattina'),
-    v.literal('spuntino_pomeriggio'),
+    v.literal('spuntino_pomeriggio')
   ),
-  items: v.array(mealItemInput),
 });
 
 // --- Types ---
 
-type MealItem = {
+interface MealItem {
   foodId: string;
   constraintMin?: number;
   constraintMax?: number;
-};
+}
 
-type Meal = {
+interface Meal {
   type: string;
   items: MealItem[];
-};
+}
 
-type MacroTarget = {
+interface MacroTarget {
   proteinGrams: number;
   carbGrams: number;
   fatGrams: number;
-};
+}
 
-type FoodDoc = {
+interface FoodDoc {
   _id: string;
   kcalPer100g: number;
   proteinPer100g: number;
   carbPer100g: number;
   fatPer100g: number;
-};
+}
 
-type OptimizerFood = {
+interface OptimizerFood {
   id: string;
   proteinPer100g: number;
   carbPer100g: number;
   fatPer100g: number;
   kcalPer100g: number;
-};
+}
 
-type MealResult = {
+interface MealResult {
   type: string;
   optimizedItems: { foodId: string; quantityGrams: number; constraintMin?: number; constraintMax?: number }[];
   macrosAchieved: MacroTarget & { kcal: number };
-};
+}
 
 // --- Helper: fetch food documents for a meal's items ---
 
@@ -105,7 +105,7 @@ const buildConstraints = (items: MealItem[]): Record<string, { min?: number; max
 
 const buildMealItems = (
   items: MealItem[],
-  quantities: Record<string, number>,
+  quantities: Record<string, number>
 ): { foodId: string; quantityGrams: number; constraintMin?: number; constraintMax?: number }[] =>
   items.map((item) => ({
     constraintMax: item.constraintMax,
@@ -119,7 +119,7 @@ const buildMealItems = (
 const optimizeSingleMeal = async (
   ctx: QueryCtx | MutationCtx,
   meal: Meal,
-  mealTarget: MacroTarget,
+  mealTarget: MacroTarget
 ): Promise<MealResult> => {
   const foodDocs = await fetchFoodsForMeal(ctx, meal.items);
   const foods = buildOptimizerFoods(foodDocs);
@@ -170,7 +170,7 @@ const upsertDailyPlan = async (
     meals: ReturnType<typeof buildMealsForDb>;
     macrosAchieved: { proteinGrams: number; carbGrams: number; fatGrams: number; kcal: number };
     macrosTarget: { proteinGrams: number; carbGrams: number; fatGrams: number; calorieTarget: number; tdee: number };
-  },
+  }
 ) => {
   const existing = await ctx.db
     .query('dailyPlans')
@@ -234,25 +234,24 @@ export const optimize = mutation({
     }
 
     const profileMacros = await fetchProfileMacros(ctx, user._id);
-    const mealTypes = args.meals.map((m) => m.type);
     const dailyTarget: MacroTarget = {
       carbGrams: profileMacros.carbGrams,
       fatGrams: profileMacros.fatGrams,
       proteinGrams: profileMacros.proteinGrams,
     };
 
-    const mealTargets = distributeMacrosToMeals(dailyTarget, mealTypes);
+    const mealTargets = distributeMacrosToMeals(
+      dailyTarget,
+      args.meals.map((m) => m.type)
+    );
     const mealResults = await Promise.all(
-      args.meals.map((meal) => optimizeSingleMeal(ctx, meal as Meal, mealTargets[meal.type] ?? dailyTarget)),
+      args.meals.map((meal) => optimizeSingleMeal(ctx, meal as Meal, mealTargets[meal.type] ?? dailyTarget))
     );
 
-    const totalMacros = sumMacros(mealResults);
-    const mealsForDb = buildMealsForDb(mealResults);
-
     return upsertDailyPlan(ctx, user._id, args.date, {
-      macrosAchieved: totalMacros,
+      macrosAchieved: sumMacros(mealResults),
       macrosTarget: profileMacros,
-      meals: mealsForDb,
+      meals: buildMealsForDb(mealResults),
     });
   },
 });

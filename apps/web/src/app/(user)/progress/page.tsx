@@ -28,9 +28,28 @@ interface MacroSnapshot {
   tdee: number;
 }
 
-const buildRecalcToast = (newMacros: MacroResult) => ({
-  description: `Proteine: ${newMacros.proteinGrams}g · Carbo: ${Math.round(newMacros.carbGrams)}g · Grassi: ${newMacros.fatGrams}g`,
-});
+const showWeightToast = (result: { recalculated: boolean; newMacros?: MacroResult }) => {
+  if (result.recalculated && result.newMacros) {
+    const desc = `Proteine: ${result.newMacros.proteinGrams}g · Carbo: ${Math.round(result.newMacros.carbGrams)}g · Grassi: ${result.newMacros.fatGrams}g`;
+    toast.success('I tuoi target sono stati aggiornati in base al nuovo peso', { description: desc });
+  } else {
+    toast.success('Peso registrato');
+  }
+};
+
+const parseWeight = (val: string): number | null => {
+  const kg = Number.parseFloat(val);
+  return Number.isNaN(kg) || kg <= 0 ? null : kg;
+};
+
+const submitWeight = async (
+  logWeight: ReturnType<typeof useMutation<typeof api.weightLogs.log>>,
+  date: string,
+  kg: number
+) => {
+  const result = await logWeight({ date, weightKg: kg });
+  showWeightToast(result);
+};
 
 const WeightLogForm = () => {
   const [weightKg, setWeightKg] = useState('');
@@ -40,18 +59,14 @@ const WeightLogForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const kg = Number.parseFloat(weightKg);
-    if (Number.isNaN(kg) || kg <= 0) {return;}
+    const kg = parseWeight(weightKg);
+    if (!kg) {
+      return;
+    }
     setSubmitting(true);
     try {
-      const result = await logWeight({ date, weightKg: kg });
-      if (result.recalculated && result.newMacros) {
-        toast.success('I tuoi target sono stati aggiornati in base al nuovo peso', buildRecalcToast(result.newMacros));
-      } else {
-        toast.success('Peso registrato');
-      }
+      await submitWeight(logWeight, date, kg);
       setWeightKg('');
-      setDate(getTodayDate());
     } catch {
       toast.error('Impossibile registrare il peso');
     } finally {

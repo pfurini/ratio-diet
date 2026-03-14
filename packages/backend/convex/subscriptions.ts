@@ -11,19 +11,25 @@ const importStripe = async () => {
 
 const getStripeKey = () => {
   const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) { throw new Error('STRIPE_SECRET_KEY is not set'); }
+  if (!key) {
+    throw new Error('STRIPE_SECRET_KEY is not set');
+  }
   return key;
 };
 
 const getSiteUrl = () => {
   const url = process.env.SITE_URL;
-  if (!url) { throw new Error('SITE_URL is not set'); }
+  if (!url) {
+    throw new Error('SITE_URL is not set');
+  }
   return url;
 };
 
 const getPriceId = () => {
   const priceId = process.env.STRIPE_PRICE_ID;
-  if (!priceId) { throw new Error('STRIPE_PRICE_ID is not set'); }
+  if (!priceId) {
+    throw new Error('STRIPE_PRICE_ID is not set');
+  }
   return priceId;
 };
 
@@ -31,7 +37,9 @@ export const getStatus = query({
   args: {},
   handler: async (ctx) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) { return null; }
+    if (!user) {
+      return null;
+    }
 
     const sub = await ctx.db
       .query('subscriptions')
@@ -46,7 +54,9 @@ export const createCheckoutSession = action({
   args: {},
   handler: async (ctx) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) { throw new Error('Non autenticato'); }
+    if (!user) {
+      throw new Error('Non autenticato');
+    }
 
     const Stripe = await importStripe();
     const stripe = new Stripe(getStripeKey());
@@ -70,10 +80,14 @@ export const createPortalSession = action({
   args: {},
   handler: async (ctx) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) { throw new Error('Non autenticato'); }
+    if (!user) {
+      throw new Error('Non autenticato');
+    }
 
     const sub = await ctx.runQuery(api.subscriptions.getSubscriptionForPortal, {});
-    if (!sub) { throw new Error('Nessun abbonamento trovato'); }
+    if (!sub) {
+      throw new Error('Nessun abbonamento trovato');
+    }
 
     const Stripe = await importStripe();
     const stripe = new Stripe(getStripeKey());
@@ -91,7 +105,9 @@ export const getSubscriptionForPortal = query({
   args: {},
   handler: async (ctx) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) { return null; }
+    if (!user) {
+      return null;
+    }
 
     return await ctx.db
       .query('subscriptions')
@@ -112,9 +128,7 @@ export const upsertFromWebhook = internalMutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('subscriptions')
-      .withIndex('by_stripeSubscriptionId', (q) =>
-        q.eq('stripeSubscriptionId', args.stripeSubscriptionId),
-      )
+      .withIndex('by_stripeSubscriptionId', (q) => q.eq('stripeSubscriptionId', args.stripeSubscriptionId))
       .unique();
 
     await (existing

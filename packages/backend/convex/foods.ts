@@ -217,7 +217,9 @@ export const deleteCustomFood = mutation({
   args: { foodId: v.id('foods') },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) { throw new Error('Non autenticato'); }
+    if (!user) {
+      throw new Error('Non autenticato');
+    }
 
     const food = await ctx.db.get(args.foodId);
     if (!food || food.source !== 'custom' || food.userId !== user._id) {
@@ -229,21 +231,24 @@ export const deleteCustomFood = mutation({
 });
 
 const fetchAllCreaFoods = (ctx: QueryCtx) =>
-  ctx.db.query('foods').withIndex('by_source', (q) => q.eq('source', 'crea')).collect();
+  ctx.db
+    .query('foods')
+    .withIndex('by_source', (q) => q.eq('source', 'crea'))
+    .collect();
 
 const isNotAllergen = (food: FoodDoc, userAllergens: string[]): boolean =>
   userAllergens.length === 0 || !food.allergenTags.some((tag) => userAllergens.includes(tag));
 
-const filterFoodsForSuggest = (
-  allFoods: FoodDoc[],
-  userAllergens: string[],
-  dietPref: string,
-): FoodDoc[] =>
+const filterFoodsForSuggest = (allFoods: FoodDoc[], userAllergens: string[], dietPref: string): FoodDoc[] =>
   allFoods.filter((f) => isNotAllergen(f, userAllergens) && filterByDietaryPreference(f, dietPref));
 
 const sortFieldForMacro = (macro: 'protein' | 'carb' | 'fat'): keyof FoodDoc => {
-  if (macro === 'protein') { return 'proteinPer100g'; }
-  if (macro === 'carb') { return 'carbPer100g'; }
+  if (macro === 'protein') {
+    return 'proteinPer100g';
+  }
+  if (macro === 'carb') {
+    return 'carbPer100g';
+  }
   return 'fatPer100g';
 };
 
@@ -255,7 +260,10 @@ export const suggestForMacro = query({
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     const profile = user
-      ? await ctx.db.query('userProfiles').withIndex('by_userId', (q) => q.eq('userId', user._id)).unique()
+      ? await ctx.db
+          .query('userProfiles')
+          .withIndex('by_userId', (q) => q.eq('userId', user._id))
+          .unique()
       : null;
 
     const allFoods = await fetchAllCreaFoods(ctx);
@@ -264,8 +272,6 @@ export const suggestForMacro = query({
     const filtered = filterFoodsForSuggest(allFoods as FoodDoc[], userAllergens, dietPref);
     const sortField = sortFieldForMacro(args.macro);
 
-    return filtered
-      .toSorted((a, b) => (b[sortField] as number) - (a[sortField] as number))
-      .slice(0, args.limit ?? 5);
+    return filtered.toSorted((a, b) => (b[sortField] as number) - (a[sortField] as number)).slice(0, args.limit ?? 5);
   },
 });

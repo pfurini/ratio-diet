@@ -6,16 +6,8 @@ import { action, internalMutation, mutation, query } from './_generated/server';
 import type { ActionCtx, MutationCtx } from './_generated/server';
 import { authComponent } from './auth';
 import { addFoodToShoppingMap, buildShoppingList, buildShoppingListFromMap } from './lib/shoppingList';
-import {
-  type DayPlan,
-  type FoodDoc,
-  type MacroTarget,
-  type MealItem,
-  type WeeklyPlanResult,
-  calcItemsMacros,
-  findFood,
-  generateWithRetry,
-} from './lib/weeklyPlanGenerator';
+import { calcItemsMacros, findFood, generateWithRetry } from './lib/weeklyPlanGenerator';
+import type { DayPlan, FoodDoc, MacroTarget, MealItem, WeeklyPlanResult } from './lib/weeklyPlanGenerator';
 import { buildWeeklyPlanPrompt } from './lib/weeklyPlanPrompt';
 
 // --- Interfaces ---
@@ -46,25 +38,22 @@ const addDays = (dateStr: string, days: number): string => {
 
 // --- Shopping list helpers ---
 
-const addMealItemsToMap = (
-  items: MealItem[],
-  foods: FoodDoc[],
-  map: Map<string, ShoppingEntry>,
-): void => {
+const addMealItemsToMap = (items: MealItem[], foods: FoodDoc[], map: Map<string, ShoppingEntry>): void => {
   for (const item of items) {
     const food = findFood(foods, item.foodName);
-    if (food) { addFoodToShoppingMap(food, item.grams, map); }
+    if (food) {
+      addFoodToShoppingMap(food, item.grams, map);
+    }
   }
 };
 
-const buildMealItems = (
-  items: MealItem[],
-  foods: FoodDoc[],
-): { foodId: Id<'foods'>; quantityGrams: number }[] => {
+const buildMealItems = (items: MealItem[], foods: FoodDoc[]): { foodId: Id<'foods'>; quantityGrams: number }[] => {
   const result: { foodId: Id<'foods'>; quantityGrams: number }[] = [];
   for (const item of items) {
     const food = findFood(foods, item.foodName);
-    if (food) { result.push({ foodId: food._id, quantityGrams: item.grams }); }
+    if (food) {
+      result.push({ foodId: food._id, quantityGrams: item.grams });
+    }
   }
   return result;
 };
@@ -102,9 +91,9 @@ export const createDailyPlan = internalMutation({
           v.literal('pranzo'),
           v.literal('cena'),
           v.literal('spuntino_mattina'),
-          v.literal('spuntino_pomeriggio'),
+          v.literal('spuntino_pomeriggio')
         ),
-      }),
+      })
     ),
     userId: v.string(),
   },
@@ -128,7 +117,7 @@ export const create = internalMutation({
         foodId: v.id('foods'),
         name: v.string(),
         totalGrams: v.number(),
-      }),
+      })
     ),
     userId: v.string(),
     weekStartDate: v.string(),
@@ -147,17 +136,23 @@ export const create = internalMutation({
 
 const validateSubscription = async (ctx: ActionCtx): Promise<string> => {
   const user = await authComponent.safeGetAuthUser(ctx);
-  if (!user) { throw new Error('Non autenticato'); }
+  if (!user) {
+    throw new Error('Non autenticato');
+  }
 
   const sub = await ctx.runQuery(api.subscriptions.getStatus, {});
-  if (!sub || sub.status !== 'active') { throw new Error('Abbonamento non attivo'); }
+  if (!sub || sub.status !== 'active') {
+    throw new Error('Abbonamento non attivo');
+  }
 
   return user._id;
 };
 
 const fetchProfileForPlan = async (ctx: ActionCtx) => {
   const profile = await ctx.runQuery(api.userProfiles.get, {});
-  if (!profile) { throw new Error('Profilo non trovato'); }
+  if (!profile) {
+    throw new Error('Profilo non trovato');
+  }
   return profile;
 };
 
@@ -174,7 +169,7 @@ const processDayForPlan = async (
   index: number,
   foods: FoodDoc[],
   macros: MacroTarget,
-  shoppingMap: Map<string, ShoppingEntry>,
+  shoppingMap: Map<string, ShoppingEntry>
 ): Promise<Id<'dailyPlans'>> => {
   const date = index === 0 ? weekStart : addDays(weekStart, index);
   const allItems = [...day.colazione, ...day.pranzo, ...day.cena];
@@ -199,7 +194,7 @@ const createDailyPlansFromAI = async (
   weekStart: string,
   result: WeeklyPlanResult,
   foods: FoodDoc[],
-  macros: MacroTarget,
+  macros: MacroTarget
 ): Promise<{ dailyPlanIds: Id<'dailyPlans'>[]; shoppingMap: Map<string, ShoppingEntry> }> => {
   const dailyPlanIds: Id<'dailyPlans'>[] = [];
   const shoppingMap = new Map<string, ShoppingEntry>();
@@ -237,7 +232,7 @@ const saveWeeklyPlan = async (
   weekStart: string,
   result: WeeklyPlanResult,
   foods: FoodDoc[],
-  macros: MacroTarget,
+  macros: MacroTarget
 ) => {
   const { dailyPlanIds, shoppingMap } = await createDailyPlansFromAI(ctx, userId, weekStart, result, foods, macros);
   const shoppingList = buildShoppingListFromMap(shoppingMap);
@@ -253,7 +248,9 @@ export const generate = action({
     const profile = await fetchProfileForPlan(ctx);
     const foods = await fetchFoodsForPlan(ctx);
 
-    if (foods.length === 0) { throw new Error('Nessun alimento disponibile'); }
+    if (foods.length === 0) {
+      throw new Error('Nessun alimento disponibile');
+    }
 
     const macros: MacroTarget = { ...profile.macros };
     const prompt = buildPromptForProfile(profile, foods);
@@ -270,10 +267,14 @@ export const get = query({
   args: { weeklyPlanId: v.id('weeklyPlans') },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) { return null; }
+    if (!user) {
+      return null;
+    }
 
     const plan = await ctx.db.get(args.weeklyPlanId);
-    if (!plan || plan.userId !== user._id) { return null; }
+    if (!plan || plan.userId !== user._id) {
+      return null;
+    }
 
     const dailyPlans = await Promise.all(plan.dailyPlanIds.map((id) => ctx.db.get(id)));
     return { ...plan, dailyPlans: dailyPlans.filter(Boolean) };
@@ -284,7 +285,9 @@ export const list = query({
   args: {},
   handler: async (ctx) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) { return []; }
+    if (!user) {
+      return [];
+    }
 
     return ctx.db
       .query('weeklyPlans')
@@ -298,7 +301,9 @@ export const list = query({
 
 const verifyEditAccess = async (ctx: MutationCtx, weeklyPlanId: Id<'weeklyPlans'>) => {
   const user = await authComponent.safeGetAuthUser(ctx);
-  if (!user) { throw new Error('Non autenticato'); }
+  if (!user) {
+    throw new Error('Non autenticato');
+  }
 
   const sub = await ctx.db
     .query('subscriptions')
@@ -309,9 +314,11 @@ const verifyEditAccess = async (ctx: MutationCtx, weeklyPlanId: Id<'weeklyPlans'
   }
 
   const plan = await ctx.db.get(weeklyPlanId);
-  if (!plan || plan.userId !== user._id) { throw new Error('Piano non trovato'); }
+  if (!plan || plan.userId !== user._id) {
+    throw new Error('Piano non trovato');
+  }
 
-  return { user, plan };
+  return { plan, user };
 };
 
 export const updateMealItem = mutation({
@@ -326,12 +333,16 @@ export const updateMealItem = mutation({
     await verifyEditAccess(ctx, args.weeklyPlanId);
 
     const daily = await ctx.db.get(args.dailyPlanId);
-    if (!daily) { throw new Error('Piano giornaliero non trovato'); }
+    if (!daily) {
+      throw new Error('Piano giornaliero non trovato');
+    }
 
     const meals = daily.meals.map((meal) => {
-      if (meal.type !== args.mealType) { return meal; }
+      if (meal.type !== args.mealType) {
+        return meal;
+      }
       const items = meal.items.map((item) =>
-        item.foodId === args.foodId ? { ...item, quantityGrams: args.quantityGrams } : item,
+        item.foodId === args.foodId ? { ...item, quantityGrams: args.quantityGrams } : item
       );
       return { ...meal, items };
     });
@@ -343,13 +354,15 @@ export const updateMealItem = mutation({
 
 const fetchFoodLookup = async (
   ctx: MutationCtx,
-  foodIds: string[],
+  foodIds: string[]
 ): Promise<Map<string, { _id: string; name: string; category: string }>> => {
   const unique = [...new Set(foodIds)];
   const foods = await Promise.all(unique.map((id) => ctx.db.get(id as Id<'foods'>)));
   const map = new Map<string, { _id: string; name: string; category: string }>();
   for (const food of foods) {
-    if (food) { map.set(String(food._id), food); }
+    if (food) {
+      map.set(String(food._id), food);
+    }
   }
   return map;
 };
@@ -361,7 +374,7 @@ export const recalculateShoppingList = mutation({
 
     const dailyPlans = await Promise.all(plan.dailyPlanIds.map((id) => ctx.db.get(id)));
     const allFoodIds = dailyPlans.flatMap((dp) =>
-      dp ? dp.meals.flatMap((m) => m.items.map((i) => String(i.foodId))) : [],
+      dp ? dp.meals.flatMap((m) => m.items.map((i) => String(i.foodId))) : []
     );
 
     const foodLookup = await fetchFoodLookup(ctx, allFoodIds);

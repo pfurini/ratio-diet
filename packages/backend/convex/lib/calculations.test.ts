@@ -1,17 +1,15 @@
-import { describe, expect, it } from 'vitest';
-
 import { calculateMacros } from './calculations';
 
-describe('calculateMacros', () => {
+describe(calculateMacros, () => {
   it('calculates correctly for a 30yo male, 80kg, 180cm, moderately active, maintenance', () => {
     const result = calculateMacros({
-      sex: 'M',
+      activityLevel: 'moderatamente_attivo',
       ageYears: 30,
-      heightCm: 180,
-      weightKg: 80,
       bodyBuild: 'medio',
       goal: 'mantenimento',
-      activityLevel: 'moderatamente_attivo',
+      heightCm: 180,
+      sex: 'M',
+      weightKg: 80,
     });
 
     // BMR = (10*80) + (6.25*180) - (5*30) + 5 = 800 + 1125 - 150 + 5 = 1780
@@ -30,13 +28,13 @@ describe('calculateMacros', () => {
 
   it('calculates correctly for a 45yo female, 65kg, 165cm, sedentary, dimagrimento', () => {
     const result = calculateMacros({
-      sex: 'F',
+      activityLevel: 'sedentario',
       ageYears: 45,
-      heightCm: 165,
-      weightKg: 65,
       bodyBuild: 'snello',
       goal: 'dimagrimento',
-      activityLevel: 'sedentario',
+      heightCm: 165,
+      sex: 'F',
+      weightKg: 65,
     });
 
     // BMR = (10*65) + (6.25*165) - (5*45) - 161 = 650 + 1031.25 - 225 - 161 = 1295.25
@@ -55,13 +53,13 @@ describe('calculateMacros', () => {
 
   it('applies ricomposizione adjustments', () => {
     const result = calculateMacros({
-      sex: 'M',
+      activityLevel: 'molto_attivo',
       ageYears: 35,
-      heightCm: 175,
-      weightKg: 85,
       bodyBuild: 'robusto',
       goal: 'ricomposizione',
-      activityLevel: 'molto_attivo',
+      heightCm: 175,
+      sex: 'M',
+      weightKg: 85,
     });
 
     // Proteine should be 2.4 g/kg for ricomposizione

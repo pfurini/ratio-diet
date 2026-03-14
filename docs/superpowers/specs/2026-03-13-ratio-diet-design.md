@@ -1,9 +1,6 @@
 # Ratio Diet — Design Specification
 
-**Date:** 2026-03-13
-**Status:** Draft
-**App name:** Ratio Diet
-**Tagline:** La tua alimentazione basata su numeri, proporzioni e metodo.
+**Date:** 2026-03-13 **Status:** Draft **App name:** Ratio Diet **Tagline:** La tua alimentazione basata su numeri, proporzioni e metodo.
 
 ---
 
@@ -85,6 +82,7 @@ Pubblico italiano, interfaccia solo in italiano. Persone sane over 18 che voglio
 ## 3. Data Model (Convex Schema)
 
 ### users
+
 - Dati anagrafici: sesso, data di nascita (età derivata al momento del calcolo), altezza, peso, corporatura
 - Obiettivo: `"dimagrimento"` | `"mantenimento"` | `"aumento_massa"` | `"ricomposizione"`
 - Livello attività: `"sedentario"` | `"leggermente_attivo"` | `"moderatamente_attivo"` | `"molto_attivo"` | `"atleta"`
@@ -94,6 +92,7 @@ Pubblico italiano, interfaccia solo in italiano. Persone sane over 18 che voglio
 - Campi calcolati: TDEE (kcal), proteine target (g), carboidrati target (g), grassi target (g), calorie target (kcal)
 
 ### foods
+
 - Nome, categoria (es. "cereali", "carni", "latticini")
 - Valori per 100g: kcal, proteine (g), carboidrati (g), grassi (g)
 - Tag allergeni: `string[]`
@@ -103,6 +102,7 @@ Pubblico italiano, interfaccia solo in italiano. Persone sane over 18 che voglio
 - Query: filtrano per `source === "crea" OR userId === currentUser`
 
 ### daily_plans
+
 - userId, data
 - Stato: `"draft"` | `"complete"` (draft = in costruzione, complete = finalizzato)
 - Pasti: array di `{ tipo ("colazione" | "pranzo" | "cena" | "spuntino"), alimenti: [{ foodId, quantità_g, vincolo_min?, vincolo_max? }] }`
@@ -111,11 +111,13 @@ Pubblico italiano, interfaccia solo in italiano. Persone sane over 18 che voglio
 - templateId (se creato da template, opzionale)
 
 ### templates
+
 - userId
 - Nome (es. "giornata ufficio")
 - Configurazione pasti con cibi e vincoli (stessa struttura dei pasti in daily_plans)
 
 ### weekly_plans
+
 - userId
 - Settimana: data inizio (lunedì)
 - 7 daily_plans collegati (riferimenti)
@@ -123,11 +125,13 @@ Pubblico italiano, interfaccia solo in italiano. Persone sane over 18 che voglio
 - Stato: `"generato"` | `"modificato"` | `"archiviato"`
 
 ### weight_logs
+
 - userId
 - Data, peso (kg)
 - Macro target al momento della registrazione (snapshot per storico)
 
 ### subscriptions
+
 - userId
 - Stripe customer ID, subscription ID
 - Stato: `"active"` | `"cancelled"` | `"past_due"`
@@ -140,40 +144,42 @@ Pubblico italiano, interfaccia solo in italiano. Persone sane over 18 che voglio
 ### 4.1 TDEE e macro target
 
 **Step 1: BMR (Mifflin-St Jeor)**
+
 - Uomini: `(10 × peso_kg) + (6.25 × altezza_cm) - (5 × età) + 5`
 - Donne: `(10 × peso_kg) + (6.25 × altezza_cm) - (5 × età) - 161`
 
 **Step 1b: Aggiustamento corporatura**
+
 - Snello: BMR × 0.95
 - Medio: BMR × 1.00
 - Robusto: BMR × 1.05
 
 **Step 2: TDEE = BMR_aggiustato × fattore attività**
 
-| Livello | Fattore |
-|---|---|
-| Sedentario | 1.2 |
-| Leggermente attivo | 1.375 |
-| Moderatamente attivo | 1.55 |
-| Molto attivo | 1.725 |
-| Atleta | 1.9 |
+| Livello              | Fattore |
+| -------------------- | ------- |
+| Sedentario           | 1.2     |
+| Leggermente attivo   | 1.375   |
+| Moderatamente attivo | 1.55    |
+| Molto attivo         | 1.725   |
+| Atleta               | 1.9     |
 
 **Step 3: Calorie obiettivo**
 
-| Obiettivo | Aggiustamento |
-|---|---|
-| Dimagrimento | TDEE - 500 kcal |
-| Mantenimento | TDEE |
-| Aumento massa | TDEE + 300 kcal |
+| Obiettivo      | Aggiustamento   |
+| -------------- | --------------- |
+| Dimagrimento   | TDEE - 500 kcal |
+| Mantenimento   | TDEE            |
+| Aumento massa  | TDEE + 300 kcal |
 | Ricomposizione | TDEE - 150 kcal |
 
 **Step 4: Ripartizione macro (g/kg peso corporeo)**
 
-| Obiettivo | Proteine | Grassi | Carboidrati |
-|---|---|---|---|
-| Dimagrimento | 2.0 g/kg | 0.8 g/kg | per differenza |
-| Mantenimento | 1.6 g/kg | 1.0 g/kg | per differenza |
-| Aumento massa | 2.0 g/kg | 0.8 g/kg | per differenza |
+| Obiettivo      | Proteine | Grassi   | Carboidrati    |
+| -------------- | -------- | -------- | -------------- |
+| Dimagrimento   | 2.0 g/kg | 0.8 g/kg | per differenza |
+| Mantenimento   | 1.6 g/kg | 1.0 g/kg | per differenza |
+| Aumento massa  | 2.0 g/kg | 0.8 g/kg | per differenza |
 | Ricomposizione | 2.4 g/kg | 0.9 g/kg | per differenza |
 
 Carboidrati "per differenza" = `(calorie_obiettivo - proteine_g × 4 - grassi_g × 9) ÷ 4`
@@ -181,17 +187,18 @@ Carboidrati "per differenza" = `(calorie_obiettivo - proteine_g × 4 - grassi_g 
 ### 4.2 Ottimizzatore quantità cibi (piano giornaliero)
 
 Problema di ottimizzazione lineare:
+
 - **Input**: macro target (P, C, G in grammi), lista cibi scelti per pasto con valori nutrizionali per 100g, vincoli utente (min/max per alimento)
 - **Obiettivo**: minimizzare la distanza pesata tra macro raggiunti e macro target (pesi: proteine 1.0, carboidrati 0.8, grassi 0.8 — le proteine hanno priorità)
 - **Vincoli**: rispettare i limiti per alimento, quantità ≥ 0, nessun cibo > 500g di default
 - **Output**: grammi per ogni alimento per pasto
 
 **Distribuzione per pasto:** il macro target giornaliero è distribuito sui pasti con proporzioni fisse di default:
+
 - Colazione: 25% dei macro giornalieri
 - Pranzo: 40%
 - Cena: 35%
-- Se l'utente aggiunge spuntini, il sistema ridistribuisce: colazione 20%, spuntino mattina 10%, pranzo 35%, spuntino pomeriggio 10%, cena 25%
-L'ottimizzatore lavora pasto per pasto, allocando i cibi assegnati a quel pasto per raggiungere la quota macro del pasto.
+- Se l'utente aggiunge spuntini, il sistema ridistribuisce: colazione 20%, spuntino mattina 10%, pranzo 35%, spuntino pomeriggio 10%, cena 25% L'ottimizzatore lavora pasto per pasto, allocando i cibi assegnati a quel pasto per raggiungere la quota macro del pasto.
 
 - **Algoritmo**: weighted least-squares — minimizza la somma pesata degli scarti quadratici tra macro target e raggiunti per ogni pasto. Con ~3-5 cibi per pasto e 3 macro, il sistema è sovradeterminato e risolubile analiticamente (pseudo-inversa con vincoli proiettati). Non serve una libreria di LP.
 - **Implementazione**: Convex function deterministica
@@ -212,17 +219,17 @@ L'ottimizzatore lavora pasto per pasto, allocando i cibi assegnati a quel pasto 
 
 ### Stack
 
-| Layer | Technology | Package |
-|---|---|---|
-| Frontend | Next.js 16, PWA mobile-first, Tailwind v4, shadcn/ui | `apps/web` |
-| Backend | Convex (queries, mutations, actions, HTTP actions) | `packages/backend` |
-| AI | Vercel AI SDK + `@openrouter/ai-sdk-provider` | `packages/backend` |
-| Auth | Better Auth (already configured) | `packages/backend` |
-| Payments | Stripe (Checkout + Customer Portal + Webhooks) | `packages/backend` |
-| Shared UI | shadcn components | `packages/ui` |
-| Env vars | t3-env validation | `packages/env` |
-| Config | Shared TS configs | `packages/config` |
-| Deploy | Vercel (frontend) + Convex Cloud (backend) | — |
+| Layer     | Technology                                           | Package            |
+| --------- | ---------------------------------------------------- | ------------------ |
+| Frontend  | Next.js 16, PWA mobile-first, Tailwind v4, shadcn/ui | `apps/web`         |
+| Backend   | Convex (queries, mutations, actions, HTTP actions)   | `packages/backend` |
+| AI        | Vercel AI SDK + `@openrouter/ai-sdk-provider`        | `packages/backend` |
+| Auth      | Better Auth (already configured)                     | `packages/backend` |
+| Payments  | Stripe (Checkout + Customer Portal + Webhooks)       | `packages/backend` |
+| Shared UI | shadcn components                                    | `packages/ui`      |
+| Env vars  | t3-env validation                                    | `packages/env`     |
+| Config    | Shared TS configs                                    | `packages/config`  |
+| Deploy    | Vercel (frontend) + Convex Cloud (backend)           | —                  |
 
 ### Routing (`apps/web/src/app/`)
 
@@ -255,27 +262,32 @@ src/app/
 ### Data flows
 
 **Onboarding:**
+
 ```
 Browser → Better Auth (signup) → Convex mutation (salva profilo + calcola TDEE/macro) → redirect a dashboard
 ```
 
 **Piano giornaliero:**
+
 ```
 Browser → seleziona cibi → Convex query (dati CREA + custom utente) → Convex function (ottimizzatore) → risultato quantità → Convex mutation (salva daily_plan)
 ```
 
 **Piano settimanale:**
+
 ```
 Browser → verifica subscription (Convex query) → seleziona cibi settimana → Convex Action (AI SDK → OpenRouter → generateObject) → JSON piano 7gg → validazione deterministica → Convex mutation (salva weekly_plan + lista spesa)
 ```
 
 **Stripe:**
+
 ```
 Checkout: Browser → Convex Action (crea Checkout Session) → redirect Stripe → webhook → Convex HTTP Action → mutation (crea subscription)
 Gestione: Browser → Convex Action (crea Customer Portal session) → redirect Stripe → webhook → Convex HTTP Action → mutation (aggiorna subscription)
 ```
 
 **Monitoraggio peso:**
+
 ```
 Browser → inserisci peso → Convex mutation (salva weight_log) → se Δ ≥ 2kg → ricalcola TDEE/macro → aggiorna profilo utente
 ```
@@ -291,6 +303,7 @@ Browser → inserisci peso → Convex mutation (salva weight_log) → se Δ ≥ 
 ## 6. Food Database Strategy
 
 ### Livello 1: CREA (verificati) — MVP
+
 - ~900 alimenti dal database ufficiale CREA (Centro di Ricerca Alimenti e Nutrizione)
 - Dati accurati e verificati, gratuiti e pubblici
 - Badge "verificato" nell'UI
@@ -298,6 +311,7 @@ Browser → inserisci peso → Convex mutation (salva weight_log) → se Δ ≥ 
 - Importati tramite script di seed: una Convex mutation interna (`internal.foods.seedCREA`) che riceve i dati CREA in batch e li inserisce nella tabella `foods`. Eseguita una volta tramite `npx convex run internal.foods.seedCREA` con il JSON dei dati CREA come argomento. I dati CREA sono conservati come file JSON statico in `packages/backend/data/crea-foods.json`
 
 ### Livello 2: Alimenti custom (privati per utente) — MVP
+
 - L'utente può aggiungere cibi non presenti nel database
 - Campi richiesti: nome, kcal/100g, proteine/100g, carboidrati/100g, grassi/100g
 - Visibili solo all'utente che li ha creati
@@ -306,6 +320,7 @@ Browser → inserisci peso → Convex mutation (salva weight_log) → se Δ ≥ 
 - Limite: max 100 alimenti custom per utente, con indicatore visivo chiaro dello spazio usato (es. "73/100 alimenti personalizzati")
 
 ### Livello 3: Promozione a condivisi (fase 2, fuori MVP)
+
 - Admin review degli alimenti custom più inseriti
 - Promozione a "verificati dalla community" dopo validazione
 - Permette crescita del database mantenendo qualità
@@ -362,16 +377,19 @@ Browser → inserisci peso → Convex mutation (salva weight_log) → se Δ ≥ 
 ## 9. Competitor Positioning
 
 ### Mercato italiano
+
 - **Melarossa** (unico competitor italiano): diete prescritte, non macro-flexible, €2.99/mese, dati CREA
 - Nessuna app italiana offre pianificazione macro-based con scelta cibi
 
 ### Mercato internazionale
+
 - **MyFitnessPal/Yazio/Lifesum**: tracking-centric (logghi cosa hai mangiato), non pianificazione. Database crowd-sourced con 15-30% varianza. Cibi italiani mal rappresentati
 - **MacroFactor**: macro adattivi, ma no pianificazione pasti, no italiano, €11.99/mese
 - **Eat This Much**: auto-genera piani ma non lascia scegliere i cibi all'utente. Shopping list. No italiano
 - **AutoMealPlanner**: il più vicino al nostro approccio (pick foods → calculate grams) ma web-only, no mobile, no italiano
 
 ### Differenziatori Ratio Diet
+
 1. **Approccio inverso**: scegli i cibi, il sistema calcola le quantità (vs "ti dico io cosa mangiare")
 2. **Dati italiani verificati**: database CREA (vs crowd-sourced inaffidabile)
 3. **Solo italiano**: nessun competitor macro-based serve il mercato italiano

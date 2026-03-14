@@ -22,31 +22,31 @@ interface MacroResult {
 }
 
 const ACTIVITY_FACTORS: Record<ActivityLevel, number> = {
-  sedentario: 1.2,
+  atleta: 1.9,
   leggermente_attivo: 1.375,
   moderatamente_attivo: 1.55,
   molto_attivo: 1.725,
-  atleta: 1.9,
+  sedentario: 1.2,
 };
 
 const BODY_BUILD_FACTORS: Record<BodyBuild, number> = {
-  snello: 0.95,
-  medio: 1.0,
+  medio: 1,
   robusto: 1.05,
+  snello: 0.95,
 };
 
 const CALORIE_ADJUSTMENTS: Record<Goal, number> = {
+  aumento_massa: 300,
   dimagrimento: -500,
   mantenimento: 0,
-  aumento_massa: 300,
   ricomposizione: -150,
 };
 
 const MACRO_RATIOS: Record<Goal, { proteinPerKg: number; fatPerKg: number }> = {
-  dimagrimento: { proteinPerKg: 2.0, fatPerKg: 0.8 },
-  mantenimento: { proteinPerKg: 1.6, fatPerKg: 1.0 },
-  aumento_massa: { proteinPerKg: 2.0, fatPerKg: 0.8 },
-  ricomposizione: { proteinPerKg: 2.4, fatPerKg: 0.9 },
+  aumento_massa: { fatPerKg: 0.8, proteinPerKg: 2 },
+  dimagrimento: { fatPerKg: 0.8, proteinPerKg: 2 },
+  mantenimento: { fatPerKg: 1, proteinPerKg: 1.6 },
+  ricomposizione: { fatPerKg: 0.9, proteinPerKg: 2.4 },
 };
 
 const computeBaseBmr = (sex: Sex, weightKg: number, heightCm: number, ageYears: number): number => {
@@ -57,7 +57,7 @@ const computeBaseBmr = (sex: Sex, weightKg: number, heightCm: number, ageYears: 
 const computeMacros = (
   goal: Goal,
   weightKg: number,
-  calorieTarget: number,
+  calorieTarget: number
 ): { proteinGrams: number; fatGrams: number; carbGrams: number } => {
   const { proteinPerKg, fatPerKg } = MACRO_RATIOS[goal];
   const proteinGrams = proteinPerKg * weightKg;
@@ -66,7 +66,7 @@ const computeMacros = (
   const fatKcal = fatGrams * 9;
   const remainingKcal = calorieTarget - proteinKcal - fatKcal;
   const carbGrams = Math.max(0, remainingKcal / 4);
-  return { proteinGrams, fatGrams, carbGrams };
+  return { carbGrams, fatGrams, proteinGrams };
 };
 
 export const calculateMacros = (input: CalculationInput): MacroResult => {
@@ -76,7 +76,7 @@ export const calculateMacros = (input: CalculationInput): MacroResult => {
   const tdee = Math.round(bmr * ACTIVITY_FACTORS[activityLevel]);
   const calorieTarget = tdee + CALORIE_ADJUSTMENTS[goal];
   const { proteinGrams, fatGrams, carbGrams } = computeMacros(goal, weightKg, calorieTarget);
-  return { tdee, calorieTarget, proteinGrams, carbGrams, fatGrams };
+  return { calorieTarget, carbGrams, fatGrams, proteinGrams, tdee };
 };
 
 export const getAgeFromDateOfBirth = (dateOfBirth: string): number => {

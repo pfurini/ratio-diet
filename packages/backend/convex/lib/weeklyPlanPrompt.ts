@@ -23,7 +23,7 @@ const buildFoodList = (foods: FoodForPrompt[]): string =>
   foods
     .map(
       (f) =>
-        `- ${f.name}: ${f.kcalPer100g} kcal, ${f.proteinPer100g}g proteine, ${f.carbPer100g}g carbo, ${f.fatPer100g}g grassi (per 100g)`,
+        `- ${f.name}: ${f.kcalPer100g} kcal, ${f.proteinPer100g}g proteine, ${f.carbPer100g}g carbo, ${f.fatPer100g}g grassi (per 100g)`
     )
     .join('\n');
 

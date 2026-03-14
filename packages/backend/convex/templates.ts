@@ -4,35 +4,37 @@ import { mutation, query } from './_generated/server';
 import { authComponent } from './auth';
 
 const mealItemValidator = v.object({
-  foodId: v.id('foods'),
-  constraintMin: v.optional(v.number()),
   constraintMax: v.optional(v.number()),
+  constraintMin: v.optional(v.number()),
+  foodId: v.id('foods'),
 });
 
 const mealValidator = v.object({
+  items: v.array(mealItemValidator),
   type: v.union(
     v.literal('colazione'),
     v.literal('pranzo'),
     v.literal('cena'),
     v.literal('spuntino_mattina'),
-    v.literal('spuntino_pomeriggio'),
+    v.literal('spuntino_pomeriggio')
   ),
-  items: v.array(mealItemValidator),
 });
 
 export const save = mutation({
   args: {
-    name: v.string(),
     meals: v.array(mealValidator),
+    name: v.string(),
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) throw new Error('Non autenticato');
+    if (!user) {
+      throw new Error('Non autenticato');
+    }
 
     return await ctx.db.insert('templates', {
-      userId: user._id,
-      name: args.name,
       meals: args.meals,
+      name: args.name,
+      userId: user._id,
     });
   },
 });
@@ -41,7 +43,9 @@ export const list = query({
   args: {},
   handler: async (ctx) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) return [];
+    if (!user) {
+      return [];
+    }
 
     return await ctx.db
       .query('templates')
@@ -54,10 +58,14 @@ export const get = query({
   args: { templateId: v.id('templates') },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) return null;
+    if (!user) {
+      return null;
+    }
 
     const template = await ctx.db.get(args.templateId);
-    if (!template || template.userId !== user._id) return null;
+    if (!template || template.userId !== user._id) {
+      return null;
+    }
 
     return template;
   },
@@ -67,10 +75,14 @@ export const remove = mutation({
   args: { templateId: v.id('templates') },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) throw new Error('Non autenticato');
+    if (!user) {
+      throw new Error('Non autenticato');
+    }
 
     const template = await ctx.db.get(args.templateId);
-    if (!template || template.userId !== user._id) throw new Error('Template non trovato');
+    if (!template || template.userId !== user._id) {
+      throw new Error('Template non trovato');
+    }
 
     await ctx.db.delete(args.templateId);
   },

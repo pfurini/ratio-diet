@@ -18,7 +18,7 @@ interface FoodDocForShopping {
 export const addFoodToShoppingMap = (
   food: FoodDocForShopping,
   grams: number,
-  map: Map<string, ShoppingEntry>,
+  map: Map<string, ShoppingEntry>
 ): void => {
   const key = String(food._id);
   const existing = map.get(key);
@@ -29,8 +29,7 @@ export const addFoodToShoppingMap = (
   }
 };
 
-export const buildShoppingListFromMap = (map: Map<string, ShoppingEntry>): ShoppingEntry[] =>
-  [...map.values()];
+export const buildShoppingListFromMap = (map: Map<string, ShoppingEntry>): ShoppingEntry[] => [...map.values()];
 
 // --- Types for DB-stored plan shopping list ---
 
@@ -61,15 +60,13 @@ interface ShoppingItem {
   category: string;
 }
 
-const accumulateMealItems = (
-  meal: Meal,
-  foodLookup: Map<string, FoodDoc>,
-  map: Map<string, ShoppingItem>,
-): void => {
+const accumulateMealItems = (meal: Meal, foodLookup: Map<string, FoodDoc>, map: Map<string, ShoppingItem>): void => {
   for (const item of meal.items) {
     const foodId = String(item.foodId);
     const food = foodLookup.get(foodId);
-    if (!food) continue;
+    if (!food) {
+      continue;
+    }
 
     const existing = map.get(foodId);
     if (existing) {
@@ -83,7 +80,7 @@ const accumulateMealItems = (
 const accumulateDailyPlan = (
   plan: DailyPlan,
   foodLookup: Map<string, FoodDoc>,
-  map: Map<string, ShoppingItem>,
+  map: Map<string, ShoppingItem>
 ): void => {
   for (const meal of plan.meals) {
     accumulateMealItems(meal, foodLookup, map);
@@ -91,13 +88,15 @@ const accumulateDailyPlan = (
 };
 
 export const buildShoppingList = (
-  dailyPlans: Array<DailyPlan | null>,
-  foodLookup: Map<string, FoodDoc>,
+  dailyPlans: (DailyPlan | null)[],
+  foodLookup: Map<string, FoodDoc>
 ): ShoppingItem[] => {
   const map = new Map<string, ShoppingItem>();
 
   for (const plan of dailyPlans) {
-    if (!plan) continue;
+    if (!plan) {
+      continue;
+    }
     accumulateDailyPlan(plan, foodLookup, map);
   }
 
