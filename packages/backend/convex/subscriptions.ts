@@ -1,7 +1,8 @@
 import { v } from 'convex/values';
+import type Stripe from 'stripe';
 
 import { api } from './_generated/api';
-import { action, internalMutation, query } from './_generated/server';
+import { action, internalMutation, internalQuery, query } from './_generated/server';
 import { authComponent } from './auth';
 
 const importStripe = async () => {
@@ -33,6 +34,22 @@ const getPriceId = () => {
   return priceId;
 };
 
+type CheckoutSessionCreateParams = Stripe.Checkout.SessionCreateParams;
+
+export const buildCheckoutSessionCreateParams = (
+  userId: string,
+  siteUrl: string,
+  priceId: string
+): CheckoutSessionCreateParams => ({
+  cancel_url: `${siteUrl}/dashboard?subscription=cancelled`,
+  client_reference_id: userId,
+  line_items: [{ price: priceId, quantity: 1 }],
+  metadata: { userId },
+  mode: 'subscription',
+  subscription_data: { metadata: { userId } },
+  success_url: `${siteUrl}/dashboard?subscription=success`,
+});
+
 export const getStatus = query({
   args: {},
   handler: async (ctx) => {
@@ -63,14 +80,7 @@ export const createCheckoutSession = action({
     const siteUrl = getSiteUrl();
     const priceId = getPriceId();
 
-    const session = await stripe.checkout.sessions.create({
-      cancel_url: `${siteUrl}/dashboard?subscription=cancelled`,
-      client_reference_id: user._id,
-      line_items: [{ price: priceId, quantity: 1 }],
-      metadata: { userId: user._id },
-      mode: 'subscription',
-      success_url: `${siteUrl}/dashboard?subscription=success`,
-    });
+    const session = await stripe.checkout.sessions.create(buildCheckoutSessionCreateParams(user._id, siteUrl, priceId));
 
     return { url: session.url };
   },
@@ -132,7 +142,35 @@ export const upsertFromWebhook = internalMutation({
       .unique();
 
     await (existing
-      ? ctx.db.patch(existing._id, { nextRenewalDate: args.nextRenewalDate, status: args.status })
+      ? ctx.db.patch(existing._id, {
+          nextRenewalDate: args.nextRenewalDate,
+          startDate: args.startDate,
+          status: args.status,
+          stripeCustomerId: args.stripeCustomerId,
+          userId: args.userId,
+        })
       : ctx.db.insert('subscriptions', args));
+  },
+});
+
+export const getUserIdByStripeSubscriptionId = internalQuery({
+  args: { stripeSubscriptionId: v.string() },
+  handler: async (ctx, args) => {
+    const subscription = await ctx.db
+      .query('subscriptions')
+      .withIndex('by_stripeSubscriptionId', (q) => q.eq('stripeSubscriptionId', args.stripeSubscriptionId))
+      .unique();
+    return subscription?.userId ?? null;
+  },
+});
+
+export const getUserIdByStripeCustomerId = internalQuery({
+  args: { stripeCustomerId: v.string() },
+  handler: async (ctx, args) => {
+    const subscription = await ctx.db
+      .query('subscriptions')
+      .withIndex('by_stripeCustomerId', (q) => q.eq('stripeCustomerId', args.stripeCustomerId))
+      .first();
+    return subscription?.userId ?? null;
   },
 });

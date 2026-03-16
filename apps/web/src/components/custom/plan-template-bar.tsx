@@ -5,7 +5,7 @@ import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { useMutation, useQuery } from 'convex/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { MealItem, MealType } from './meal-builder';
 
@@ -70,6 +70,10 @@ interface CompleteButtonProps {
 const CompleteButton = ({ planId }: CompleteButtonProps) => {
   const completePlan = useMutation(api.dailyPlans.complete);
   const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    setDone(false);
+  }, [planId]);
 
   const handleComplete = async () => {
     if (!planId) return;

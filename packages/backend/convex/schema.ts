@@ -8,8 +8,26 @@ const mealItemValidator = v.object({
   quantityGrams: v.number(),
 });
 
+const templateMealItemValidator = v.object({
+  constraintMax: v.optional(v.number()),
+  constraintMin: v.optional(v.number()),
+  foodId: v.id('foods'),
+  quantityGrams: v.optional(v.number()),
+});
+
 const mealValidator = v.object({
   items: v.array(mealItemValidator),
+  type: v.union(
+    v.literal('colazione'),
+    v.literal('pranzo'),
+    v.literal('cena'),
+    v.literal('spuntino_mattina'),
+    v.literal('spuntino_pomeriggio')
+  ),
+});
+
+const templateMealValidator = v.object({
+  items: v.array(templateMealItemValidator),
   type: v.union(
     v.literal('colazione'),
     v.literal('pranzo'),
@@ -64,10 +82,11 @@ export default defineSchema({
     userId: v.string(),
   })
     .index('by_userId', ['userId'])
-    .index('by_stripeSubscriptionId', ['stripeSubscriptionId']),
+    .index('by_stripeSubscriptionId', ['stripeSubscriptionId'])
+    .index('by_stripeCustomerId', ['stripeCustomerId']),
 
   templates: defineTable({
-    meals: v.array(mealValidator),
+    meals: v.array(templateMealValidator),
     name: v.string(),
     userId: v.string(),
   }).index('by_userId', ['userId']),

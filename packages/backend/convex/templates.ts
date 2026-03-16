@@ -7,7 +7,7 @@ const mealItemValidator = v.object({
   constraintMax: v.optional(v.number()),
   constraintMin: v.optional(v.number()),
   foodId: v.id('foods'),
-  quantityGrams: v.number(),
+  quantityGrams: v.optional(v.number()),
 });
 
 const mealValidator = v.object({
@@ -21,6 +21,12 @@ const mealValidator = v.object({
   ),
 });
 
+export const buildTemplateInsertDoc = <TMeals>(userId: string, args: { meals: TMeals; name: string }) => ({
+  meals: args.meals,
+  name: args.name,
+  userId,
+});
+
 export const save = mutation({
   args: {
     meals: v.array(mealValidator),
@@ -32,11 +38,7 @@ export const save = mutation({
       throw new Error('Non autenticato');
     }
 
-    return await ctx.db.insert('templates', {
-      meals: args.meals,
-      name: args.name,
-      userId: user._id,
-    });
+    return await ctx.db.insert('templates', buildTemplateInsertDoc(user._id, args));
   },
 });
 

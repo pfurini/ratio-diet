@@ -24,16 +24,7 @@ interface MealState {
   items: MealItem[];
 }
 
-const DEFAULT_MEALS: MealState[] = [
-  { items: [], type: 'colazione' },
-  { items: [], type: 'pranzo' },
-  { items: [], type: 'cena' },
-];
-
-const SPUNTINI: MealState[] = [
-  { items: [], type: 'spuntino_mattina' },
-  { items: [], type: 'spuntino_pomeriggio' },
-];
+const MEAL_ORDER: MealType[] = ['colazione', 'pranzo', 'cena', 'spuntino_mattina', 'spuntino_pomeriggio'];
 
 interface MacroSnapshot {
   proteinGrams: number;
@@ -45,7 +36,17 @@ interface MacroSnapshot {
 
 const isSpuntino = (type: MealType) => type === 'spuntino_mattina' || type === 'spuntino_pomeriggio';
 
-const buildActiveMeals = (base: MealState[], show: boolean): MealState[] => (show ? [...base, ...SPUNTINI] : base);
+const toEmptyMeal = (type: MealType): MealState => ({ items: [], type });
+
+const DEFAULT_MEALS: MealState[] = MEAL_ORDER.map(toEmptyMeal);
+
+const normalizeMeals = (meals: MealState[]): MealState[] => {
+  const byType = new Map(meals.map((meal) => [meal.type, meal]));
+  return MEAL_ORDER.map((type) => byType.get(type) ?? toEmptyMeal(type));
+};
+
+const getVisibleMeals = (meals: MealState[], showSpuntini: boolean): MealState[] =>
+  meals.filter((meal) => showSpuntini || !isSpuntino(meal.type));
 
 const updateMealItems = (meals: MealState[], mealType: MealType, items: MealItem[]): MealState[] =>
   meals.map((m) => (m.type === mealType ? { ...m, items } : m));
@@ -110,31 +111,35 @@ const usePlanHandlers = (
   };
 
   const handleLoadTemplate = (loaded: MealState[]) => {
-    setMeals(loaded);
+    setMeals(normalizeMeals(loaded));
     setShowSpuntini(loaded.some((m) => isSpuntino(m.type)));
   };
 
   return { handleItemsChange, handleLoadTemplate };
 };
 
+interface OptimizedPlanRef {
+  id: Id<'dailyPlans'>;
+  date: string;
+}
+
 const DailyPlanPage = () => {
   const [date, setDate] = useState(getLocalDate);
   const [meals, setMeals] = useState<MealState[]>(DEFAULT_MEALS);
   const [showSpuntini, setShowSpuntini] = useState(false);
-  const [planId, setPlanId] = useState<Id<'dailyPlans'> | null>(null);
+  const [optimizedPlan, setOptimizedPlan] = useState<OptimizedPlanRef | null>(null);
 
-  const baseMeals = meals.filter((m) => !isSpuntino(m.type));
-  const activeMeals = buildActiveMeals(baseMeals, showSpuntini);
+  const visibleMeals = getVisibleMeals(meals, showSpuntini);
   const { macrosAchieved, macrosTarget, resolvedPlanId } = usePlanData(date);
   const { handleItemsChange, handleLoadTemplate } = usePlanHandlers(setMeals, setShowSpuntini);
-  const effectivePlanId = resolvedPlanId ?? planId;
+  const effectivePlanId = resolvedPlanId ?? (optimizedPlan?.date === date ? optimizedPlan.id : null);
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-8">
       <h1 className="text-2xl font-bold">Piano giornaliero</h1>
       <DatePicker date={date} onChange={setDate} />
       <div className="space-y-4">
-        {activeMeals.map((meal) => (
+        {visibleMeals.map((meal) => (
           <MealBuilder
             key={meal.type}
             mealType={meal.type}
@@ -146,9 +151,9 @@ const DailyPlanPage = () => {
       <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => setShowSpuntini((v) => !v)}>
         {showSpuntini ? 'Rimuovi spuntini' : 'Aggiungi spuntini'}
       </Button>
-      <OptimizeButton meals={activeMeals} date={date} onOptimized={setPlanId} />
+      <OptimizeButton meals={visibleMeals} date={date} onOptimized={(id) => setOptimizedPlan({ date, id })} />
       {macrosAchieved && macrosTarget && <PlanMacroSummary achieved={macrosAchieved} target={macrosTarget} />}
-      <PlanTemplateBar meals={activeMeals} onLoadTemplate={handleLoadTemplate} planId={effectivePlanId} />
+      <PlanTemplateBar meals={visibleMeals} onLoadTemplate={handleLoadTemplate} planId={effectivePlanId} />
     </div>
   );
 };

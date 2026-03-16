@@ -152,7 +152,7 @@ export const getCategories = query({
       .collect();
 
     const categories = new Set(foods.map((f) => f.category));
-    return [...categories].sort((a, b) => a.localeCompare(b));
+    return [...categories].toSorted((a, b) => a.localeCompare(b));
   },
 });
 
@@ -272,7 +272,7 @@ export const suggestForMacro = query({
     const filtered = filterFoodsForSuggest(allFoods as FoodDoc[], userAllergens, dietPref);
     const sortField = sortFieldForMacro(args.macro);
 
-    const sorted = [...filtered].sort(
+    const sorted = [...filtered].toSorted(
       (a: FoodDoc, b: FoodDoc) => (b[sortField] as number) - (a[sortField] as number)
     );
     return sorted.slice(0, args.limit ?? 5);

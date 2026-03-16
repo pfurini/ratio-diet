@@ -20,12 +20,18 @@ const STATUS_MAP: Record<string, StripeStatus> = {
   unpaid: 'past_due',
 };
 
-const toDateString = (unixTimestamp: number): string => new Date(unixTimestamp * 1000).toISOString().split('T')[0];
+const toDateString = (unixTimestamp: number): string => {
+  const [dateString] = new Date(unixTimestamp * 1000).toISOString().split('T');
+  if (!dateString) {
+    throw new Error('Unable to convert timestamp to date string');
+  }
+  return dateString;
+};
 
 const getCurrentPeriodEnd = (subscription: StripeSubscription): number => {
   const value = (subscription as unknown as { current_period_end?: unknown }).current_period_end;
   if (typeof value !== 'number') {
-    throw new Error('Stripe subscription is missing current_period_end');
+    throw new TypeError('Stripe subscription is missing current_period_end');
   }
   return value;
 };
@@ -56,23 +62,54 @@ const upsertSubscription = async (ctx: ActionCtx, userId: string, subscription: 
   });
 };
 
+const getStripeCustomerId = (subscription: StripeSubscription): string | null => {
+  const { customer } = subscription;
+  if (typeof customer === 'string') {
+    return customer;
+  }
+  return customer?.id ?? null;
+};
+
+export const resolveUserIdForSubscriptionEvent = async (
+  ctx: ActionCtx,
+  subscription: StripeSubscription
+): Promise<string | null> => {
+  const fromMetadata = subscription.metadata?.userId;
+  if (fromMetadata) {
+    return fromMetadata;
+  }
+
+  const fromSubscriptionId = await ctx.runQuery(internal.subscriptions.getUserIdByStripeSubscriptionId, {
+    stripeSubscriptionId: subscription.id,
+  });
+  if (fromSubscriptionId) {
+    return fromSubscriptionId;
+  }
+
+  const stripeCustomerId = getStripeCustomerId(subscription);
+  if (!stripeCustomerId) {
+    return null;
+  }
+
+  return await ctx.runQuery(internal.subscriptions.getUserIdByStripeCustomerId, { stripeCustomerId });
+};
+
 const handleCheckoutCompleted = async (
   ctx: ActionCtx,
   stripe: InstanceType<StripeInstance>,
   session: StripeCheckoutSession
 ) => {
-  const userId = session.client_reference_id;
+  const subscriptionId = session.subscription as string;
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const userId = session.client_reference_id ?? subscription.metadata?.userId;
   if (!userId) {
     return;
   }
-
-  const subscriptionId = session.subscription as string;
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   await upsertSubscription(ctx, userId, subscription);
 };
 
 const handleSubscriptionEvent = async (ctx: ActionCtx, subscription: StripeSubscription) => {
-  const userId = subscription.metadata?.userId;
+  const userId = await resolveUserIdForSubscriptionEvent(ctx, subscription);
   if (!userId) {
     return;
   }
