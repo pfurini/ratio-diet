@@ -1,7 +1,8 @@
-import type { ActionCtx } from 'convex/server';
 import { httpRouter } from 'convex/server';
+import type Stripe from 'stripe';
 
 import { internal } from './_generated/api';
+import type { ActionCtx } from './_generated/server';
 import { httpAction } from './_generated/server';
 import { authComponent, createAuth } from './auth';
 
@@ -21,28 +22,28 @@ const STATUS_MAP: Record<string, StripeStatus> = {
 
 const toDateString = (unixTimestamp: number): string => new Date(unixTimestamp * 1000).toISOString().split('T')[0];
 
+const getCurrentPeriodEnd = (subscription: StripeSubscription): number => {
+  const value = (subscription as unknown as { current_period_end?: unknown }).current_period_end;
+  if (typeof value !== 'number') {
+    throw new Error('Stripe subscription is missing current_period_end');
+  }
+  return value;
+};
+
 const importStripe = async () => {
   const stripeModule = await import('stripe');
   return stripeModule.default;
 };
 
 type StripeInstance = Awaited<ReturnType<typeof importStripe>>;
-type StripeSubscription = InstanceType<StripeInstance>['subscriptions'] extends {
-  retrieve: (...args: unknown[]) => Promise<infer R>;
-}
-  ? R
-  : never;
-type StripeCheckoutSession = Parameters<
-  InstanceType<StripeInstance>['checkout']['sessions']['create']
->[0] extends infer _P
-  ? Awaited<ReturnType<InstanceType<StripeInstance>['checkout']['sessions']['retrieve']>>
-  : never;
-type StripeEvent = Awaited<ReturnType<InstanceType<StripeInstance>['webhooks']['constructEvent']>>;
+type StripeSubscription = Stripe.Response<Stripe.Subscription>;
+type StripeCheckoutSession = Stripe.Checkout.Session;
+type StripeEvent = Stripe.Event;
 
 const upsertSubscription = async (ctx: ActionCtx, userId: string, subscription: StripeSubscription) => {
   const status = STATUS_MAP[subscription.status] ?? 'past_due';
   const startDate = toDateString(subscription.start_date);
-  const nextRenewalDate = toDateString(subscription.current_period_end);
+  const nextRenewalDate = toDateString(getCurrentPeriodEnd(subscription));
   const stripeCustomerId = subscription.customer as string;
 
   await ctx.runMutation(internal.subscriptions.upsertFromWebhook, {

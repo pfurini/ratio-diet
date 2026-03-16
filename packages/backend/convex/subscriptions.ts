@@ -52,7 +52,7 @@ export const getStatus = query({
 
 export const createCheckoutSession = action({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<{ url: string | null }> => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new Error('Non autenticato');
@@ -78,7 +78,7 @@ export const createCheckoutSession = action({
 
 export const createPortalSession = action({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<{ url: string | null }> => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new Error('Non autenticato');

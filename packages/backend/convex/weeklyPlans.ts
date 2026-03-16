@@ -158,7 +158,7 @@ const fetchProfileForPlan = async (ctx: ActionCtx) => {
 
 const fetchFoodsForPlan = async (ctx: ActionCtx): Promise<FoodDoc[]> => {
   const foods = await ctx.runQuery(api.foods.search, {});
-  return foods as FoodDoc[];
+  return foods as unknown as FoodDoc[];
 };
 
 const processDayForPlan = async (
@@ -233,7 +233,7 @@ const saveWeeklyPlan = async (
   result: WeeklyPlanResult,
   foods: FoodDoc[],
   macros: MacroTarget
-) => {
+): Promise<Id<'weeklyPlans'>> => {
   const { dailyPlanIds, shoppingMap } = await createDailyPlansFromAI(ctx, userId, weekStart, result, foods, macros);
   const shoppingList = buildShoppingListFromMap(shoppingMap);
   return ctx.runMutation(internal.weeklyPlans.create, { dailyPlanIds, shoppingList, userId, weekStartDate: weekStart });
@@ -243,7 +243,7 @@ const saveWeeklyPlan = async (
 
 export const generate = action({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<Id<'weeklyPlans'>> => {
     const userId = await validateSubscription(ctx);
     const profile = await fetchProfileForPlan(ctx);
     const foods = await fetchFoodsForPlan(ctx);

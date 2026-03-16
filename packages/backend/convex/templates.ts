@@ -7,6 +7,7 @@ const mealItemValidator = v.object({
   constraintMax: v.optional(v.number()),
   constraintMin: v.optional(v.number()),
   foodId: v.id('foods'),
+  quantityGrams: v.number(),
 });
 
 const mealValidator = v.object({
