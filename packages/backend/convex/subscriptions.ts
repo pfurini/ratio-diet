@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import type Stripe from 'stripe';
+import type { Stripe } from 'stripe';
 
 import { api } from './_generated/api';
 import { action, internalMutation, internalQuery, query } from './_generated/server';

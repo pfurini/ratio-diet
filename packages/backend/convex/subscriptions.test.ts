@@ -1,6 +1,6 @@
 import { buildCheckoutSessionCreateParams } from './subscriptions';
 
-describe(buildCheckoutSessionCreateParams, () => {
+describe('buildCheckoutSessionCreateParams', () => {
   it('writes userId to both session and subscription metadata', () => {
     const params = buildCheckoutSessionCreateParams('user_123', 'https://app.example.com', 'price_abc');
 

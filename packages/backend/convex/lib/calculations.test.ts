@@ -1,6 +1,6 @@
 import { calculateMacros } from './calculations';
 
-describe(calculateMacros, () => {
+describe('calculateMacros', () => {
   it('calculates correctly for a 30yo male, 80kg, 180cm, moderately active, maintenance', () => {
     const result = calculateMacros({
       activityLevel: 'moderatamente_attivo',
@@ -39,11 +39,11 @@ describe(calculateMacros, () => {
 
     // BMR = (10*65) + (6.25*165) - (5*45) - 161 = 650 + 1031.25 - 225 - 161 = 1295.25
     // Corporatura snello = 0.95: 1295.25 * 0.95 = 1230.4875
-    // TDEE = 1230.4875 * 1.2 = 1476.585 → round to 1477
+    // TDEE = 1230.4875 * 1.2 = 1476.585 -> round to 1477
     // Dimagrimento: 1477 - 500 = 977
     // Proteine: 2.0 * 65 = 130g (520 kcal)
     // Grassi: 0.8 * 65 = 52g (468 kcal)
-    // Carbo: (977 - 520 - 468) / 4 = -2.75 → floored to 0
+    // Carbo: (977 - 520 - 468) / 4 = -2.75 -> floored to 0
     expect(result.tdee).toBe(1477);
     expect(result.calorieTarget).toBe(977);
     expect(result.proteinGrams).toBe(130);

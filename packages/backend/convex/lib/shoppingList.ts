@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-relative-parent-imports
 import type { Id } from '../_generated/dataModel';
 
 // --- Types for AI-generated plan shopping list ---

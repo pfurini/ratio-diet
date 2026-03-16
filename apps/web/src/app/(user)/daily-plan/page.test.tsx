@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import DailyPlanPage from './page';
+
 const { mockApi, mockUseMutation, mockUseQuery } = vi.hoisted(() => ({
   mockApi: {
     dailyPlans: {
@@ -15,19 +17,16 @@ const { mockApi, mockUseMutation, mockUseQuery } = vi.hoisted(() => ({
   mockUseQuery: vi.fn(),
 }));
 
-vi.mock<typeof import('convex/react')>(import('convex/react'), () => ({
+vi.mock(import('convex/react'), () => ({
   useMutation: (...args: unknown[]) => mockUseMutation(...args),
   useQuery: (...args: unknown[]) => mockUseQuery(...args),
 }));
 
-vi.mock<typeof import('@ratio-diet/backend/convex/_generated/api')>(
-  import('@ratio-diet/backend/convex/_generated/api'),
-  () => ({
-    api: mockApi,
-  })
-);
+vi.mock(import('@ratio-diet/backend/convex/_generated/api'), () => ({
+  api: mockApi,
+}));
 
-vi.mock<typeof import('@/components/custom/meal-builder')>(import('@/components/custom/meal-builder'), () => ({
+vi.mock(import('@/components/custom/meal-builder'), () => ({
   default: ({
     items,
     mealType,
@@ -46,45 +45,38 @@ vi.mock<typeof import('@/components/custom/meal-builder')>(import('@/components/
   ),
 }));
 
-vi.mock<typeof import('@/components/custom/plan-macro-summary')>(
-  import('@/components/custom/plan-macro-summary'),
-  () => ({
-    default: () => <div data-testid="macro-summary" />,
-  })
-);
+vi.mock(import('@/components/custom/plan-macro-summary'), () => ({
+  default: () => <div data-testid="macro-summary" />,
+}));
 
-vi.mock<typeof import('@/components/custom/plan-template-bar')>(
-  import('@/components/custom/plan-template-bar'),
-  () => ({
-    default: ({ planId }: { planId: string | null }) => <div data-testid="plan-id">{planId ?? 'none'}</div>,
-  })
-);
+vi.mock(import('@/components/custom/plan-template-bar'), () => ({
+  default: ({ planId }: { planId: string | null }) => <div data-testid="plan-id">{planId ?? 'none'}</div>,
+}));
 
-import DailyPlanPage from './page';
+const setup = () => {
+  const plansByDate = new Map<string, { _id: string }>();
 
-describe('dailyPlanPage regressions', () => {
-  beforeEach(() => {
-    const plansByDate = new Map<string, { _id: string }>();
-
-    mockUseQuery.mockImplementation((query: string, args?: { date: string }) => {
-      if (query === mockApi.userProfiles.get) {
-        return null;
-      }
-      if (query === mockApi.dailyPlans.get) {
-        return args ? (plansByDate.get(args.date) ?? null) : null;
-      }
+  mockUseQuery.mockImplementation((query: string, args?: { date: string }) => {
+    if (query === mockApi.userProfiles.get) {
       return null;
-    });
-
-    mockUseMutation.mockImplementation((mutation: string) => {
-      if (mutation === mockApi.dailyPlans.optimize) {
-        return async ({ date }: { date: string }) => `plan-${date}`;
-      }
-      return async () => null;
-    });
+    }
+    if (query === mockApi.dailyPlans.get) {
+      return args ? (plansByDate.get(args.date) ?? null) : null;
+    }
+    return null;
   });
 
+  mockUseMutation.mockImplementation((mutation: string) => {
+    if (mutation === mockApi.dailyPlans.optimize) {
+      return ({ date }: { date: string }) => `plan-${date}`;
+    }
+    return () => null;
+  });
+};
+
+describe('dailyPlanPage regressions', () => {
   it('persists snack meal items when snack sections are hidden and shown again', async () => {
+    setup();
     const user = userEvent.setup();
     render(<DailyPlanPage />);
 
@@ -101,6 +93,7 @@ describe('dailyPlanPage regressions', () => {
   });
 
   it('does not carry over optimized plan id after date changes', async () => {
+    setup();
     const user = userEvent.setup();
     render(<DailyPlanPage />);
 

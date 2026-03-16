@@ -2,6 +2,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
+// eslint-disable-next-line import/no-relative-parent-imports
 import type { Id } from '../_generated/dataModel';
 
 // --- Zod schemas ---

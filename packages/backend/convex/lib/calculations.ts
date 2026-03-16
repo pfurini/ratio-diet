@@ -87,7 +87,7 @@ export const getAgeFromDateOfBirth = (dateOfBirth: string): number => {
   const dayDiff = today.getDate() - birth.getDate();
   const birthdayNotYetReached = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0);
   if (birthdayNotYetReached) {
-    age--;
+    age -= 1;
   }
   return age;
 };

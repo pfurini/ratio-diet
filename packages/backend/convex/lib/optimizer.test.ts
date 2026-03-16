@@ -1,10 +1,10 @@
 import { optimizeMealQuantities } from './optimizer';
 
-describe(optimizeMealQuantities, () => {
+describe('optimizeMealQuantities', () => {
   const chickenBreast = {
     carbPer100g: 0,
     fatPer100g: 3.6,
-    id: 'food_1' as any,
+    id: 'food_1',
     kcalPer100g: 165,
     proteinPer100g: 31,
   };
@@ -12,7 +12,7 @@ describe(optimizeMealQuantities, () => {
   const rice = {
     carbPer100g: 28,
     fatPer100g: 0.3,
-    id: 'food_2' as any,
+    id: 'food_2',
     kcalPer100g: 130,
     proteinPer100g: 2.7,
   };
@@ -20,7 +20,7 @@ describe(optimizeMealQuantities, () => {
   const oliveOil = {
     carbPer100g: 0,
     fatPer100g: 100,
-    id: 'food_3' as any,
+    id: 'food_3',
     kcalPer100g: 884,
     proteinPer100g: 0,
   };

@@ -81,11 +81,11 @@ export const create = mutation({
     const macros = computeProfileMacros(args);
 
     return await ctx.db.insert('userProfiles', {
-      userId: user._id,
       ...args,
+      lastRecalcWeightKg: args.weightKg,
       legalGateAccepted: true,
       macros,
-      lastRecalcWeightKg: args.weightKg,
+      userId: user._id,
     });
   },
 });

@@ -5,8 +5,26 @@
     "./node_modules/ultracite/config/oxlint/next/.oxlintrc.json"
   ],
   "rules": {
-    "unicorn/filename-case": "off"
+    "unicorn/filename-case": "off",
+    "vitest/prefer-called-times": "off",
+    "vitest/prefer-describe-function-title": "off"
   },
+  "overrides": [
+    {
+      "files": [
+        "**/*.{test,spec}.{ts,tsx,js,jsx}",
+        "**/__tests__/**/*.{ts,tsx,js,jsx}"
+      ],
+      "plugins": [
+        "vitest",
+        "jest"
+      ],
+      "rules": {
+        "vitest/prefer-called-times": "off",
+        "vitest/prefer-describe-function-title": "off"
+      }
+    }
+  ],
   "ignorePatterns": [
     ".*/**",
     "**/.*/**",

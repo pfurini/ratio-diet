@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 
+// eslint-disable-next-line import/no-relative-parent-imports
 import creaDatabaseFoods from '../data/crea-foods.json';
 import { internalMutation, mutation, query } from './_generated/server';
 import type { QueryCtx } from './_generated/server';

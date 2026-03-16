@@ -46,88 +46,26 @@ const EMPTY_RESULT: OptimizerResult = {
   success: false,
 };
 
-const buildResult = (
-  quantities: Record<FoodId, number>,
-  foods: FoodNutrition[],
-  macroTarget: MacroTarget,
-  constraints: Record<FoodId, Constraint>
-): OptimizerResult => {
-  const achieved = computeAchieved(foods, quantities);
-  const gap = computeGap(macroTarget, achieved);
-  const maxGap = Math.max(Math.abs(gap.protein), Math.abs(gap.carb), Math.abs(gap.fat));
-  const success = isConvergedSuccess(maxGap, foods, macroTarget, constraints);
-  return { gap: success ? undefined : gap, macrosAchieved: achieved, quantities, success };
+const addFoodMacros = (
+  acc: { proteinGrams: number; carbGrams: number; fatGrams: number; kcal: number },
+  food: FoodNutrition,
+  factor: number
+) => {
+  acc.proteinGrams += food.proteinPer100g * factor;
+  acc.carbGrams += food.carbPer100g * factor;
+  acc.fatGrams += food.fatPer100g * factor;
+  acc.kcal += food.kcalPer100g * factor;
 };
 
-export const optimizeMealQuantities = (input: OptimizerInput): OptimizerResult => {
-  const { macroTarget, foods, constraints } = input;
-  if (foods.length === 0) {
-    return EMPTY_RESULT;
-  }
-
-  const quantities = initializeQuantities(foods, constraints);
-  runOptimizationLoop(foods, quantities, macroTarget, constraints);
-  roundQuantities(quantities);
-  return buildResult(quantities, foods, macroTarget, constraints);
-};
-
-const isConvergedSuccess = (
-  maxGap: number,
+const computeAchieved = (
   foods: FoodNutrition[],
-  macroTarget: MacroTarget,
-  constraints: Record<FoodId, Constraint>
-): boolean => {
-  if (maxGap <= GAP_THRESHOLD) {
-    return true;
-  }
-  return isConstraintBound(foods, macroTarget, constraints);
-};
-
-const isConstraintBound = (
-  foods: FoodNutrition[],
-  macroTarget: MacroTarget,
-  constraints: Record<FoodId, Constraint>
-): boolean => {
-  const hasUserMax = foods.some((f) => constraints[f.id]?.max !== undefined);
-  if (!hasUserMax) {
-    return false;
-  }
-  const relaxedQuantities = initializeQuantities(foods, {});
-  runOptimizationLoop(foods, relaxedQuantities, macroTarget, {});
-  const relaxedAchieved = computeAchieved(foods, relaxedQuantities);
-  const relaxedGap = computeGap(macroTarget, relaxedAchieved);
-  const maxRelaxedGap = Math.max(Math.abs(relaxedGap.protein), Math.abs(relaxedGap.carb), Math.abs(relaxedGap.fat));
-  return maxRelaxedGap <= GAP_THRESHOLD;
-};
-
-const initializeQuantities = (
-  foods: FoodNutrition[],
-  constraints: Record<FoodId, Constraint>
-): Record<FoodId, number> => {
-  const quantities: Record<FoodId, number> = {};
+  quantities: Record<FoodId, number>
+): MacroTarget & { kcal: number } => {
+  const acc = { carbGrams: 0, fatGrams: 0, kcal: 0, proteinGrams: 0 };
   for (const food of foods) {
-    const min = constraints[food.id]?.min ?? 0;
-    const max = constraints[food.id]?.max ?? DEFAULT_MAX_GRAMS;
-    quantities[food.id] = Math.min(max, Math.max(min, 100));
+    addFoodMacros(acc, food, (quantities[food.id] ?? 0) / 100);
   }
-  return quantities;
-};
-
-const runOptimizationLoop = (
-  foods: FoodNutrition[],
-  quantities: Record<FoodId, number>,
-  macroTarget: MacroTarget,
-  constraints: Record<FoodId, Constraint>
-): void => {
-  for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
-    const achieved = computeAchieved(foods, quantities);
-    const errors = computeErrors(macroTarget, achieved);
-    const totalError = Math.abs(errors.protein) + Math.abs(errors.carb) + Math.abs(errors.fat);
-    if (totalError < 1) {
-      break;
-    }
-    adjustQuantities(foods, quantities, errors, constraints);
-  }
+  return acc;
 };
 
 const computeErrors = (
@@ -163,26 +101,34 @@ const roundQuantities = (quantities: Record<FoodId, number>): void => {
   }
 };
 
-const addFoodMacros = (
-  acc: { proteinGrams: number; carbGrams: number; fatGrams: number; kcal: number },
-  food: FoodNutrition,
-  factor: number
-) => {
-  acc.proteinGrams += food.proteinPer100g * factor;
-  acc.carbGrams += food.carbPer100g * factor;
-  acc.fatGrams += food.fatPer100g * factor;
-  acc.kcal += food.kcalPer100g * factor;
+const initializeQuantities = (
+  foods: FoodNutrition[],
+  constraints: Record<FoodId, Constraint>
+): Record<FoodId, number> => {
+  const quantities: Record<FoodId, number> = {};
+  for (const food of foods) {
+    const min = constraints[food.id]?.min ?? 0;
+    const max = constraints[food.id]?.max ?? DEFAULT_MAX_GRAMS;
+    quantities[food.id] = Math.min(max, Math.max(min, 100));
+  }
+  return quantities;
 };
 
-const computeAchieved = (
+const runOptimizationLoop = (
   foods: FoodNutrition[],
-  quantities: Record<FoodId, number>
-): MacroTarget & { kcal: number } => {
-  const acc = { carbGrams: 0, fatGrams: 0, kcal: 0, proteinGrams: 0 };
-  for (const food of foods) {
-    addFoodMacros(acc, food, (quantities[food.id] ?? 0) / 100);
+  quantities: Record<FoodId, number>,
+  macroTarget: MacroTarget,
+  constraints: Record<FoodId, Constraint>
+): void => {
+  for (let iter = 0; iter < MAX_ITERATIONS; iter += 1) {
+    const achieved = computeAchieved(foods, quantities);
+    const errors = computeErrors(macroTarget, achieved);
+    const totalError = Math.abs(errors.protein) + Math.abs(errors.carb) + Math.abs(errors.fat);
+    if (totalError < 1) {
+      break;
+    }
+    adjustQuantities(foods, quantities, errors, constraints);
   }
-  return acc;
 };
 
 const computeGap = (target: MacroTarget, achieved: MacroTarget): { protein: number; carb: number; fat: number } => ({
@@ -190,6 +136,60 @@ const computeGap = (target: MacroTarget, achieved: MacroTarget): { protein: numb
   fat: target.fatGrams > 0 ? (achieved.fatGrams - target.fatGrams) / target.fatGrams : 0,
   protein: target.proteinGrams > 0 ? (achieved.proteinGrams - target.proteinGrams) / target.proteinGrams : 0,
 });
+
+const isConstraintBound = (
+  foods: FoodNutrition[],
+  macroTarget: MacroTarget,
+  constraints: Record<FoodId, Constraint>
+): boolean => {
+  const hasUserMax = foods.some((f) => constraints[f.id]?.max !== undefined);
+  if (!hasUserMax) {
+    return false;
+  }
+  const relaxedQuantities = initializeQuantities(foods, {});
+  runOptimizationLoop(foods, relaxedQuantities, macroTarget, {});
+  const relaxedAchieved = computeAchieved(foods, relaxedQuantities);
+  const relaxedGap = computeGap(macroTarget, relaxedAchieved);
+  const maxRelaxedGap = Math.max(Math.abs(relaxedGap.protein), Math.abs(relaxedGap.carb), Math.abs(relaxedGap.fat));
+  return maxRelaxedGap <= GAP_THRESHOLD;
+};
+
+const isConvergedSuccess = (
+  maxGap: number,
+  foods: FoodNutrition[],
+  macroTarget: MacroTarget,
+  constraints: Record<FoodId, Constraint>
+): boolean => {
+  if (maxGap <= GAP_THRESHOLD) {
+    return true;
+  }
+  return isConstraintBound(foods, macroTarget, constraints);
+};
+
+const buildResult = (
+  quantities: Record<FoodId, number>,
+  foods: FoodNutrition[],
+  macroTarget: MacroTarget,
+  constraints: Record<FoodId, Constraint>
+): OptimizerResult => {
+  const achieved = computeAchieved(foods, quantities);
+  const gap = computeGap(macroTarget, achieved);
+  const maxGap = Math.max(Math.abs(gap.protein), Math.abs(gap.carb), Math.abs(gap.fat));
+  const success = isConvergedSuccess(maxGap, foods, macroTarget, constraints);
+  return { gap: success ? undefined : gap, macrosAchieved: achieved, quantities, success };
+};
+
+export const optimizeMealQuantities = (input: OptimizerInput): OptimizerResult => {
+  const { macroTarget, foods, constraints } = input;
+  if (foods.length === 0) {
+    return EMPTY_RESULT;
+  }
+
+  const quantities = initializeQuantities(foods, constraints);
+  runOptimizationLoop(foods, quantities, macroTarget, constraints);
+  roundQuantities(quantities);
+  return buildResult(quantities, foods, macroTarget, constraints);
+};
 
 export const MEAL_DISTRIBUTION = {
   withSnacks: {

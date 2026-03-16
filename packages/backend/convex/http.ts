@@ -1,5 +1,5 @@
 import { httpRouter } from 'convex/server';
-import type Stripe from 'stripe';
+import type { Stripe } from 'stripe';
 
 import { internal } from './_generated/api';
 import type { ActionCtx } from './_generated/server';
