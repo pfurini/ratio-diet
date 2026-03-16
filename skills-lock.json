@@ -71,6 +71,16 @@
       "sourceType": "github",
       "computedHash": "91c02eb706f046fb9d6a061efbb96496e4be751b5b14c283cf82baaa50f3a985"
     },
+    "stripe-best-practices": {
+      "source": "anthropics/claude-plugins-official",
+      "sourceType": "github",
+      "computedHash": "4b3e66fe21b41d61903031bee94649c8fde4af57bb6bed6e9f14a6b361f3f82e"
+    },
+    "stripe-integration": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "2ea87d17f71bbc8fb206af2e90d8345c9a978ee36c7874bcccdb0fdd8cdd745c"
+    },
     "turborepo": {
       "source": "vercel/turborepo",
       "sourceType": "github",
