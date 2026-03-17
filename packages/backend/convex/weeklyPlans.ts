@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 
 import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
@@ -137,12 +137,12 @@ export const create = internalMutation({
 const validateSubscription = async (ctx: ActionCtx): Promise<string> => {
   const user = await authComponent.safeGetAuthUser(ctx);
   if (!user) {
-    throw new Error('Non autenticato');
+    throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
   }
 
   const sub = await ctx.runQuery(api.subscriptions.getStatus, {});
   if (!sub || sub.status !== 'active') {
-    throw new Error('Abbonamento non attivo');
+    throw new ConvexError({ code: 'FORBIDDEN', message: 'Abbonamento non attivo' });
   }
 
   return user._id;
@@ -151,7 +151,7 @@ const validateSubscription = async (ctx: ActionCtx): Promise<string> => {
 const fetchProfileForPlan = async (ctx: ActionCtx) => {
   const profile = await ctx.runQuery(api.userProfiles.get, {});
   if (!profile) {
-    throw new Error('Profilo non trovato');
+    throw new ConvexError({ code: 'NOT_FOUND', message: 'Profilo non trovato' });
   }
   return profile;
 };
@@ -249,7 +249,7 @@ export const generate = action({
     const foods = await fetchFoodsForPlan(ctx);
 
     if (foods.length === 0) {
-      throw new Error('Nessun alimento disponibile');
+      throw new ConvexError({ code: 'NOT_FOUND', message: 'Nessun alimento disponibile' });
     }
 
     const macros: MacroTarget = { ...profile.macros };
@@ -302,7 +302,7 @@ export const list = query({
 const verifyEditAccess = async (ctx: MutationCtx, weeklyPlanId: Id<'weeklyPlans'>) => {
   const user = await authComponent.safeGetAuthUser(ctx);
   if (!user) {
-    throw new Error('Non autenticato');
+    throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
   }
 
   const sub = await ctx.db
@@ -310,12 +310,12 @@ const verifyEditAccess = async (ctx: MutationCtx, weeklyPlanId: Id<'weeklyPlans'
     .withIndex('by_userId', (q) => q.eq('userId', user._id))
     .unique();
   if (!sub || sub.status !== 'active') {
-    throw new Error('Abbonamento attivo richiesto per modificare il piano');
+    throw new ConvexError({ code: 'FORBIDDEN', message: 'Abbonamento attivo richiesto per modificare il piano' });
   }
 
   const plan = await ctx.db.get(weeklyPlanId);
   if (!plan || plan.userId !== user._id) {
-    throw new Error('Piano non trovato');
+    throw new ConvexError({ code: 'NOT_FOUND', message: 'Piano non trovato' });
   }
 
   return { plan, user };
@@ -334,7 +334,7 @@ export const updateMealItem = mutation({
 
     const daily = await ctx.db.get(args.dailyPlanId);
     if (!daily) {
-      throw new Error('Piano giornaliero non trovato');
+      throw new ConvexError({ code: 'NOT_FOUND', message: 'Piano giornaliero non trovato' });
     }
 
     const meals = daily.meals.map((meal) => {

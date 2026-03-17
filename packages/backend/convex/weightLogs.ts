@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 
 import type { Doc } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
@@ -63,7 +63,7 @@ const getAuthenticatedProfile = async (ctx: MutationCtx, userId: string) => {
     .unique();
 
   if (!profile) {
-    throw new Error('Profilo non trovato');
+    throw new ConvexError({ code: 'NOT_FOUND', message: 'Profilo non trovato' });
   }
 
   return profile;
@@ -88,7 +88,7 @@ export const log = mutation({
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const profile = await getAuthenticatedProfile(ctx, user._id);

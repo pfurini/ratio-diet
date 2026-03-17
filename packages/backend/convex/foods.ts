@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 
 // eslint-disable-next-line import/no-relative-parent-imports
 import creaDatabaseFoods from '../data/crea-foods.json';
@@ -172,7 +172,7 @@ export const addCustomFood = mutation({
   handler: async (ctx, args) => {
     const authUser = await authComponent.safeGetAuthUser(ctx);
     if (!authUser) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const userId = authUser._id;
@@ -182,7 +182,7 @@ export const addCustomFood = mutation({
       .collect();
 
     if (existingCount.length >= CUSTOM_FOOD_LIMIT) {
-      throw new Error(`Custom food limit of ${CUSTOM_FOOD_LIMIT} reached`);
+      throw new ConvexError({ code: 'LIMIT_REACHED', message: `Custom food limit of ${CUSTOM_FOOD_LIMIT} reached` });
     }
 
     return ctx.db.insert('foods', {
@@ -220,12 +220,12 @@ export const deleteCustomFood = mutation({
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const food = await ctx.db.get(args.foodId);
     if (!food || food.source !== 'custom' || food.userId !== user._id) {
-      throw new Error('Alimento non trovato');
+      throw new ConvexError({ code: 'NOT_FOUND', message: 'Alimento non trovato' });
     }
 
     await ctx.db.delete(args.foodId);

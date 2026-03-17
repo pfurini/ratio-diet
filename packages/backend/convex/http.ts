@@ -182,6 +182,13 @@ http.route({
       return result;
     }
 
+    const { alreadyProcessed } = await ctx.runMutation(internal.subscriptions.claimWebhookEvent, {
+      eventId: result.id,
+    });
+    if (alreadyProcessed) {
+      return new Response('Already processed', { status: 200 });
+    }
+
     await handleStripeEvent(ctx, stripe, result);
     return new Response('OK', { status: 200 });
   }),

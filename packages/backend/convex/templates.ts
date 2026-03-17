@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 
 import { mutation, query } from './_generated/server';
 import { authComponent } from './auth';
@@ -35,7 +35,7 @@ export const save = mutation({
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     return await ctx.db.insert('templates', buildTemplateInsertDoc(user._id, args));
@@ -79,12 +79,12 @@ export const remove = mutation({
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const template = await ctx.db.get(args.templateId);
     if (!template || template.userId !== user._id) {
-      throw new Error('Template non trovato');
+      throw new ConvexError({ code: 'NOT_FOUND', message: 'Template non trovato' });
     }
 
     await ctx.db.delete(args.templateId);

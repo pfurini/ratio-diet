@@ -28,6 +28,7 @@ const createAuth = (ctx: GenericCtx<DataModel>) =>
     database: authComponent.adapter(ctx),
     emailAndPassword: {
       enabled: true,
+      // PROD: Enable email verification before production launch
       requireEmailVerification: false,
     },
     plugins: [

@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 
 import { mutation, query } from './_generated/server';
 import { authComponent } from './auth';
@@ -67,7 +67,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const existing = await ctx.db
@@ -76,7 +76,7 @@ export const create = mutation({
       .unique();
 
     if (existing) {
-      throw new Error('Profilo già esistente');
+      throw new ConvexError({ code: 'CONFLICT', message: 'Profilo già esistente' });
     }
 
     assertAdultDateOfBirth(args.dateOfBirth);
@@ -114,7 +114,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const profile = await ctx.db
@@ -123,7 +123,7 @@ export const update = mutation({
       .unique();
 
     if (!profile) {
-      throw new Error('Profilo non trovato');
+      throw new ConvexError({ code: 'NOT_FOUND', message: 'Profilo non trovato' });
     }
 
     assertAdultDateOfBirth(args.dateOfBirth);

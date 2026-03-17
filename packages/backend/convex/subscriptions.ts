@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import type { Stripe } from 'stripe';
 
 import { api } from './_generated/api';
@@ -72,7 +72,7 @@ export const createCheckoutSession = action({
   handler: async (ctx): Promise<{ url: string | null }> => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const Stripe = await importStripe();
@@ -84,6 +84,7 @@ export const createCheckoutSession = action({
 
     return { url: session.url };
   },
+  returns: v.object({ url: v.union(v.string(), v.null()) }),
 });
 
 export const createPortalSession = action({
@@ -91,12 +92,12 @@ export const createPortalSession = action({
   handler: async (ctx): Promise<{ url: string | null }> => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const sub = await ctx.runQuery(api.subscriptions.getSubscriptionForPortal, {});
     if (!sub) {
-      throw new Error('Nessun abbonamento trovato');
+      throw new ConvexError({ code: 'NOT_FOUND', message: 'Nessun abbonamento trovato' });
     }
 
     const Stripe = await importStripe();
@@ -109,6 +110,7 @@ export const createPortalSession = action({
 
     return { url: session.url };
   },
+  returns: v.object({ url: v.union(v.string(), v.null()) }),
 });
 
 export const getSubscriptionForPortal = query({
@@ -161,6 +163,24 @@ export const getUserIdByStripeSubscriptionId = internalQuery({
       .withIndex('by_stripeSubscriptionId', (q) => q.eq('stripeSubscriptionId', args.stripeSubscriptionId))
       .unique();
     return subscription?.userId ?? null;
+  },
+});
+
+export const claimWebhookEvent = internalMutation({
+  args: { eventId: v.string() },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('stripeWebhookEvents')
+      .withIndex('by_eventId', (q) => q.eq('eventId', args.eventId))
+      .unique();
+    if (existing) {
+      return { alreadyProcessed: true };
+    }
+    await ctx.db.insert('stripeWebhookEvents', {
+      eventId: args.eventId,
+      processedAt: Date.now(),
+    });
+    return { alreadyProcessed: false };
   },
 });
 

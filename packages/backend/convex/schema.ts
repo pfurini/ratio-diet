@@ -73,6 +73,11 @@ export default defineSchema({
     .index('by_category', ['category'])
     .searchIndex('search_name', { filterFields: ['source', 'userId', 'category'], searchField: 'name' }),
 
+  stripeWebhookEvents: defineTable({
+    eventId: v.string(),
+    processedAt: v.number(),
+  }).index('by_eventId', ['eventId']),
+
   subscriptions: defineTable({
     nextRenewalDate: v.string(),
     startDate: v.string(),

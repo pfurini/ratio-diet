@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 
 import type { Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
@@ -214,7 +214,7 @@ const fetchProfileMacros = async (ctx: MutationCtx, userId: string) => {
     .unique();
 
   if (!profile) {
-    throw new Error('Profilo non trovato');
+    throw new ConvexError({ code: 'NOT_FOUND', message: 'Profilo non trovato' });
   }
 
   return profile.macros;
@@ -230,7 +230,7 @@ export const optimize = mutation({
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const profileMacros = await fetchProfileMacros(ctx, user._id);
@@ -280,16 +280,16 @@ export const complete = mutation({
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
-      throw new Error('Non autenticato');
+      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const plan = await ctx.db.get(args.planId);
     if (!plan) {
-      throw new Error('Piano non trovato');
+      throw new ConvexError({ code: 'NOT_FOUND', message: 'Piano non trovato' });
     }
 
     if (plan.userId !== user._id) {
-      throw new Error('Non autorizzato');
+      throw new ConvexError({ code: 'FORBIDDEN', message: 'Non autorizzato' });
     }
 
     await ctx.db.patch(args.planId, { status: 'complete' });
