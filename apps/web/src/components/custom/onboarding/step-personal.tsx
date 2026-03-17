@@ -1,14 +1,15 @@
 'use client';
 
-import type { AnyFormApi } from '@tanstack/react-form';
+import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
 
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
 
-import type { FormValues } from './types';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>;
 
 type Props = {
-  form: AnyFormApi<FormValues>;
+  form: AnyReactFormApi;
 };
 
 const SEX_OPTIONS = [
@@ -32,7 +33,7 @@ const StepPersonal = ({ form }: Props) => (
     </div>
 
     <form.Field name="sex">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label>Sesso</Label>
           <div className="flex gap-4">
@@ -54,7 +55,7 @@ const StepPersonal = ({ form }: Props) => (
     </form.Field>
 
     <form.Field name="dateOfBirth">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label htmlFor="dateOfBirth">Data di nascita</Label>
           <Input
@@ -68,7 +69,7 @@ const StepPersonal = ({ form }: Props) => (
     </form.Field>
 
     <form.Field name="heightCm">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label htmlFor="heightCm">Altezza (cm)</Label>
           <Input
@@ -84,7 +85,7 @@ const StepPersonal = ({ form }: Props) => (
     </form.Field>
 
     <form.Field name="weightKg">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label htmlFor="weightKg">Peso (kg)</Label>
           <Input
@@ -101,7 +102,7 @@ const StepPersonal = ({ form }: Props) => (
     </form.Field>
 
     <form.Field name="bodyBuild">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label>Corporatura</Label>
           <div className="flex gap-4">

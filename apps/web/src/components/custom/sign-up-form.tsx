@@ -3,6 +3,7 @@
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
+import type { AnyFieldApi, FormState, ReactFormExtendedApi } from '@tanstack/react-form';
 import { useForm } from '@tanstack/react-form';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,6 +11,9 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { authClient } from '@/lib/auth-client';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>;
 
 const handleSignUpError = (error: { error?: { message?: string; statusText?: string } }) => {
   toast.error(error?.error?.message ?? error?.error?.statusText ?? 'Errore imprevisto durante la registrazione');
@@ -20,10 +24,10 @@ const handleSignUpSuccess = (router: ReturnType<typeof useRouter>) => {
   router.push('/onboarding');
 };
 
-const NameField = ({ form }: { form: ReturnType<typeof useForm> }) => (
+const NameField = ({ form }: { form: AnyReactFormApi }) => (
   <div>
     <form.Field name="name">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label htmlFor={field.name}>Nome</Label>
           <Input
@@ -33,7 +37,7 @@ const NameField = ({ form }: { form: ReturnType<typeof useForm> }) => (
             onBlur={field.handleBlur}
             onChange={(e) => field.handleChange(e.target.value)}
           />
-          {field.state.meta.errors.map((error) => (
+          {field.state.meta.errors.map((error: unknown) => (
             <p key={String(error)} className="text-sm text-destructive">
               {(error as { message?: string })?.message}
             </p>
@@ -44,10 +48,10 @@ const NameField = ({ form }: { form: ReturnType<typeof useForm> }) => (
   </div>
 );
 
-const EmailField = ({ form }: { form: ReturnType<typeof useForm> }) => (
+const EmailField = ({ form }: { form: AnyReactFormApi }) => (
   <div>
     <form.Field name="email">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label htmlFor={field.name}>Email</Label>
           <Input
@@ -58,7 +62,7 @@ const EmailField = ({ form }: { form: ReturnType<typeof useForm> }) => (
             onBlur={field.handleBlur}
             onChange={(e) => field.handleChange(e.target.value)}
           />
-          {field.state.meta.errors.map((error) => (
+          {field.state.meta.errors.map((error: unknown) => (
             <p key={String(error)} className="text-sm text-destructive">
               {(error as { message?: string })?.message}
             </p>
@@ -69,10 +73,10 @@ const EmailField = ({ form }: { form: ReturnType<typeof useForm> }) => (
   </div>
 );
 
-const PasswordField = ({ form }: { form: ReturnType<typeof useForm> }) => (
+const PasswordField = ({ form }: { form: AnyReactFormApi }) => (
   <div>
     <form.Field name="password">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label htmlFor={field.name}>Password</Label>
           <Input
@@ -83,7 +87,7 @@ const PasswordField = ({ form }: { form: ReturnType<typeof useForm> }) => (
             onBlur={field.handleBlur}
             onChange={(e) => field.handleChange(e.target.value)}
           />
-          {field.state.meta.errors.map((error) => (
+          {field.state.meta.errors.map((error: unknown) => (
             <p key={String(error)} className="text-sm text-destructive">
               {(error as { message?: string })?.message}
             </p>
@@ -94,9 +98,10 @@ const PasswordField = ({ form }: { form: ReturnType<typeof useForm> }) => (
   </div>
 );
 
-const SubmitButton = ({ form }: { form: ReturnType<typeof useForm> }) => (
-  <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-    {({ canSubmit, isSubmitting }) => (
+const SubmitButton = ({ form }: { form: AnyReactFormApi }) => (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  <form.Subscribe selector={(state: any) => ({ canSubmit: state.canSubmit as boolean, isSubmitting: state.isSubmitting as boolean })}>
+    {({ canSubmit, isSubmitting }: { canSubmit: boolean; isSubmitting: boolean }) => (
       <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
         {isSubmitting ? 'Creazione in corso...' : 'Crea account'}
       </Button>

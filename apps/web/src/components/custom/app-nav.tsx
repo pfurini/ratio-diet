@@ -1,6 +1,7 @@
 'use client';
 
 import { CalendarDays, CalendarRange, Home, Settings, TrendingUp } from 'lucide-react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -14,7 +15,7 @@ const navItems = [
 
 const NavItem = ({ href, icon: Icon, label, active }: { href: string; icon: typeof Home; label: string; active: boolean }) => (
   <Link
-    href={href}
+    href={href as Route<string>}
     className={`flex flex-1 flex-col items-center justify-center gap-1 py-2 text-xs transition-colors ${
       active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
     }`}

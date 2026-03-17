@@ -17,41 +17,52 @@ const { mockApi, mockUseMutation, mockUseQuery } = vi.hoisted(() => ({
   mockUseQuery: vi.fn(),
 }));
 
-vi.mock(import('convex/react'), () => ({
+vi.mock<typeof import('convex/react')>(import('convex/react'), () => ({
   useMutation: (...args: unknown[]) => mockUseMutation(...args),
   useQuery: (...args: unknown[]) => mockUseQuery(...args),
 }));
 
-vi.mock(import('@ratio-diet/backend/convex/_generated/api'), () => ({
-  api: mockApi,
-}));
+vi.mock<typeof import('@ratio-diet/backend/convex/_generated/api')>(
+  import('@ratio-diet/backend/convex/_generated/api'),
+  () => ({ api: mockApi }) as unknown as typeof import('@ratio-diet/backend/convex/_generated/api')
+);
 
-vi.mock(import('@/components/custom/meal-builder'), () => ({
-  default: ({
-    items,
-    mealType,
-    onItemsChange,
-  }: {
-    mealType: string;
-    items: { foodId: string }[];
-    onItemsChange: (items: { foodId: string }[]) => void;
-  }) => (
-    <section data-testid={`meal-${mealType}`}>
-      <span data-testid={`count-${mealType}`}>{items.length}</span>
-      <button type="button" onClick={() => onItemsChange([...items, { foodId: `food-${mealType}` }])}>
-        {`add-${mealType}`}
-      </button>
-    </section>
-  ),
-}));
+vi.mock<typeof import('@/components/custom/meal-builder')>(
+  import('@/components/custom/meal-builder'),
+  () =>
+    ({
+      default: ({
+        items,
+        mealType,
+        onItemsChange,
+      }: {
+        mealType: string;
+        items: { foodId: string }[];
+        onItemsChange: (items: { foodId: string }[]) => void;
+      }) => (
+        <section data-testid={`meal-${mealType}`}>
+          <span data-testid={`count-${mealType}`}>{items.length}</span>
+          <button type="button" onClick={() => onItemsChange([...items, { foodId: `food-${mealType}` }])}>
+            {`add-${mealType}`}
+          </button>
+        </section>
+      ),
+    }) as unknown as typeof import('@/components/custom/meal-builder')
+);
 
-vi.mock(import('@/components/custom/plan-macro-summary'), () => ({
-  default: () => <div data-testid="macro-summary" />,
-}));
+vi.mock<typeof import('@/components/custom/plan-macro-summary')>(
+  import('@/components/custom/plan-macro-summary'),
+  () => ({
+    default: () => <div data-testid="macro-summary" />,
+  })
+);
 
-vi.mock(import('@/components/custom/plan-template-bar'), () => ({
-  default: ({ planId }: { planId: string | null }) => <div data-testid="plan-id">{planId ?? 'none'}</div>,
-}));
+vi.mock<typeof import('@/components/custom/plan-template-bar')>(
+  import('@/components/custom/plan-template-bar'),
+  () => ({
+    default: ({ planId }: { planId: string | null }) => <div data-testid="plan-id">{planId ?? 'none'}</div>,
+  })
+);
 
 const setup = () => {
   const plansByDate = new Map<string, { _id: string }>();

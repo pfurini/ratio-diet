@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactFormExtendedApi } from '@tanstack/react-form';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from 'convex/react';
 import { useState } from 'react';
@@ -117,7 +118,8 @@ const OnboardingForm = () => {
           void form.handleSubmit();
         }}
       >
-        <StepComponent form={form} />
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <StepComponent form={form as unknown as ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>} />
 
         <div className="mt-8 flex justify-between">
           <Button type="button" variant="outline" onClick={handleBack} disabled={step === 0}>

@@ -1,13 +1,14 @@
 'use client';
 
-import type { AnyFormApi } from '@tanstack/react-form';
+import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
 
 import { Label } from '@ratio-diet/ui/components/label';
 
-import type { FormValues } from './types';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>;
 
 type Props = {
-  form: AnyFormApi<FormValues>;
+  form: AnyReactFormApi;
 };
 
 const GOAL_OPTIONS = [
@@ -59,7 +60,7 @@ const StepGoal = ({ form }: Props) => (
     </div>
 
     <form.Field name="goal">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label>Obiettivo</Label>
           <div className="space-y-2">
@@ -88,7 +89,7 @@ const StepGoal = ({ form }: Props) => (
     </form.Field>
 
     <form.Field name="activityLevel">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label>Livello di attività fisica</Label>
           <div className="space-y-2">

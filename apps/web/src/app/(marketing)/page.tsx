@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import Link from 'next/link';
 
 const steps = [
@@ -61,7 +62,7 @@ const PlanCard = ({
   price: string;
   features: string[];
   ctaLabel: string;
-  ctaHref: string;
+  ctaHref: Route<string>;
   highlighted?: boolean;
 }) => (
   <div

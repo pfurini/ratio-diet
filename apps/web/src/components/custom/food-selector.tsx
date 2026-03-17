@@ -116,7 +116,7 @@ const FoodSelector = ({ onSelect, open, onOpenChange }: FoodSelectorProps) => {
             />
           )}
           <div className="max-h-60 space-y-1 overflow-y-auto">
-            {foods?.map((food: FoodRowProps['food']) => (
+            {foods?.map((food) => (
               <FoodRow
                 key={food._id}
                 food={food}

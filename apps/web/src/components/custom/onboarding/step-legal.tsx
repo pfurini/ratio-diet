@@ -1,13 +1,14 @@
 'use client';
 
-import type { AnyFormApi } from '@tanstack/react-form';
+import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
 
 import { Label } from '@ratio-diet/ui/components/label';
 
-import type { FormValues } from './types';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>;
 
 type Props = {
-  form: AnyFormApi<FormValues>;
+  form: AnyReactFormApi;
 };
 
 const StepLegal = ({ form }: Props) => (
@@ -20,7 +21,7 @@ const StepLegal = ({ form }: Props) => (
     </div>
 
     <form.Field name="isOver18">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="flex items-start gap-3">
           <input
             id="isOver18"
@@ -37,7 +38,7 @@ const StepLegal = ({ form }: Props) => (
     </form.Field>
 
     <form.Field name="noPathologies">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="flex items-start gap-3">
           <input
             id="noPathologies"
@@ -54,7 +55,7 @@ const StepLegal = ({ form }: Props) => (
     </form.Field>
 
     <form.Field name="disclaimerRead">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="flex items-start gap-3">
           <input
             id="disclaimerRead"
@@ -72,7 +73,7 @@ const StepLegal = ({ form }: Props) => (
     </form.Field>
 
     <form.Field name="followedByNutritionist">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="flex items-start gap-3">
           <input
             id="followedByNutritionist"

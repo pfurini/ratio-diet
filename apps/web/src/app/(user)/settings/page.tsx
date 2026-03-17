@@ -23,7 +23,9 @@ const SubscriptionSection = () => {
     setLoading(true);
     try {
       const { url } = await createPortalSession();
-      window.location.href = url;
+      if (url) {
+        window.location.href = url;
+      }
     } catch {
       toast.error("Errore durante l'apertura del portale.");
       setLoading(false);

@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 
 import type { MealItem, MealType } from './meal-builder';
 
-interface MealState {
+export interface MealState {
   type: MealType;
   items: MealItem[];
 }

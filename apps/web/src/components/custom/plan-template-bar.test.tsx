@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
 import userEvent from '@testing-library/user-event';
 import type { ChangeEvent, ReactNode } from 'react';
+import type { MealState } from './plan-template-bar';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockApi, mockCompletePlan, mockUseMutation, mockUseQuery } = vi.hoisted(() => ({
@@ -88,7 +89,7 @@ describe('PlanTemplateBar complete button regressions', () => {
 
   it('resets done state when planId changes', async () => {
     const user = userEvent.setup();
-    const meals = [{ items: [], type: 'colazione' }];
+    const meals: MealState[] = [{ items: [], type: 'colazione' }];
     const onLoadTemplate = vi.fn();
     const planA = 'plan-a' as Id<'dailyPlans'>;
     const planB = 'plan-b' as Id<'dailyPlans'>;

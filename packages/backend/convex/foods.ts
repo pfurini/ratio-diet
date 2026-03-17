@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 
 // eslint-disable-next-line import/no-relative-parent-imports
 import creaDatabaseFoods from '../data/crea-foods.json';
+import type { Id } from './_generated/dataModel';
 import { internalMutation, mutation, query } from './_generated/server';
 import type { QueryCtx } from './_generated/server';
 import { authComponent } from './auth';
@@ -28,7 +29,7 @@ const filterByAllergens = (food: { allergenTags: string[] }, excludeAllergens: s
 };
 
 interface FoodDoc {
-  _id: string;
+  _id: Id<'foods'>;
   name: string;
   category: string;
   kcalPer100g: number;

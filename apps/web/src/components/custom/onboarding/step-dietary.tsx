@@ -1,14 +1,17 @@
 'use client';
 
-import type { AnyFormApi } from '@tanstack/react-form';
+import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
 
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
 
-import { ALLERGEN_OPTIONS, type FormValues } from './types';
+import { ALLERGEN_OPTIONS } from './types';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>;
 
 type Props = {
-  form: AnyFormApi<FormValues>;
+  form: AnyReactFormApi;
 };
 
 const DIETARY_OPTIONS = [
@@ -35,7 +38,7 @@ const StepDietary = ({ form }: Props) => (
     </div>
 
     <form.Field name="dietaryPreference">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label>Regime alimentare</Label>
           <div className="flex flex-wrap gap-3">
@@ -57,7 +60,7 @@ const StepDietary = ({ form }: Props) => (
     </form.Field>
 
     <form.Field name="allergies">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label>Allergie e intolleranze</Label>
           <div className="flex flex-wrap gap-3">
@@ -80,7 +83,7 @@ const StepDietary = ({ form }: Props) => (
     </form.Field>
 
     <form.Field name="allergiesOther">
-      {(field) => (
+      {(field: AnyFieldApi) => (
         <div className="space-y-2">
           <Label htmlFor="allergiesOther">Altre allergie o intolleranze</Label>
           <Input
