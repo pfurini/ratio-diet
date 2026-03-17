@@ -1,5 +1,11 @@
+import type * as GeneratedApi from '@ratio-diet/backend/convex/_generated/api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type * as ConvexReact from 'convex/react';
+
+import type * as MealBuilder from '@/components/custom/meal-builder';
+import type * as PlanMacroSummary from '@/components/custom/plan-macro-summary';
+import type * as PlanTemplateBar from '@/components/custom/plan-template-bar';
 
 import DailyPlanPage from './page';
 
@@ -17,17 +23,17 @@ const { mockApi, mockUseMutation, mockUseQuery } = vi.hoisted(() => ({
   mockUseQuery: vi.fn(),
 }));
 
-vi.mock<typeof import('convex/react')>(import('convex/react'), () => ({
+vi.mock<typeof ConvexReact>(import('convex/react'), () => ({
   useMutation: (...args: unknown[]) => mockUseMutation(...args),
   useQuery: (...args: unknown[]) => mockUseQuery(...args),
 }));
 
-vi.mock<typeof import('@ratio-diet/backend/convex/_generated/api')>(
+vi.mock<typeof GeneratedApi>(
   import('@ratio-diet/backend/convex/_generated/api'),
-  () => ({ api: mockApi }) as unknown as typeof import('@ratio-diet/backend/convex/_generated/api')
+  () => ({ api: mockApi }) as unknown as typeof GeneratedApi
 );
 
-vi.mock<typeof import('@/components/custom/meal-builder')>(
+vi.mock<typeof MealBuilder>(
   import('@/components/custom/meal-builder'),
   () =>
     ({
@@ -47,22 +53,16 @@ vi.mock<typeof import('@/components/custom/meal-builder')>(
           </button>
         </section>
       ),
-    }) as unknown as typeof import('@/components/custom/meal-builder')
+    }) as unknown as typeof MealBuilder
 );
 
-vi.mock<typeof import('@/components/custom/plan-macro-summary')>(
-  import('@/components/custom/plan-macro-summary'),
-  () => ({
-    default: () => <div data-testid="macro-summary" />,
-  })
-);
+vi.mock<typeof PlanMacroSummary>(import('@/components/custom/plan-macro-summary'), () => ({
+  default: () => <div data-testid="macro-summary" />,
+}));
 
-vi.mock<typeof import('@/components/custom/plan-template-bar')>(
-  import('@/components/custom/plan-template-bar'),
-  () => ({
-    default: ({ planId }: { planId: string | null }) => <div data-testid="plan-id">{planId ?? 'none'}</div>,
-  })
-);
+vi.mock<typeof PlanTemplateBar>(import('@/components/custom/plan-template-bar'), () => ({
+  default: ({ planId }: { planId: string | null }) => <div data-testid="plan-id">{planId ?? 'none'}</div>,
+}));
 
 const setup = () => {
   const plansByDate = new Map<string, { _id: string }>();
