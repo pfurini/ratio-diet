@@ -69,9 +69,9 @@ const StepDietary = ({ form }: Props) => (
                 <input
                   type="checkbox"
                   value={opt.value}
-                  checked={field.state.value.includes(opt.value)}
+                  checked={(field.state.value ?? []).includes(opt.value)}
                   onChange={() =>
-                    field.handleChange(toggleAllergen(field.state.value, opt.value))
+                    field.handleChange(toggleAllergen(field.state.value ?? [], opt.value))
                   }
                 />
                 {opt.label}
@@ -90,7 +90,7 @@ const StepDietary = ({ form }: Props) => (
             id="allergiesOther"
             type="text"
             placeholder="es. kiwi, sedano..."
-            value={field.state.value}
+            value={field.state.value ?? ''}
             onChange={(e) => field.handleChange(e.target.value)}
           />
           <p className="text-muted-foreground text-xs">

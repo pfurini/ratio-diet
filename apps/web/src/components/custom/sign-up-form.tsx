@@ -3,7 +3,7 @@
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
-import type { AnyFieldApi, FormState, ReactFormExtendedApi } from '@tanstack/react-form';
+import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
 import { useForm } from '@tanstack/react-form';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -24,65 +24,26 @@ const handleSignUpSuccess = (router: ReturnType<typeof useRouter>) => {
   router.push('/onboarding');
 };
 
-const NameField = ({ form }: { form: AnyReactFormApi }) => (
+const FormField = ({
+  form,
+  name,
+  label,
+  type = 'text',
+}: {
+  form: AnyReactFormApi;
+  name: string;
+  label: string;
+  type?: string;
+}) => (
   <div>
-    <form.Field name="name">
+    <form.Field name={name}>
       {(field: AnyFieldApi) => (
         <div className="space-y-2">
-          <Label htmlFor={field.name}>Nome</Label>
+          <Label htmlFor={field.name}>{label}</Label>
           <Input
             id={field.name}
             name={field.name}
-            value={field.state.value as string}
-            onBlur={field.handleBlur}
-            onChange={(e) => field.handleChange(e.target.value)}
-          />
-          {field.state.meta.errors.map((error: unknown) => (
-            <p key={String(error)} className="text-sm text-destructive">
-              {(error as { message?: string })?.message}
-            </p>
-          ))}
-        </div>
-      )}
-    </form.Field>
-  </div>
-);
-
-const EmailField = ({ form }: { form: AnyReactFormApi }) => (
-  <div>
-    <form.Field name="email">
-      {(field: AnyFieldApi) => (
-        <div className="space-y-2">
-          <Label htmlFor={field.name}>Email</Label>
-          <Input
-            id={field.name}
-            name={field.name}
-            type="email"
-            value={field.state.value as string}
-            onBlur={field.handleBlur}
-            onChange={(e) => field.handleChange(e.target.value)}
-          />
-          {field.state.meta.errors.map((error: unknown) => (
-            <p key={String(error)} className="text-sm text-destructive">
-              {(error as { message?: string })?.message}
-            </p>
-          ))}
-        </div>
-      )}
-    </form.Field>
-  </div>
-);
-
-const PasswordField = ({ form }: { form: AnyReactFormApi }) => (
-  <div>
-    <form.Field name="password">
-      {(field: AnyFieldApi) => (
-        <div className="space-y-2">
-          <Label htmlFor={field.name}>Password</Label>
-          <Input
-            id={field.name}
-            name={field.name}
-            type="password"
+            type={type}
             value={field.state.value as string}
             onBlur={field.handleBlur}
             onChange={(e) => field.handleChange(e.target.value)}
@@ -115,13 +76,18 @@ const SignUpForm = () => {
   const form = useForm({
     defaultValues: { name: '', email: '', password: '' },
     onSubmit: async ({ value }) => {
-      await authClient.signUp.email(
-        { email: value.email, name: value.name, password: value.password },
-        {
-          onError: handleSignUpError,
-          onSuccess: () => handleSignUpSuccess(router),
-        }
-      );
+      try {
+        await authClient.signUp.email(
+          { email: value.email, name: value.name, password: value.password },
+          {
+            onError: handleSignUpError,
+            onSuccess: () => {},
+          }
+        );
+        handleSignUpSuccess(router);
+      } catch (error) {
+        handleSignUpError(error as { error?: { message?: string; statusText?: string } });
+      }
     },
     validators: {
       onSubmit: z.object({
@@ -141,9 +107,9 @@ const SignUpForm = () => {
       }}
       className="space-y-4"
     >
-      <NameField form={form} />
-      <EmailField form={form} />
-      <PasswordField form={form} />
+      <FormField form={form} name="name" label="Nome" />
+      <FormField form={form} name="email" label="Email" type="email" />
+      <FormField form={form} name="password" label="Password" type="password" />
       <SubmitButton form={form} />
       <p className="mt-4 text-center text-sm">
         Hai già un account?{' '}

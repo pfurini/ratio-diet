@@ -29,7 +29,7 @@ interface MealBuilderProps {
   onItemsChange: (items: MealItem[]) => void;
 }
 
-const MEAL_LABELS: Record<MealType, string> = {
+export const MEAL_LABELS: Record<MealType, string> = {
   cena: 'Cena',
   colazione: 'Colazione',
   pranzo: 'Pranzo',
@@ -84,7 +84,7 @@ const FoodItemRow = ({ item, index, onConstraintChange, onRemove }: FoodItemRowP
             type="number"
             min="0"
             placeholder="—"
-            defaultValue={item.constraintMin?.toString() ?? ''}
+            value={item.constraintMin ?? ''}
             onChange={(e) => onConstraintChange(index, 'constraintMin', e.target.value)}
           />
         </div>
@@ -97,7 +97,7 @@ const FoodItemRow = ({ item, index, onConstraintChange, onRemove }: FoodItemRowP
             type="number"
             min="0"
             placeholder="—"
-            defaultValue={item.constraintMax?.toString() ?? ''}
+            value={item.constraintMax ?? ''}
             onChange={(e) => onConstraintChange(index, 'constraintMax', e.target.value)}
           />
         </div>

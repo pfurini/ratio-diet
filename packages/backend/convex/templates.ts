@@ -1,5 +1,6 @@
 import { ConvexError, v } from 'convex/values';
 
+import type { Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 import { authComponent } from './auth';
 
@@ -21,7 +22,7 @@ const mealValidator = v.object({
   ),
 });
 
-export const buildTemplateInsertDoc = <TMeals>(userId: string, args: { meals: TMeals; name: string }) => ({
+export const buildTemplateInsertDoc = <TMeals>(userId: Id<'user'>, args: { meals: TMeals; name: string }) => ({
   meals: args.meals,
   name: args.name,
   userId,

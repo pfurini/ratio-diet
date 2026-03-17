@@ -3,7 +3,7 @@
 import { api } from '@ratio-diet/backend/convex/_generated/api';
 import { useQuery } from 'convex/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import DashboardActions from '@/components/custom/dashboard-actions';
 import DashboardHero from '@/components/custom/dashboard-hero';
@@ -18,9 +18,23 @@ const getLocalDate = (): string => {
 };
 
 const DashboardPage = () => {
+  const [sessionDate, setSessionDate] = useState<string>(() => getLocalDate());
   const profile = useQuery(api.userProfiles.get);
-  const todayPlan = useQuery(api.dailyPlans.get, profile ? { date: getLocalDate() } : 'skip');
+  const todayPlan = useQuery(api.dailyPlans.get, profile ? { date: sessionDate } : 'skip');
   const router = useRouter();
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setSessionDate(getLocalDate());
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (profile === null) {

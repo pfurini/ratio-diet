@@ -3,6 +3,7 @@
 import type { ReactFormExtendedApi } from '@tanstack/react-form';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from 'convex/react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -48,12 +49,21 @@ const validatePersonal = (values: FormValues): string | null => {
   return null;
 };
 
-const STEP_VALIDATORS = [validateLegal, validatePersonal, null, null];
+const validateDietary = (values: FormValues): string | null => {
+  const validPreferences = ['onnivoro', 'vegetariano', 'vegano', 'pescetariano'] as const;
+  if (!validPreferences.includes(values.dietaryPreference)) {
+    return 'Seleziona un regime alimentare.';
+  }
+  return null;
+};
+
+const STEP_VALIDATORS = [validateLegal, validatePersonal, null, validateDietary];
 
 const STEP_COMPONENTS = [StepLegal, StepPersonal, StepGoal, StepDietary];
 
 const OnboardingForm = () => {
   const [step, setStep] = useState(0);
+  const router = useRouter();
   const createProfile = useMutation(api.userProfiles.create);
 
   const form = useForm({
@@ -72,9 +82,12 @@ const OnboardingForm = () => {
           allergiesOther: value.allergiesOther || undefined,
           dietaryPreference: value.dietaryPreference,
           followedByNutritionist: value.followedByNutritionist,
+          legalGateAccepted: true,
         });
         toast.success('Profilo creato con successo!');
+        router.push('/dashboard');
       } catch (err) {
+        console.error('Profile creation failed:', err);
         toast.error('Errore durante la creazione del profilo. Riprova.');
       }
     },
@@ -117,6 +130,18 @@ const OnboardingForm = () => {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (!isLastStep) {
+            handleNext();
+            return;
+          }
+          const validator = STEP_VALIDATORS[step];
+          if (validator) {
+            const error = validator(form.state.values);
+            if (error) {
+              toast.error(error);
+              return;
+            }
+          }
           void form.handleSubmit();
         }}
       >
@@ -128,7 +153,15 @@ const OnboardingForm = () => {
             Indietro
           </Button>
           {isLastStep ? (
-            <Button type="submit">Completa</Button>
+            <form.Subscribe
+              selector={(state: { isSubmitting: boolean }) => ({ isSubmitting: state.isSubmitting })}
+            >
+              {({ isSubmitting }) => (
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Completamento in corso...' : 'Completa'}
+                </Button>
+              )}
+            </form.Subscribe>
           ) : (
             <Button type="button" onClick={handleNext}>
               Avanti

@@ -70,6 +70,7 @@ describe('optimizeMealQuantities', () => {
       macroTarget: { carbGrams: 10, fatGrams: 10, proteinGrams: 200 },
     });
 
+    expect(result.success).toBeFalsy();
     expect(result.quantities[chickenBreast.id]).toBeLessThanOrEqual(500);
   });
 

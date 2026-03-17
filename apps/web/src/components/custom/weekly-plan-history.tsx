@@ -26,6 +26,9 @@ const STATUS_VARIANTS: Record<PlanStatus, 'default' | 'secondary' | 'outline'> =
 
 const formatWeekStart = (dateStr: string): string => {
   const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) {
+    return dateStr;
+  }
   return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
 };
 

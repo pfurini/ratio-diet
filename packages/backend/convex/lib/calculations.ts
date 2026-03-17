@@ -60,12 +60,14 @@ const computeMacros = (
   calorieTarget: number
 ): { proteinGrams: number; fatGrams: number; carbGrams: number } => {
   const { proteinPerKg, fatPerKg } = MACRO_RATIOS[goal];
-  const proteinGrams = proteinPerKg * weightKg;
-  const fatGrams = fatPerKg * weightKg;
-  const proteinKcal = proteinGrams * 4;
-  const fatKcal = fatGrams * 9;
+  const rawProteinGrams = proteinPerKg * weightKg;
+  const rawFatGrams = fatPerKg * weightKg;
+  const proteinKcal = rawProteinGrams * 4;
+  const fatKcal = rawFatGrams * 9;
   const remainingKcal = calorieTarget - proteinKcal - fatKcal;
-  const carbGrams = Math.max(0, remainingKcal / 4);
+  const proteinGrams = Math.round(rawProteinGrams);
+  const fatGrams = Math.round(rawFatGrams);
+  const carbGrams = Math.max(0, Math.round(remainingKcal / 4));
   return { carbGrams, fatGrams, proteinGrams };
 };
 
@@ -82,12 +84,12 @@ export const calculateMacros = (input: CalculationInput): MacroResult => {
 export const getAgeFromDateOfBirth = (dateOfBirth: string): number => {
   const today = new Date();
   const birth = new Date(dateOfBirth);
-  let age = today.getFullYear() - birth.getFullYear();
+  if (Number.isNaN(birth.getTime())) {
+    throw new TypeError(`Invalid dateOfBirth: "${dateOfBirth}"`);
+  }
+  const yearDiff = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
   const dayDiff = today.getDate() - birth.getDate();
-  const birthdayNotYetReached = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0);
-  if (birthdayNotYetReached) {
-    age -= 1;
-  }
-  return age;
+  const hasBirthdayPassedThisYear = monthDiff > 0 || (monthDiff === 0 && dayDiff >= 0);
+  return hasBirthdayPassedThisYear ? yearDiff : yearDiff - 1;
 };

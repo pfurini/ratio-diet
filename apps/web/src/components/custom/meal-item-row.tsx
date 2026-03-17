@@ -6,7 +6,7 @@ import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { useMutation, useQuery } from 'convex/react';
 import { Pencil, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import FoodName from './food-name';
 
@@ -22,6 +22,11 @@ interface MealItemRowProps {
 const useEditState = (initial: number) => {
   const [editing, setEditing] = useState(false);
   const [qty, setQty] = useState(initial.toString());
+  useEffect(() => {
+    if (!editing) {
+      setQty(initial.toString());
+    }
+  }, [initial, editing]);
   return { editing, qty, setEditing, setQty };
 };
 
@@ -67,6 +72,9 @@ const EditControls = ({ qty, onQtyChange, onSave, onCancel, saving }: EditContro
   </div>
 );
 
+const PARTIAL_SUCCESS_MSG =
+  'Quantità salvata ma aggiornamento lista spesa fallito — riprova ricalcolo';
+
 const MealItemRow = ({
   foodId,
   quantityGrams,
@@ -89,12 +97,32 @@ const MealItemRow = ({
     }
     setSaving(true);
     setSaveError(null);
+    let updated = false;
     try {
       await updateItem({ weeklyPlanId, dailyPlanId, mealType, foodId, quantityGrams: parsed });
+      updated = true;
       await recalculate({ weeklyPlanId });
       setEditing(false);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Errore durante il salvataggio';
+      if (updated) {
+        setSaveError(PARTIAL_SUCCESS_MSG);
+        setEditing(false);
+      } else {
+        const msg = err instanceof Error ? err.message : 'Errore durante il salvataggio';
+        setSaveError(msg);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const retryRecalculate = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await recalculate({ weeklyPlanId });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Errore durante il ricalcolo';
       setSaveError(msg);
     } finally {
       setSaving(false);
@@ -106,6 +134,8 @@ const MealItemRow = ({
     setEditing(false);
     setSaveError(null);
   };
+
+  const isPartialSuccess = saveError === PARTIAL_SUCCESS_MSG;
 
   return (
     <div className="flex flex-col gap-0.5 py-1">
@@ -147,7 +177,21 @@ const MealItemRow = ({
         />
       )}
       {saveError && (
-        <p className="text-xs text-destructive">{saveError}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs text-destructive">{saveError}</p>
+          {isPartialSuccess && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-6 text-xs"
+              onClick={retryRecalculate}
+              disabled={saving}
+            >
+              {saving ? '...' : 'Riprova ricalcolo'}
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );

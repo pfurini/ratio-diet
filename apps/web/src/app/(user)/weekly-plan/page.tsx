@@ -10,6 +10,9 @@ import WeeklyPlanGenerator from '@/components/custom/weekly-plan-generator';
 import WeeklyPlanHistory from '@/components/custom/weekly-plan-history';
 import WeeklyPlanView from '@/components/custom/weekly-plan-view';
 
+const getCheckoutErrorMessage = (checkoutError: unknown): string =>
+  checkoutError instanceof Error ? checkoutError.message : 'Errore durante il pagamento';
+
 const useCheckoutRedirect = () => {
   const createSession = useAction(api.subscriptions.createCheckoutSession);
   const [loading, setLoading] = useState(false);
@@ -21,14 +24,15 @@ const useCheckoutRedirect = () => {
     try {
       const result = await createSession({});
       if (result?.url) {
+        // Keep loading state during navigation.
         window.location.href = result.url;
+        return;
       }
+      setError('Impossibile avviare il pagamento. Riprova.');
     } catch (checkoutError) {
-      const msg = checkoutError instanceof Error ? checkoutError.message : 'Errore durante il pagamento';
-      setError(msg);
-    } finally {
-      setLoading(false);
+      setError(getCheckoutErrorMessage(checkoutError));
     }
+    setLoading(false);
   };
 
   return { error, handleCheckout, loading };
@@ -104,7 +108,7 @@ const WeeklyPlanPage = () => {
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-8">
       <h1 className="text-2xl font-bold">Piano settimanale</h1>
-      {!hasSubscription && <UpgradePrompt />}
+      {(!hasSubscription || (hasSubscription && !isActive)) && <UpgradePrompt />}
       {hasSubscription && isActive && (
         <ActiveView selectedPlanId={selectedPlanId} onSelect={setSelectedPlanId} onGenerated={handleGenerated} />
       )}

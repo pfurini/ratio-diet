@@ -7,9 +7,20 @@ import { authComponent } from './auth';
 import { calculateMacros, getAgeFromDateOfBirth } from './lib/calculations';
 
 const RECALC_THRESHOLD_KG = 2;
+const DEFAULT_MAX_WEIGHT_LOGS = 1000;
 
 const shouldRecalculate = (currentWeight: number, lastRecalcWeight: number): boolean =>
   Math.abs(currentWeight - lastRecalcWeight) >= RECALC_THRESHOLD_KG;
+
+const getSafeLimit = (limit: number | undefined): number => {
+  if (limit === undefined) {
+    return DEFAULT_MAX_WEIGHT_LOGS;
+  }
+  if (limit <= 0) {
+    return 0;
+  }
+  return Math.min(limit, DEFAULT_MAX_WEIGHT_LOGS);
+};
 
 const buildNewMacros = (profile: Doc<'userProfiles'>, newWeight: number) => {
   const age = getAgeFromDateOfBirth(profile.dateOfBirth);
@@ -70,13 +81,13 @@ const getAuthenticatedProfile = async (ctx: MutationCtx, userId: string) => {
 };
 
 const processWeightLog = async (ctx: MutationCtx, profile: Doc<'userProfiles'>, weightKg: number, date: string) => {
-  await upsertWeightEntry(ctx, profile.userId, date, weightKg, profile.macros);
-
   if (!shouldRecalculate(weightKg, profile.lastRecalcWeightKg)) {
+    await upsertWeightEntry(ctx, profile.userId, date, weightKg, profile.macros);
     return { recalculated: false };
   }
 
   const newMacros = await recalculateAndUpdateProfile(ctx, profile, weightKg);
+  await upsertWeightEntry(ctx, profile.userId, date, weightKg, newMacros);
   return { newMacros, recalculated: true };
 };
 
@@ -89,6 +100,10 @@ export const log = mutation({
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
+    }
+
+    if (args.weightKg <= 0) {
+      throw new ConvexError({ code: 'INVALID_INPUT', message: 'Il peso deve essere positivo' });
     }
 
     const profile = await getAuthenticatedProfile(ctx, user._id);
@@ -111,9 +126,12 @@ export const list = query({
       .withIndex('by_userId_date', (q) => q.eq('userId', user._id))
       .order('desc');
 
-    if (args.limit) {
-      return await weightQuery.take(args.limit);
+    const safeLimit = getSafeLimit(args.limit);
+
+    if (safeLimit <= 0) {
+      return [];
     }
-    return await weightQuery.collect();
+
+    return await weightQuery.take(safeLimit);
   },
 });

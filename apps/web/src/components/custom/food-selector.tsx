@@ -11,10 +11,11 @@ import {
 } from '@ratio-diet/ui/components/dialog';
 import { Input } from '@ratio-diet/ui/components/input';
 import { useQuery } from 'convex/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import CustomFoodForm from './custom-food-form';
 import FoodName from './food-name';
+import Loader from './loader';
 
 interface FoodSelectorProps {
   onSelect: (foodId: Id<'foods'>) => void;
@@ -88,6 +89,14 @@ const FoodSelector = ({ onSelect, open, onOpenChange }: FoodSelectorProps) => {
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [showForm, setShowForm] = useState(false);
 
+  useEffect(() => {
+    if (!open) {
+      setTerm('');
+      setCategory(undefined);
+      setShowForm(false);
+    }
+  }, [open]);
+
   const foods = useQuery(api.foods.search, { category, term: term || undefined });
   const categories = useQuery(api.foods.getCategories);
 
@@ -116,17 +125,20 @@ const FoodSelector = ({ onSelect, open, onOpenChange }: FoodSelectorProps) => {
             />
           )}
           <div className="max-h-60 space-y-1 overflow-y-auto">
-            {foods?.map((food) => (
-              <FoodRow
-                key={food._id}
-                food={food}
-                onSelect={handleSelect}
-              />
-            ))}
-            {foods?.length === 0 && (
+            {foods === undefined ? (
+              <Loader />
+            ) : foods.length === 0 ? (
               <p className="text-muted-foreground py-4 text-center text-sm">
                 Nessun alimento trovato
               </p>
+            ) : (
+              foods.map((food) => (
+                <FoodRow
+                  key={food._id}
+                  food={food}
+                  onSelect={handleSelect}
+                />
+              ))
             )}
           </div>
           <Button

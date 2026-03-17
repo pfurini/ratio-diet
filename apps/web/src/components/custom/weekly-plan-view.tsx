@@ -17,8 +17,16 @@ interface WeeklyPlanViewProps {
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 const FULL_DAY_LABELS = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
 
+const ISO_DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
 const formatDate = (dateStr: string): string => {
-  const date = new Date(dateStr);
+  let date: Date;
+  if (ISO_DATE_ONLY.test(dateStr)) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    date = new Date(year, month - 1, day);
+  } else {
+    date = new Date(dateStr);
+  }
   return date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
 };
 
@@ -88,7 +96,7 @@ const DayTabContent = ({ dailyPlan, index, weeklyPlanId, canEdit }: DayTabConten
   <TabsContent value={`day-${index}`}>
     <div className="pt-3">
       <h3 className="mb-3 font-medium">
-        {FULL_DAY_LABELS[index]} — {formatDate(dailyPlan.date)}
+        {FULL_DAY_LABELS[index] ?? `Giorno ${index + 1}`} — {formatDate(dailyPlan.date)}
       </h3>
       <DayView
         dailyPlan={dailyPlan}
@@ -136,7 +144,7 @@ const WeeklyPlanView = ({ weeklyPlanId, canEdit }: WeeklyPlanViewProps) => {
     <div className="rounded-xl border p-4 space-y-4">
       <PlanHeader weekStartDate={plan.weekStartDate} status={plan.status} />
       <ReadOnlyBanner show={!canEdit} />
-      <Tabs defaultValue="day-0">
+      <Tabs defaultValue={dailyPlans.length > 0 ? "day-0" : "shopping"}>
         <TabsList className="flex w-full overflow-x-auto">
           {dailyPlans.map((dp, i) => (
             <TabsTrigger key={dp._id} value={`day-${i}`} className="flex-1 min-w-fit">

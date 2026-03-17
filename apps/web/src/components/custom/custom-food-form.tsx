@@ -39,6 +39,7 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
   const [form, setForm] = useState<CustomFoodFormState>(initialState);
   const addCustomFood = useMutation(api.foods.addCustomFood);
   const customCount = useQuery(api.foods.getCustomFoodCount);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const setField = (field: keyof CustomFoodFormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -48,7 +49,11 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
     setError('');
+    setIsSubmitting(true);
     try {
       await addCustomFood({
         allergenTags: [],
@@ -64,6 +69,8 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
       onAdded();
     } catch {
       setError('Impossibile aggiungere alimento');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -152,7 +159,15 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
         <span className="text-muted-foreground text-xs">Tipo alimento</span>
       </div>
       {error && <p className="text-destructive text-xs">{error}</p>}
-      <Button type="submit" size="sm" className="w-full">
+      {customCount != null && customCount.count >= customCount.limit && (
+        <p className="text-muted-foreground text-xs">Limite raggiunto</p>
+      )}
+      <Button
+        type="submit"
+        size="sm"
+        className="w-full"
+        disabled={isSubmitting || (customCount != null && customCount.count >= customCount.limit)}
+      >
         Aggiungi alimento
       </Button>
     </form>

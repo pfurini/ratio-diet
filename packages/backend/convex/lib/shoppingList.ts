@@ -30,7 +30,8 @@ export const addFoodToShoppingMap = (
   }
 };
 
-export const buildShoppingListFromMap = (map: Map<string, ShoppingEntry>): ShoppingEntry[] => [...map.values()];
+export const buildShoppingListFromMap = (map: Map<string, ShoppingEntry>): ShoppingEntry[] =>
+  [...map.values()].map((entry) => ({ ...entry, totalGrams: Math.round(entry.totalGrams) }));
 
 // --- Types for DB-stored plan shopping list ---
 

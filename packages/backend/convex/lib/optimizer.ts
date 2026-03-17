@@ -1,3 +1,5 @@
+import { ConvexError } from 'convex/values';
+
 type FoodId = string;
 
 interface FoodNutrition {
@@ -95,9 +97,12 @@ const adjustQuantities = (
   }
 };
 
-const roundQuantities = (quantities: Record<FoodId, number>): void => {
+const roundQuantities = (quantities: Record<FoodId, number>, constraints: Record<FoodId, Constraint>): void => {
   for (const id of Object.keys(quantities)) {
-    quantities[id] = Math.max(0, Math.round(quantities[id]));
+    const roundedValue = Math.round(quantities[id]);
+    const min = constraints[id]?.min ?? 0;
+    const max = constraints[id]?.max ?? Number.MAX_SAFE_INTEGER;
+    quantities[id] = Math.min(max, Math.max(min, roundedValue));
   }
 };
 
@@ -142,8 +147,11 @@ const isConstraintBound = (
   macroTarget: MacroTarget,
   constraints: Record<FoodId, Constraint>
 ): boolean => {
-  const hasUserMax = foods.some((f) => constraints[f.id]?.max !== undefined);
-  if (!hasUserMax) {
+  const hasUserBounds = foods.some((f) => {
+    const userConstraint = constraints[f.id];
+    return userConstraint?.min !== undefined || userConstraint?.max !== undefined;
+  });
+  if (!hasUserBounds) {
     return false;
   }
   const relaxedQuantities = initializeQuantities(foods, {});
@@ -187,7 +195,7 @@ export const optimizeMealQuantities = (input: OptimizerInput): OptimizerResult =
 
   const quantities = initializeQuantities(foods, constraints);
   runOptimizationLoop(foods, quantities, macroTarget, constraints);
-  roundQuantities(quantities);
+  roundQuantities(quantities, constraints);
   return buildResult(quantities, foods, macroTarget, constraints);
 };
 
@@ -212,7 +220,18 @@ export const distributeMacrosToMeals = (dailyMacros: MacroTarget, mealTypes: str
 
   const result: Record<string, MacroTarget> = {};
   for (const mealType of mealTypes) {
-    const factor = distribution[mealType as keyof typeof distribution] ?? 0;
+    if (!(mealType in distribution)) {
+      throw new ConvexError({
+        code: 'INVALID_INPUT',
+        message:
+          `Unrecognized meal type: "${mealType}". ` +
+          `mealTypes: ${JSON.stringify(mealTypes)}, ` +
+          `distribution keys: ${JSON.stringify(Object.keys(distribution))}, ` +
+          `result so far: ${JSON.stringify(result)}, ` +
+          `dailyMacros: ${JSON.stringify(dailyMacros)}`,
+      });
+    }
+    const factor = distribution[mealType as keyof typeof distribution];
     result[mealType] = {
       carbGrams: dailyMacros.carbGrams * factor,
       fatGrams: dailyMacros.fatGrams * factor,

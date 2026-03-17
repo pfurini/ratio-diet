@@ -5,7 +5,7 @@ import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { useMutation, useQuery } from 'convex/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { MealItem, MealType } from './meal-builder';
 
@@ -29,37 +29,69 @@ interface TemplateDoc {
   }>;
 }
 
+const getErrorDetail = (error: unknown, fallback: string) =>
+  error instanceof Error && error.message ? error.message : fallback;
+
 const TemplateSaveForm = ({ meals }: { meals: MealState[] }) => {
   const [name, setName] = useState('');
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const saveTemplate = useMutation(api.templates.save);
+  const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (savedTimeoutRef.current) {
+        clearTimeout(savedTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
     if (!name.trim()) return;
+    setIsSaving(true);
     try {
       await saveTemplate({ meals, name: name.trim() });
       setName('');
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch {
+      setErrorMessage(null);
+      if (savedTimeoutRef.current) {
+        clearTimeout(savedTimeoutRef.current);
+      }
+      savedTimeoutRef.current = setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
       setSaved(false);
+      setErrorMessage(
+        `Impossibile salvare il template. ${getErrorDetail(
+          error,
+          'Si e verificato un errore imprevisto.',
+        )}`,
+      );
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
-    <form onSubmit={handleSave} className="flex gap-2">
-      <Input
-        placeholder="Nome template..."
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-        className="flex-1"
-      />
-      <Button type="submit" variant="outline" size="sm">
-        {saved ? 'Salvato!' : 'Salva'}
-      </Button>
-    </form>
+    <div className="space-y-1">
+      <form onSubmit={handleSave} className="flex gap-2">
+        <Input
+          placeholder="Nome template..."
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          disabled={isSaving}
+          className="flex-1"
+        />
+        <Button type="submit" variant="outline" size="sm" disabled={isSaving}>
+          {isSaving ? 'Salvando...' : saved ? 'Salvato!' : 'Salva'}
+        </Button>
+      </form>
+      {errorMessage && <p className="text-xs text-destructive">{errorMessage}</p>}
+    </div>
   );
 };
 
@@ -70,9 +102,11 @@ interface CompleteButtonProps {
 const CompleteButton = ({ planId }: CompleteButtonProps) => {
   const completePlan = useMutation(api.dailyPlans.complete);
   const [done, setDone] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setDone(false);
+    setErrorMessage(null);
   }, [planId]);
 
   const handleComplete = async () => {
@@ -80,21 +114,31 @@ const CompleteButton = ({ planId }: CompleteButtonProps) => {
     try {
       await completePlan({ planId });
       setDone(true);
-    } catch {
+      setErrorMessage(null);
+    } catch (error) {
       setDone(false);
+      setErrorMessage(
+        `Impossibile completare la giornata. ${getErrorDetail(
+          error,
+          'Si e verificato un errore imprevisto.',
+        )}`,
+      );
     }
   };
 
   return (
-    <Button
-      type="button"
-      variant="default"
-      className="w-full"
-      disabled={!planId || done}
-      onClick={handleComplete}
-    >
-      {done ? 'Completato!' : 'Completa giornata'}
-    </Button>
+    <div className="space-y-1">
+      <Button
+        type="button"
+        variant="default"
+        className="w-full"
+        disabled={!planId || done}
+        onClick={handleComplete}
+      >
+        {done ? 'Completato!' : 'Completa giornata'}
+      </Button>
+      {errorMessage && <p className="text-xs text-destructive">{errorMessage}</p>}
+    </div>
   );
 };
 

@@ -28,8 +28,8 @@ const buildFoodList = (foods: FoodForPrompt[]): string =>
     .join('\n');
 
 const buildAllergyNote = (allergies: string[], allergiesOther?: string): string =>
-  allergies.length > 0
-    ? `Allergie/intolleranze: ${allergies.join(', ')}${allergiesOther ? `. Altro: ${allergiesOther}` : ''}\n`
+  allergies.length > 0 || allergiesOther
+    ? `Allergie/intolleranze: ${allergies.length > 0 ? allergies.join(', ') : ''}${allergiesOther ? `${allergies.length > 0 ? '. ' : ''}Altro: ${allergiesOther}` : ''}\n`
     : '';
 
 export const buildWeeklyPlanPrompt = (input: PromptInput): string => {

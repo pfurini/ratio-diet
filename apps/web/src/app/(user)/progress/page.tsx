@@ -10,9 +10,12 @@ import { toast } from 'sonner';
 
 import WeightChart from '@/components/custom/weight-chart';
 
-const getTodayDate = (): string => new Date().toISOString().split('T')[0];
+const getTodayDate = (): string => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
-interface MacroResult {
+interface MacroData {
   proteinGrams: number;
   carbGrams: number;
   fatGrams: number;
@@ -20,17 +23,10 @@ interface MacroResult {
   tdee: number;
 }
 
-interface MacroSnapshot {
-  proteinGrams: number;
-  carbGrams: number;
-  fatGrams: number;
-  calorieTarget: number;
-  tdee: number;
-}
-
-const showWeightToast = (result: { recalculated: boolean; newMacros?: MacroResult }) => {
+const showWeightToast = (result: { recalculated: boolean; newMacros?: MacroData }) => {
   if (result.recalculated && result.newMacros) {
-    const desc = `Proteine: ${result.newMacros.proteinGrams}g · Carbo: ${Math.round(result.newMacros.carbGrams)}g · Grassi: ${result.newMacros.fatGrams}g`;
+    const { proteinGrams, carbGrams, fatGrams } = result.newMacros;
+    const desc = `Proteine: ${Math.round(proteinGrams)}g · Carbo: ${Math.round(carbGrams)}g · Grassi: ${Math.round(fatGrams)}g`;
     toast.success('I tuoi target sono stati aggiornati in base al nuovo peso', { description: desc });
   } else {
     toast.success('Peso registrato');
@@ -113,7 +109,7 @@ const MacroRow = ({ label, value, unit }: { label: string; value: number; unit: 
   </div>
 );
 
-const MacroTargets = ({ macros }: { macros: MacroSnapshot }) => (
+const MacroTargets = ({ macros }: { macros: MacroData }) => (
   <section className="space-y-2 rounded-xl border p-4">
     <h2 className="font-semibold">Target attuali</h2>
     <MacroRow label="Calorie" value={macros.calorieTarget} unit="kcal" />

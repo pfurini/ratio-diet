@@ -3,8 +3,7 @@
 import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
 
 import MealItemRow from './meal-item-row';
-
-type MealType = 'colazione' | 'pranzo' | 'cena' | 'spuntino_mattina' | 'spuntino_pomeriggio';
+import { MEAL_LABELS, type MealType } from './meal-builder';
 
 interface MealItem {
   foodId: Id<'foods'>;
@@ -28,14 +27,6 @@ interface DayViewProps {
   canEdit: boolean;
 }
 
-const MEAL_LABELS: Record<MealType, string> = {
-  cena: 'Cena',
-  colazione: 'Colazione',
-  pranzo: 'Pranzo',
-  spuntino_mattina: 'Spuntino mattina',
-  spuntino_pomeriggio: 'Spuntino pomeriggio',
-};
-
 const MEAL_ORDER: MealType[] = ['colazione', 'spuntino_mattina', 'pranzo', 'spuntino_pomeriggio', 'cena'];
 
 interface MealSectionProps {
@@ -56,9 +47,9 @@ const MealSection = ({ meal, dailyPlanId, weeklyPlanId, canEdit }: MealSectionPr
         {MEAL_LABELS[meal.type]}
       </h4>
       <div className="divide-y divide-border rounded-md border px-3">
-        {meal.items.map((item) => (
+        {meal.items.map((item, index) => (
           <MealItemRow
-            key={item.foodId}
+            key={`${item.foodId}-${index}`}
             foodId={item.foodId}
             quantityGrams={item.quantityGrams}
             canEdit={canEdit}

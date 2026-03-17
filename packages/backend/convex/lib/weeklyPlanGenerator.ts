@@ -53,7 +53,6 @@ export interface MacroSnapshot {
   proteinGrams: number;
   carbGrams: number;
   fatGrams: number;
-  tdee: number;
 }
 
 interface MacroAccumulator {
@@ -78,30 +77,60 @@ const addItemToAccumulator = (acc: MacroAccumulator, item: MealItem, food: FoodD
   acc.fat += food.fatPer100g * ratio;
 };
 
-const calcDayMacros = (day: DayPlan, foods: FoodDoc[]): MacroAccumulator => {
+export interface DayMacroResult {
+  macros: MacroAccumulator;
+  unknownFoods: string[];
+}
+
+const calcDayMacros = (day: DayPlan, foods: FoodDoc[]): DayMacroResult => {
   const allItems = [...day.colazione, ...day.pranzo, ...day.cena];
   const acc: MacroAccumulator = { carb: 0, fat: 0, kcal: 0, protein: 0 };
+  const unknownFoods = new Set<string>();
   for (const item of allItems) {
     const food = findFood(foods, item.foodName);
     if (food) {
       addItemToAccumulator(acc, item, food);
+    } else {
+      unknownFoods.add(item.foodName);
     }
   }
-  return acc;
+  return { macros: acc, unknownFoods: [...unknownFoods] };
 };
+
+const TINY_ABSOLUTE = 0.01;
 
 const isDayMacroValid = (macros: MacroAccumulator, target: MacroTarget): boolean => {
   const TOLERANCE = 0.05;
-  const kcalOk = Math.abs(macros.kcal - target.calorieTarget) / target.calorieTarget <= TOLERANCE;
-  const proteinOk = Math.abs(macros.protein - target.proteinGrams) / target.proteinGrams <= TOLERANCE;
-  const carbOk = Math.abs(macros.carb - target.carbGrams) / target.carbGrams <= TOLERANCE;
-  const fatOk = Math.abs(macros.fat - target.fatGrams) / target.fatGrams <= TOLERANCE;
+
+  const kcalOk =
+    target.calorieTarget === 0
+      ? Math.abs(macros.kcal) <= TINY_ABSOLUTE
+      : Math.abs(macros.kcal - target.calorieTarget) / target.calorieTarget <= TOLERANCE;
+
+  const proteinOk =
+    target.proteinGrams === 0
+      ? Math.abs(macros.protein) <= TINY_ABSOLUTE
+      : Math.abs(macros.protein - target.proteinGrams) / target.proteinGrams <= TOLERANCE;
+
+  const carbOk =
+    target.carbGrams === 0
+      ? Math.abs(macros.carb) <= TINY_ABSOLUTE
+      : Math.abs(macros.carb - target.carbGrams) / target.carbGrams <= TOLERANCE;
+
+  const fatOk =
+    target.fatGrams === 0
+      ? Math.abs(macros.fat) <= TINY_ABSOLUTE
+      : Math.abs(macros.fat - target.fatGrams) / target.fatGrams <= TOLERANCE;
+
   return kcalOk && proteinOk && carbOk && fatOk;
 };
 
 const validateWeeklyPlan = (plan: WeeklyPlanResult, foods: FoodDoc[], target: MacroTarget): boolean => {
   for (const day of plan.days) {
-    const macros = calcDayMacros(day, foods);
+    const { macros, unknownFoods } = calcDayMacros(day, foods);
+    if (unknownFoods.length > 0) {
+      return false;
+    }
     if (!isDayMacroValid(macros, target)) {
       return false;
     }
@@ -114,7 +143,6 @@ export const accToMacroSnapshot = (acc: MacroAccumulator): MacroSnapshot => ({
   carbGrams: acc.carb,
   fatGrams: acc.fat,
   proteinGrams: acc.protein,
-  tdee: acc.kcal,
 });
 
 export const calcItemsMacros = (items: MealItem[], foods: FoodDoc[]): MacroSnapshot => {
@@ -145,19 +173,60 @@ const runAiGeneration = (prompt: string): Promise<WeeklyPlanResult> => {
   return generateObject({ model, prompt, schema: weeklyPlanSchema }).then(({ object }) => object);
 };
 
+const assertValidRetries = (maxRetries: number): void => {
+  if (maxRetries <= 0) {
+    throw new RangeError('maxRetries must be greater than 0');
+  }
+};
+
+const runGenerationAttempt = async (
+  prompt: string,
+  foods: FoodDoc[],
+  macros: MacroTarget,
+  attempt: number,
+  maxRetries: number
+): Promise<{ isValid: boolean; result: WeeklyPlanResult | null }> => {
+  try {
+    const result = await runAiGeneration(prompt);
+    return { isValid: validateWeeklyPlan(result, foods, macros), result };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`generateWithRetry attempt ${attempt + 1}/${maxRetries} failed:`, msg);
+    return { isValid: false, result: null };
+  }
+};
+
+const runGenerationAttempts = async (
+  prompt: string,
+  foods: FoodDoc[],
+  macros: MacroTarget,
+  maxRetries: number
+): Promise<{ isValid: boolean; result: WeeklyPlanResult | null }> => {
+  let lastResult: WeeklyPlanResult | null = null;
+  let lastResultValid = false;
+  for (let attempt = 0; attempt < maxRetries; attempt += 1) {
+    const attemptResult = await runGenerationAttempt(prompt, foods, macros, attempt, maxRetries);
+    if (attemptResult.result) {
+      lastResult = attemptResult.result;
+      lastResultValid = attemptResult.isValid;
+    }
+    if (attemptResult.isValid && attemptResult.result) {
+      return attemptResult;
+    }
+  }
+  return { isValid: lastResultValid, result: lastResult };
+};
+
 export const generateWithRetry = async (
   prompt: string,
   foods: FoodDoc[],
   macros: MacroTarget,
   maxRetries = 3
 ): Promise<WeeklyPlanResult> => {
-  let lastResult: WeeklyPlanResult | null = null;
-  for (let attempt = 0; attempt < maxRetries; attempt += 1) {
-    const result = await runAiGeneration(prompt);
-    if (validateWeeklyPlan(result, foods, macros)) {
-      return result;
-    }
-    lastResult = result;
+  assertValidRetries(maxRetries);
+  const { isValid, result } = await runGenerationAttempts(prompt, foods, macros, maxRetries);
+  if (result === null || !isValid) {
+    throw new Error(`Failed to generate weekly plan after ${maxRetries} attempts`);
   }
-  return lastResult as WeeklyPlanResult;
+  return result;
 };

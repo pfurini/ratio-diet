@@ -67,22 +67,23 @@ const XAxisLabels = ({
   innerHeight: number;
 }) => {
   const step = Math.ceil(data.length / 5);
-  const visible = data.filter((_, i) => i % step === 0 || i === data.length - 1);
+  const visible = data
+    .map((item, index) => ({ item, index }))
+    .filter(({ index }) => index % step === 0 || index === data.length - 1);
   return (
     <>
-      {visible.map((d) => {
-        const i = data.indexOf(d);
-        const x = toX(i, data.length, innerWidth);
+      {visible.map(({ item, index }) => {
+        const x = toX(index, data.length, innerWidth);
         return (
           <text
-            key={d.date}
+            key={item.date}
             x={x}
             y={innerHeight + 20}
             textAnchor="middle"
             fontSize={10}
             className="fill-muted-foreground"
           >
-            {formatDate(d.date)}
+            {formatDate(item.date)}
           </text>
         );
       })}
@@ -102,11 +103,11 @@ const YAxisLabels = ({
   const ticks = [min + WEIGHT_PADDING, (min + max) / 2, max - WEIGHT_PADDING];
   return (
     <>
-      {ticks.map((val) => {
+      {ticks.map((val, idx) => {
         const y = toY(val, min, max, innerHeight);
         return (
           <text
-            key={val}
+            key={idx}
             x={-8}
             y={y}
             textAnchor="end"

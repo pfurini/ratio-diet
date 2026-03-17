@@ -35,7 +35,11 @@ const AppNav = () => {
       aria-label="Navigazione principale"
     >
       {navItems.map((item) => (
-        <NavItem key={item.href} {...item} active={pathname === item.href} />
+        <NavItem
+          key={item.href}
+          {...item}
+          active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+        />
       ))}
     </nav>
   );

@@ -1,8 +1,9 @@
 'use client';
 
 type MacroSnapshot = {
-  tdee: number;
-  calorieTarget: number;
+  achievedCalories?: number;
+  tdee?: number;
+  calorieTarget?: number;
   proteinGrams: number;
   carbGrams: number;
   fatGrams: number;
@@ -72,29 +73,29 @@ const DashboardProgress = ({ macros, plan }: Props) => {
       <h2 className="font-semibold">Progresso di oggi</h2>
       <ProgressBar
         label="Calorie"
-        achieved={macrosAchieved.calorieTarget}
-        target={macrosTarget.calorieTarget || macros.calorieTarget}
+        achieved={macrosAchieved.achievedCalories ?? 0}
+        target={(macrosTarget.calorieTarget ?? macros.calorieTarget) ?? 0}
         unit="kcal"
         colorClass="bg-orange-400"
       />
       <ProgressBar
         label="Proteine"
         achieved={macrosAchieved.proteinGrams}
-        target={macrosTarget.proteinGrams || macros.proteinGrams}
+        target={macrosTarget.proteinGrams ?? macros.proteinGrams}
         unit="g"
         colorClass="bg-blue-500"
       />
       <ProgressBar
         label="Carboidrati"
         achieved={macrosAchieved.carbGrams}
-        target={macrosTarget.carbGrams || macros.carbGrams}
+        target={macrosTarget.carbGrams ?? macros.carbGrams}
         unit="g"
         colorClass="bg-yellow-400"
       />
       <ProgressBar
         label="Grassi"
         achieved={macrosAchieved.fatGrams}
-        target={macrosTarget.fatGrams || macros.fatGrams}
+        target={macrosTarget.fatGrams ?? macros.fatGrams}
         unit="g"
         colorClass="bg-green-500"
       />

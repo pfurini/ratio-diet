@@ -3,7 +3,7 @@
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
-import type { AnyFieldApi, FormState, ReactFormExtendedApi } from '@tanstack/react-form';
+import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
 import { useForm } from '@tanstack/react-form';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,15 @@ type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, a
 
 const handleSignInError = (error: { error?: { message?: string; statusText?: string } }) => {
   toast.error(error?.error?.message ?? error?.error?.statusText ?? 'Errore imprevisto durante il login');
+};
+
+const getFieldErrorMessage = (error: unknown): string => {
+  if (typeof error === 'string') return error;
+  if (error != null && typeof error === 'object' && 'message' in error) {
+    const msg = (error as { message: unknown }).message;
+    return typeof msg === 'string' ? msg : String(msg ?? 'Errore di validazione');
+  }
+  return error != null ? String(error) : 'Errore di validazione';
 };
 
 const handleSignInSuccess = (router: ReturnType<typeof useRouter>) => {
@@ -38,9 +47,9 @@ const EmailField = ({ form }: { form: AnyReactFormApi }) => (
             onBlur={field.handleBlur}
             onChange={(e) => field.handleChange(e.target.value)}
           />
-          {field.state.meta.errors.map((error: unknown) => (
-            <p key={String(error)} className="text-sm text-destructive">
-              {(error as { message?: string })?.message}
+          {field.state.meta.errors.map((error: unknown, index: number) => (
+            <p key={index} className="text-sm text-destructive">
+              {getFieldErrorMessage(error)}
             </p>
           ))}
         </div>
@@ -63,9 +72,9 @@ const PasswordField = ({ form }: { form: AnyReactFormApi }) => (
             onBlur={field.handleBlur}
             onChange={(e) => field.handleChange(e.target.value)}
           />
-          {field.state.meta.errors.map((error: unknown) => (
-            <p key={String(error)} className="text-sm text-destructive">
-              {(error as { message?: string })?.message}
+          {field.state.meta.errors.map((error: unknown, index: number) => (
+            <p key={index} className="text-sm text-destructive">
+              {getFieldErrorMessage(error)}
             </p>
           ))}
         </div>

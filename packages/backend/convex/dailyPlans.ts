@@ -70,7 +70,14 @@ interface MealResult {
 
 const fetchFoodsForMeal = async (ctx: QueryCtx | MutationCtx, items: MealItem[]): Promise<FoodDoc[]> => {
   const docs = await Promise.all(items.map((item) => ctx.db.get(item.foodId as Parameters<typeof ctx.db.get>[0])));
-  return docs.filter((doc): doc is NonNullable<typeof doc> => doc !== null) as FoodDoc[];
+  const missingFoodIds = items.flatMap((item, index) => (docs[index] === null ? [item.foodId] : []));
+  if (missingFoodIds.length > 0) {
+    throw new ConvexError({
+      code: 'NOT_FOUND',
+      message: `Impossibile ottimizzare il pasto: alimenti mancanti (${missingFoodIds.join(', ')})`,
+    });
+  }
+  return docs as FoodDoc[];
 };
 
 // --- Helper: map food docs to optimizer input format ---
@@ -178,11 +185,10 @@ const upsertDailyPlan = async (
     .unique();
 
   const macrosAchieved = {
-    calorieTarget: planData.macrosAchieved.kcal,
+    achievedCalories: planData.macrosAchieved.kcal,
     carbGrams: planData.macrosAchieved.carbGrams,
     fatGrams: planData.macrosAchieved.fatGrams,
     proteinGrams: planData.macrosAchieved.proteinGrams,
-    tdee: planData.macrosAchieved.kcal,
   };
 
   if (existing) {

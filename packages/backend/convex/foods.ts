@@ -4,10 +4,11 @@ import { ConvexError, v } from 'convex/values';
 import creaDatabaseFoods from '../data/crea-foods.json';
 import type { Id } from './_generated/dataModel';
 import { internalMutation, mutation, query } from './_generated/server';
-import type { QueryCtx } from './_generated/server';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import { authComponent } from './auth';
 
 const CUSTOM_FOOD_LIMIT = 100;
+const CREA_SEED_BATCH_SIZE = 25;
 
 const HIDDEN_CATEGORIES: Record<string, string[]> = {
   onnivoro: [],
@@ -47,6 +48,19 @@ interface SearchFilters {
   excludeAllergens?: string[];
 }
 
+interface AddCustomFoodArgs {
+  allergenTags: string[];
+  carbPer100g: number;
+  category: string;
+  fatPer100g: number;
+  foodType: 'animale' | 'vegetale';
+  kcalPer100g: number;
+  name: string;
+  proteinPer100g: number;
+}
+
+const NUTRITION_FIELDS = ['kcalPer100g', 'proteinPer100g', 'carbPer100g', 'fatPer100g'] as const;
+
 const applyDietAndAllergenFilters = (foods: FoodDoc[], filters: SearchFilters): FoodDoc[] => {
   const { dietaryPreference, excludeAllergens = [] } = filters;
   return foods.filter((food) => {
@@ -63,6 +77,14 @@ const filterFoodsByCategory = (foods: FoodDoc[], category?: string): FoodDoc[] =
   return foods.filter((food) => food.category === category);
 };
 
+const chunkArray = <T>(items: T[], chunkSize: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize));
+  }
+  return chunks;
+};
+
 export const seedCREA = internalMutation({
   args: {},
   handler: async (ctx) => {
@@ -75,18 +97,22 @@ export const seedCREA = internalMutation({
       return { seeded: 0, skipped: true };
     }
 
-    for (const food of creaDatabaseFoods) {
-      await ctx.db.insert('foods', {
-        allergenTags: food.allergenTags,
-        carbPer100g: food.carbPer100g,
-        category: food.category,
-        fatPer100g: food.fatPer100g,
-        foodType: food.foodType as 'animale' | 'vegetale',
-        kcalPer100g: food.kcalPer100g,
-        name: food.name,
-        proteinPer100g: food.proteinPer100g,
-        source: 'crea',
-      });
+    const batches = chunkArray(creaDatabaseFoods, CREA_SEED_BATCH_SIZE);
+    for (const batch of batches) {
+      const insertPromises = batch.map((food) =>
+        ctx.db.insert('foods', {
+          allergenTags: food.allergenTags,
+          carbPer100g: food.carbPer100g,
+          category: food.category,
+          fatPer100g: food.fatPer100g,
+          foodType: food.foodType as 'animale' | 'vegetale',
+          kcalPer100g: food.kcalPer100g,
+          name: food.name,
+          proteinPer100g: food.proteinPer100g,
+          source: 'crea',
+        })
+      );
+      await Promise.all(insertPromises);
     }
 
     return { seeded: creaDatabaseFoods.length, skipped: false };
@@ -104,6 +130,34 @@ const fetchCustomFoods = (ctx: QueryCtx, userId: string, term?: string) => {
     .query('foods')
     .withIndex('by_userId', (q) => q.eq('userId', userId))
     .collect();
+};
+
+const requireAuthenticatedUserId = async (ctx: MutationCtx): Promise<string> => {
+  const authUser = await authComponent.safeGetAuthUser(ctx);
+  if (!authUser) {
+    throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
+  }
+  return authUser._id;
+};
+
+const assertNonNegativeNutritionValues = (args: AddCustomFoodArgs): void => {
+  const invalidFields = NUTRITION_FIELDS.filter((field) => args[field] < 0);
+  if (invalidFields.length > 0) {
+    throw new ConvexError({
+      code: 'INVALID_ARGUMENT',
+      message: `Nutrition values must be non-negative; invalid: ${invalidFields.join(', ')}`,
+    });
+  }
+};
+
+const assertCustomFoodLimitNotReached = async (ctx: MutationCtx, userId: string): Promise<void> => {
+  const existing = await ctx.db
+    .query('foods')
+    .withIndex('by_userId', (q) => q.eq('userId', userId))
+    .take(CUSTOM_FOOD_LIMIT);
+  if (existing.length >= CUSTOM_FOOD_LIMIT) {
+    throw new ConvexError({ code: 'LIMIT_REACHED', message: `Custom food limit of ${CUSTOM_FOOD_LIMIT} reached` });
+  }
 };
 
 export const search = query({
@@ -170,21 +224,9 @@ export const addCustomFood = mutation({
     proteinPer100g: v.number(),
   },
   handler: async (ctx, args) => {
-    const authUser = await authComponent.safeGetAuthUser(ctx);
-    if (!authUser) {
-      throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
-    }
-
-    const userId = authUser._id;
-    const existingCount = await ctx.db
-      .query('foods')
-      .withIndex('by_userId', (q) => q.eq('userId', userId))
-      .collect();
-
-    if (existingCount.length >= CUSTOM_FOOD_LIMIT) {
-      throw new ConvexError({ code: 'LIMIT_REACHED', message: `Custom food limit of ${CUSTOM_FOOD_LIMIT} reached` });
-    }
-
+    const userId = await requireAuthenticatedUserId(ctx);
+    assertNonNegativeNutritionValues(args);
+    await assertCustomFoodLimitNotReached(ctx, userId);
     return ctx.db.insert('foods', {
       ...args,
       source: 'custom',
@@ -204,7 +246,7 @@ export const getCustomFoodCount = query({
     const foods = await ctx.db
       .query('foods')
       .withIndex('by_userId', (q) => q.eq('userId', user._id))
-      .collect();
+      .take(CUSTOM_FOOD_LIMIT + 1);
 
     return { count: foods.length, limit: CUSTOM_FOOD_LIMIT };
   },
@@ -212,7 +254,23 @@ export const getCustomFoodCount = query({
 
 export const getById = query({
   args: { foodId: v.id('foods') },
-  handler: (ctx, args) => ctx.db.get(args.foodId),
+  handler: async (ctx, args) => {
+    const food = await ctx.db.get(args.foodId);
+    if (!food) {
+      return null;
+    }
+
+    if (food.source === 'crea') {
+      return food;
+    }
+
+    const authUser = await authComponent.safeGetAuthUser(ctx);
+    if (!authUser || food.userId !== authUser._id) {
+      return null;
+    }
+
+    return food;
+  },
 });
 
 export const deleteCustomFood = mutation({
@@ -238,8 +296,7 @@ const fetchAllCreaFoods = (ctx: QueryCtx) =>
     .withIndex('by_source', (q) => q.eq('source', 'crea'))
     .collect();
 
-const isNotAllergen = (food: FoodDoc, userAllergens: string[]): boolean =>
-  userAllergens.length === 0 || !food.allergenTags.some((tag) => userAllergens.includes(tag));
+const isNotAllergen = (food: FoodDoc, userAllergens: string[]): boolean => filterByAllergens(food, userAllergens);
 
 const filterFoodsForSuggest = (allFoods: FoodDoc[], userAllergens: string[], dietPref: string): FoodDoc[] =>
   allFoods.filter((f) => isNotAllergen(f, userAllergens) && filterByDietaryPreference(f, dietPref));

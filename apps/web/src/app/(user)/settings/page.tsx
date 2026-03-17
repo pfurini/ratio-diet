@@ -12,7 +12,10 @@ import ProfileEditForm from '@/components/custom/profile-edit-form';
 import TemplateList from '@/components/custom/template-list';
 import { authClient } from '@/lib/auth-client';
 
-const formatRenewalDate = (dateStr: string): string => new Date(dateStr).toLocaleDateString('it-IT');
+const formatRenewalDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('it-IT');
+};
 
 const SubscriptionSection = () => {
   const subscription = useQuery(api.subscriptions.getStatus);
@@ -25,6 +28,9 @@ const SubscriptionSection = () => {
       const { url } = await createPortalSession();
       if (url) {
         window.location.href = url;
+      } else {
+        toast.error('Impossibile aprire il portale.');
+        setLoading(false);
       }
     } catch {
       toast.error("Errore durante l'apertura del portale.");
@@ -61,19 +67,27 @@ const SubscriptionSection = () => {
 
 const SignOutSection = () => {
   const router = useRouter();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
+    if (isSigningOut) {
+      return;
+    }
+
+    setIsSigningOut(true);
     try {
       await authClient.signOut();
       router.replace('/');
     } catch {
       toast.error('Errore durante la disconnessione.');
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
   return (
-    <Button variant="destructive" onClick={handleSignOut} className="w-full">
-      Esci
+    <Button variant="destructive" onClick={handleSignOut} className="w-full" disabled={isSigningOut}>
+      {isSigningOut ? 'Disconnessione...' : 'Esci'}
     </Button>
   );
 };

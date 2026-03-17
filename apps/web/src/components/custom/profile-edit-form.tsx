@@ -71,19 +71,7 @@ const toggleAllergen = (current: string[], value: string): string[] => {
   return [...current, value];
 };
 
-const buildDefaultState = (profile: ProfileFormState): ProfileFormState => ({
-  sex: profile.sex,
-  dateOfBirth: profile.dateOfBirth,
-  heightCm: profile.heightCm,
-  weightKg: profile.weightKg,
-  bodyBuild: profile.bodyBuild,
-  goal: profile.goal,
-  activityLevel: profile.activityLevel,
-  allergies: profile.allergies,
-  allergiesOther: profile.allergiesOther,
-  dietaryPreference: profile.dietaryPreference,
-  followedByNutritionist: profile.followedByNutritionist,
-});
+const buildDefaultState = (profile: ProfileFormState): ProfileFormState => ({ ...profile });
 
 const PersonalFields = ({
   form,
@@ -263,6 +251,7 @@ const ProfileEditForm = () => {
   const profile = useQuery(api.userProfiles.get);
   const updateProfile = useMutation(api.userProfiles.update);
   const [form, setForm] = useState<ProfileFormState | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (profile === undefined) {
     return <p className="text-muted-foreground text-sm">Caricamento...</p>;
@@ -280,9 +269,15 @@ const ProfileEditForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
+    setIsSubmitting(true);
+
     const dateOfBirthError = validateDateOfBirth(currentForm.dateOfBirth);
     if (dateOfBirthError) {
       toast.error(dateOfBirthError);
+      setIsSubmitting(false);
       return;
     }
 
@@ -299,10 +294,13 @@ const ProfileEditForm = () => {
         allergiesOther: currentForm.allergiesOther || undefined,
         dietaryPreference: currentForm.dietaryPreference,
         followedByNutritionist: currentForm.followedByNutritionist,
+        legalGateAccepted: true,
       });
       toast.success('Profilo aggiornato');
     } catch {
       toast.error('Errore durante il salvataggio del profilo.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -311,7 +309,7 @@ const ProfileEditForm = () => {
       <PersonalFields form={currentForm} setField={setField} />
       <GoalActivityFields form={currentForm} setField={setField} />
       <DietaryFields form={currentForm} setField={setField} />
-      <Button type="submit" className="w-full">
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
         Salva modifiche
       </Button>
     </form>

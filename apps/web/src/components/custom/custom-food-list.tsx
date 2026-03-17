@@ -4,6 +4,7 @@ import { api } from '@ratio-diet/backend/convex/_generated/api';
 import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
 import { Button } from '@ratio-diet/ui/components/button';
 import { useMutation, useQuery } from 'convex/react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import FoodName from './food-name';
@@ -15,8 +16,16 @@ interface CustomFood {
   kcalPer100g: number;
 }
 
-const isCustomFood = (food: { source?: string }): food is CustomFood =>
-  food.source === 'custom';
+function isCustomFood(food: unknown): food is CustomFood {
+  if (typeof food !== 'object' || food === null) return false;
+  const o = food as Record<string, unknown>;
+  return (
+    o.source === 'custom' &&
+    typeof o._id === 'string' &&
+    typeof o.name === 'string' &&
+    typeof o.kcalPer100g === 'number'
+  );
+}
 
 const CustomFoodRow = ({
   food,
@@ -25,8 +34,19 @@ const CustomFoodRow = ({
   food: CustomFood;
   onDelete: (id: Id<'foods'>) => Promise<void>;
 }) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDelete = async () => {
-    await onDelete(food._id);
+    if (isDeleting) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await onDelete(food._id);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -39,9 +59,10 @@ const CustomFoodRow = ({
         variant="destructive"
         size="sm"
         onClick={handleDelete}
+        disabled={isDeleting}
         aria-label={`Elimina ${food.name}`}
       >
-        Elimina
+        {isDeleting ? 'Eliminazione...' : 'Elimina'}
       </Button>
     </div>
   );
@@ -69,7 +90,7 @@ const CustomFoodList = () => {
 
   return (
     <div className="space-y-3">
-      {customCount && (
+      {customCount && customCount.limit !== undefined && (
         <p className="text-muted-foreground text-xs">
           {customCount.count}/{customCount.limit} alimenti personalizzati
         </p>

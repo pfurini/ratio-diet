@@ -10,14 +10,26 @@ const http = httpRouter();
 
 authComponent.registerRoutes(http, createAuth);
 
-type StripeStatus = 'active' | 'cancelled' | 'past_due';
+type StripeStatus =
+  | 'incomplete'
+  | 'incomplete_expired'
+  | 'trialing'
+  | 'active'
+  | 'past_due'
+  | 'canceled'
+  | 'unpaid'
+  | 'paused';
 
 const STATUS_MAP: Record<string, StripeStatus> = {
   active: 'active',
-  canceled: 'cancelled',
-  cancelled: 'cancelled',
+  canceled: 'canceled',
+  cancelled: 'canceled',
+  incomplete: 'incomplete',
+  incomplete_expired: 'incomplete_expired',
   past_due: 'past_due',
-  unpaid: 'past_due',
+  paused: 'paused',
+  trialing: 'trialing',
+  unpaid: 'unpaid',
 };
 
 const toDateString = (unixTimestamp: number): string => {
@@ -29,11 +41,17 @@ const toDateString = (unixTimestamp: number): string => {
 };
 
 const getCurrentPeriodEnd = (subscription: StripeSubscription): number => {
-  const value = (subscription as unknown as { current_period_end?: unknown }).current_period_end;
-  if (typeof value !== 'number') {
-    throw new TypeError('Stripe subscription is missing current_period_end');
+  const firstItemPeriodEnd = subscription.items.data[0]?.current_period_end;
+  if (typeof firstItemPeriodEnd === 'number') {
+    return firstItemPeriodEnd;
   }
-  return value;
+
+  const legacyPeriodEnd = Reflect.get(subscription, 'current_period_end');
+  if (typeof legacyPeriodEnd === 'number') {
+    return legacyPeriodEnd;
+  }
+
+  throw new TypeError('Stripe subscription is missing current_period_end');
 };
 
 const importStripe = async () => {
@@ -42,15 +60,26 @@ const importStripe = async () => {
 };
 
 type StripeInstance = Awaited<ReturnType<typeof importStripe>>;
-type StripeSubscription = Stripe.Response<Stripe.Subscription>;
+type StripeSubscription = Stripe.Subscription;
 type StripeCheckoutSession = Stripe.Checkout.Session;
 type StripeEvent = Stripe.Event;
 
+const getStripeCustomerId = (subscription: StripeSubscription): string | null => {
+  const { customer } = subscription;
+  if (typeof customer === 'string') {
+    return customer;
+  }
+  return customer?.id ?? null;
+};
+
 const upsertSubscription = async (ctx: ActionCtx, userId: string, subscription: StripeSubscription) => {
+  const stripeCustomerId = getStripeCustomerId(subscription);
+  if (!stripeCustomerId) {
+    return;
+  }
   const status = STATUS_MAP[subscription.status] ?? 'past_due';
   const startDate = toDateString(subscription.start_date);
   const nextRenewalDate = toDateString(getCurrentPeriodEnd(subscription));
-  const stripeCustomerId = subscription.customer as string;
 
   await ctx.runMutation(internal.subscriptions.upsertFromWebhook, {
     nextRenewalDate,
@@ -60,14 +89,6 @@ const upsertSubscription = async (ctx: ActionCtx, userId: string, subscription: 
     stripeSubscriptionId: subscription.id,
     userId,
   });
-};
-
-const getStripeCustomerId = (subscription: StripeSubscription): string | null => {
-  const { customer } = subscription;
-  if (typeof customer === 'string') {
-    return customer;
-  }
-  return customer?.id ?? null;
 };
 
 export const resolveUserIdForSubscriptionEvent = async (
@@ -94,13 +115,34 @@ export const resolveUserIdForSubscriptionEvent = async (
   return await ctx.runQuery(internal.subscriptions.getUserIdByStripeCustomerId, { stripeCustomerId });
 };
 
+const getSubscriptionIdFromCheckoutSession = (session: StripeCheckoutSession): string | null =>
+  typeof session.subscription === 'string' ? session.subscription : null;
+
+const retrieveStripeSubscription = async (
+  stripe: InstanceType<StripeInstance>,
+  subscriptionId: string
+): Promise<StripeSubscription | null> => {
+  try {
+    return await stripe.subscriptions.retrieve(subscriptionId);
+  } catch (error) {
+    console.error('Failed to retrieve subscription:', subscriptionId, error);
+    return null;
+  }
+};
+
 const handleCheckoutCompleted = async (
   ctx: ActionCtx,
   stripe: InstanceType<StripeInstance>,
   session: StripeCheckoutSession
 ) => {
-  const subscriptionId = session.subscription as string;
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const subscriptionId = getSubscriptionIdFromCheckoutSession(session);
+  if (!subscriptionId) {
+    return;
+  }
+  const subscription = await retrieveStripeSubscription(stripe, subscriptionId);
+  if (!subscription) {
+    return;
+  }
   const userId = session.client_reference_id ?? subscription.metadata?.userId;
   if (!userId) {
     return;
@@ -117,7 +159,11 @@ const handleSubscriptionEvent = async (ctx: ActionCtx, subscription: StripeSubsc
   await upsertSubscription(ctx, userId, subscription);
 };
 
-const SUBSCRIPTION_EVENTS = new Set(['customer.subscription.updated', 'customer.subscription.deleted']);
+const SUBSCRIPTION_EVENTS = new Set([
+  'customer.subscription.created',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
+]);
 
 const handleStripeEvent = async (ctx: ActionCtx, stripe: InstanceType<StripeInstance>, event: StripeEvent) => {
   if (event.type === 'checkout.session.completed') {

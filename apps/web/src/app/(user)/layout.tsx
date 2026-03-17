@@ -25,20 +25,24 @@ const useProfileGuard = (isAuthenticated: boolean) => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const isRedirecting = profile === null && pathname !== '/onboarding';
+
   useEffect(() => {
-    if (profile === null && pathname !== '/onboarding') {
+    if (isRedirecting) {
       router.replace('/onboarding');
     }
-  }, [profile, pathname, router]);
+  }, [isRedirecting, router]);
 
-  return { profileLoaded: profile !== undefined };
+  const profileLoaded = profile !== undefined && !isRedirecting;
+
+  return { isRedirecting, profileLoaded };
 };
 
 const UserLayout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuthGuard();
-  const { profileLoaded } = useProfileGuard(isAuthenticated);
+  const { profileLoaded, isRedirecting } = useProfileGuard(isAuthenticated);
 
-  if (isLoading || (isAuthenticated && !profileLoaded)) {
+  if (isLoading || isRedirecting || (isAuthenticated && !profileLoaded)) {
     return (
       <div className="flex min-h-svh items-center justify-center">
         <p className="text-muted-foreground">Caricamento...</p>

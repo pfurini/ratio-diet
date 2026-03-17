@@ -75,6 +75,7 @@ const StepGoal = ({ form }: Props) => (
                   value={opt.value}
                   checked={field.state.value === opt.value}
                   onChange={() => field.handleChange(opt.value)}
+                  onBlur={field.handleBlur}
                   className="mt-1"
                 />
                 <div>
@@ -84,6 +85,13 @@ const StepGoal = ({ form }: Props) => (
               </label>
             ))}
           </div>
+          {field.state.meta.isTouched &&
+            field.state.meta.errors?.length > 0 &&
+            field.state.meta.errors.map((error: unknown) => (
+              <p key={String(error)} className="text-sm text-destructive">
+                {(error as { message?: string })?.message ?? String(error)}
+              </p>
+            ))}
         </div>
       )}
     </form.Field>
@@ -104,6 +112,7 @@ const StepGoal = ({ form }: Props) => (
                   value={opt.value}
                   checked={field.state.value === opt.value}
                   onChange={() => field.handleChange(opt.value)}
+                  onBlur={field.handleBlur}
                   className="mt-1"
                 />
                 <div>
@@ -113,6 +122,13 @@ const StepGoal = ({ form }: Props) => (
               </label>
             ))}
           </div>
+          {field.state.meta.isTouched &&
+            field.state.meta.errors?.length > 0 &&
+            field.state.meta.errors.map((error: unknown) => (
+              <p key={String(error)} className="text-sm text-destructive">
+                {(error as { message?: string })?.message ?? String(error)}
+              </p>
+            ))}
         </div>
       )}
     </form.Field>

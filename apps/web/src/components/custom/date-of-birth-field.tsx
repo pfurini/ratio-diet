@@ -91,8 +91,13 @@ const DateOfBirthField = ({
         onChange={(e) => onChange(e.target.value)}
         required={required}
         aria-invalid={Boolean(validationError)}
+        aria-describedby={validationError ? `${id}-error` : undefined}
       />
-      {validationError ? <p className="text-destructive text-sm">{validationError}</p> : null}
+      {validationError ? (
+        <p id={`${id}-error`} className="text-destructive text-sm">
+          {validationError}
+        </p>
+      ) : null}
     </div>
   );
 };

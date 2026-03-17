@@ -5,6 +5,7 @@ import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
 import { Button } from '@ratio-diet/ui/components/button';
 import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import type { MealItem, MealType } from '@/components/custom/meal-builder';
 import MealBuilder from '@/components/custom/meal-builder';
@@ -32,6 +33,11 @@ interface MacroSnapshot {
   fatGrams: number;
   calorieTarget: number;
   tdee: number;
+  achievedCalories?: number;
+  calories?: number;
+  caloriesConsumed?: number;
+  caloriesAchieved?: number;
+  kcal?: number;
 }
 
 const isSpuntino = (type: MealType) => type === 'spuntino_mattina' || type === 'spuntino_pomeriggio';
@@ -50,6 +56,14 @@ const getVisibleMeals = (meals: MealState[], showSpuntini: boolean): MealState[]
 
 const updateMealItems = (meals: MealState[], mealType: MealType, items: MealItem[]): MealState[] =>
   meals.map((m) => (m.type === mealType ? { ...m, items } : m));
+
+const getAchievedCalories = (macrosAchieved: MacroSnapshot): number =>
+  macrosAchieved.achievedCalories ??
+  macrosAchieved.calories ??
+  macrosAchieved.caloriesConsumed ??
+  macrosAchieved.caloriesAchieved ??
+  macrosAchieved.kcal ??
+  0;
 
 const DatePicker = ({ date, onChange }: { date: string; onChange: (d: string) => void }) => (
   <div className="flex items-center gap-2">
@@ -81,6 +95,9 @@ const OptimizeButton = ({ meals, date, onOptimized }: OptimizeButtonProps) => {
     try {
       const id = await optimize({ date, meals });
       onOptimized(id);
+    } catch (error) {
+      console.error('Optimize failed:', error);
+      toast.error('Errore durante il calcolo delle quantità. Riprova.');
     } finally {
       setLoading(false);
     }
@@ -152,7 +169,12 @@ const DailyPlanPage = () => {
         {showSpuntini ? 'Rimuovi spuntini' : 'Aggiungi spuntini'}
       </Button>
       <OptimizeButton meals={visibleMeals} date={date} onOptimized={(id) => setOptimizedPlan({ date, id })} />
-      {macrosAchieved && macrosTarget && <PlanMacroSummary achieved={macrosAchieved} target={macrosTarget} />}
+      {macrosAchieved && macrosTarget && (
+        <PlanMacroSummary
+          achieved={{ ...macrosAchieved, calories: getAchievedCalories(macrosAchieved) }}
+          target={{ ...macrosTarget, calories: macrosTarget.calorieTarget }}
+        />
+      )}
       <PlanTemplateBar meals={visibleMeals} onLoadTemplate={handleLoadTemplate} planId={effectivePlanId} />
     </div>
   );

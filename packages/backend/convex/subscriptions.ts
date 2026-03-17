@@ -132,7 +132,16 @@ export const upsertFromWebhook = internalMutation({
   args: {
     nextRenewalDate: v.string(),
     startDate: v.string(),
-    status: v.union(v.literal('active'), v.literal('cancelled'), v.literal('past_due')),
+    status: v.union(
+      v.literal('incomplete'),
+      v.literal('incomplete_expired'),
+      v.literal('trialing'),
+      v.literal('active'),
+      v.literal('past_due'),
+      v.literal('canceled'),
+      v.literal('unpaid'),
+      v.literal('paused')
+    ),
     stripeCustomerId: v.string(),
     stripeSubscriptionId: v.string(),
     userId: v.string(),

@@ -70,11 +70,10 @@ export const createDailyPlan = internalMutation({
   args: {
     date: v.string(),
     macrosAchieved: v.object({
-      calorieTarget: v.number(),
+      achievedCalories: v.number(),
       carbGrams: v.number(),
       fatGrams: v.number(),
       proteinGrams: v.number(),
-      tdee: v.number(),
     }),
     macrosTarget: v.object({
       calorieTarget: v.number(),
@@ -156,9 +155,32 @@ const fetchProfileForPlan = async (ctx: ActionCtx) => {
   return profile;
 };
 
+const isFoodDoc = (value: unknown): value is FoodDoc => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const food = value as Record<string, unknown>;
+  return (
+    typeof food._id === 'string' &&
+    typeof food.name === 'string' &&
+    typeof food.category === 'string' &&
+    typeof food.kcalPer100g === 'number' &&
+    typeof food.proteinPer100g === 'number' &&
+    typeof food.carbPer100g === 'number' &&
+    typeof food.fatPer100g === 'number' &&
+    Array.isArray(food.allergenTags) &&
+    food.allergenTags.every((tag) => typeof tag === 'string')
+  );
+};
+
+const isFoodDocArray = (value: unknown): value is FoodDoc[] => Array.isArray(value) && value.every(isFoodDoc);
+
 const fetchFoodsForPlan = async (ctx: ActionCtx): Promise<FoodDoc[]> => {
   const foods = await ctx.runQuery(api.foods.search, {});
-  return foods as unknown as FoodDoc[];
+  if (!isFoodDocArray(foods)) {
+    throw new ConvexError({ code: 'INTERNAL_ERROR', message: 'Formato alimenti non valido' });
+  }
+  return foods;
 };
 
 const processDayForPlan = async (
@@ -178,7 +200,12 @@ const processDayForPlan = async (
 
   const planId = await ctx.runMutation(internal.weeklyPlans.createDailyPlan, {
     date,
-    macrosAchieved,
+    macrosAchieved: {
+      achievedCalories: macrosAchieved.calorieTarget,
+      carbGrams: macrosAchieved.carbGrams,
+      fatGrams: macrosAchieved.fatGrams,
+      proteinGrams: macrosAchieved.proteinGrams,
+    },
     macrosTarget: macros,
     meals,
     userId,
@@ -321,34 +348,100 @@ const verifyEditAccess = async (ctx: MutationCtx, weeklyPlanId: Id<'weeklyPlans'
   return { plan, user };
 };
 
+const assertValidQuantityGrams = (quantityGrams: number): void => {
+  if (quantityGrams < 1 || quantityGrams > 2000) {
+    throw new ConvexError({ code: 'BAD_REQUEST', message: 'La quantita deve essere tra 1g e 2000g' });
+  }
+};
+
+const getDailyPlanOrThrow = async (ctx: MutationCtx, dailyPlanId: Id<'dailyPlans'>) => {
+  const daily = await ctx.db.get(dailyPlanId);
+  if (!daily) {
+    throw new ConvexError({ code: 'NOT_FOUND', message: 'Piano giornaliero non trovato' });
+  }
+  return daily;
+};
+
+const updateMealQuantity = (
+  daily: Awaited<ReturnType<typeof getDailyPlanOrThrow>>,
+  mealType: 'colazione' | 'pranzo' | 'cena' | 'spuntino_mattina' | 'spuntino_pomeriggio',
+  foodId: Id<'foods'>,
+  quantityGrams: number
+) => {
+  let foodIdFound = false;
+  let quantityUpdated = false;
+  const meals = daily.meals.map((meal) => {
+    if (meal.type !== mealType) {
+      return meal;
+    }
+    const items = meal.items.map((item) => {
+      if (item.foodId !== foodId) {
+        return item;
+      }
+      foodIdFound = true;
+      if (item.quantityGrams !== quantityGrams) {
+        quantityUpdated = true;
+        return { ...item, quantityGrams };
+      }
+      return item;
+    });
+    return { ...meal, items };
+  });
+  return { foodIdFound, meals, quantityUpdated };
+};
+
+const assertDailyPlanBelongsToWeeklyPlan = (
+  plan: Awaited<ReturnType<typeof verifyEditAccess>>['plan'],
+  dailyPlanId: Id<'dailyPlans'>
+): void => {
+  if (!plan.dailyPlanIds.includes(dailyPlanId)) {
+    throw new ConvexError({ code: 'NOT_FOUND', message: 'Piano giornaliero non trovato' });
+  }
+};
+
+const markPlanAsEdited = async (
+  ctx: MutationCtx,
+  dailyPlanId: Id<'dailyPlans'>,
+  weeklyPlanId: Id<'weeklyPlans'>,
+  meals: Awaited<ReturnType<typeof getDailyPlanOrThrow>>['meals']
+): Promise<void> => {
+  await ctx.db.patch(dailyPlanId, { meals });
+  await ctx.db.patch(weeklyPlanId, { status: 'modificato' });
+};
+
 export const updateMealItem = mutation({
   args: {
     dailyPlanId: v.id('dailyPlans'),
     foodId: v.id('foods'),
-    mealType: v.string(),
+    mealType: v.union(
+      v.literal('colazione'),
+      v.literal('pranzo'),
+      v.literal('cena'),
+      v.literal('spuntino_mattina'),
+      v.literal('spuntino_pomeriggio')
+    ),
     quantityGrams: v.number(),
     weeklyPlanId: v.id('weeklyPlans'),
   },
   handler: async (ctx, args) => {
-    await verifyEditAccess(ctx, args.weeklyPlanId);
+    const { plan } = await verifyEditAccess(ctx, args.weeklyPlanId);
+    assertValidQuantityGrams(args.quantityGrams);
+    assertDailyPlanBelongsToWeeklyPlan(plan, args.dailyPlanId);
+    const daily = await getDailyPlanOrThrow(ctx, args.dailyPlanId);
+    const { foodIdFound, meals, quantityUpdated } = updateMealQuantity(
+      daily,
+      args.mealType,
+      args.foodId,
+      args.quantityGrams
+    );
 
-    const daily = await ctx.db.get(args.dailyPlanId);
-    if (!daily) {
-      throw new ConvexError({ code: 'NOT_FOUND', message: 'Piano giornaliero non trovato' });
+    if (!foodIdFound) {
+      throw new ConvexError({ code: 'NOT_FOUND', message: 'Alimento non trovato nel pasto selezionato' });
     }
-
-    const meals = daily.meals.map((meal) => {
-      if (meal.type !== args.mealType) {
-        return meal;
-      }
-      const items = meal.items.map((item) =>
-        item.foodId === args.foodId ? { ...item, quantityGrams: args.quantityGrams } : item
-      );
-      return { ...meal, items };
-    });
-
-    await ctx.db.patch(args.dailyPlanId, { meals });
-    await ctx.db.patch(args.weeklyPlanId, { status: 'modificato' });
+    if (!quantityUpdated) {
+      return;
+    }
+    await markPlanAsEdited(ctx, args.dailyPlanId, args.weeklyPlanId, meals);
   },
 });
 

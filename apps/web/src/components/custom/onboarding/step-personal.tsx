@@ -25,6 +25,12 @@ const BODY_BUILD_OPTIONS = [
   { value: 'robusto', label: 'Robusto' },
 ] as const;
 
+function parseNumberInput(value: string): number | undefined {
+  if (value === '') return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 const StepPersonal = ({ form }: Props) => (
   <div className="space-y-6">
     <div>
@@ -76,7 +82,7 @@ const StepPersonal = ({ form }: Props) => (
             min={100}
             max={250}
             value={field.state.value || ''}
-            onChange={(e) => field.handleChange(Number(e.target.value))}
+            onChange={(e) => field.handleChange(parseNumberInput(e.target.value))}
           />
         </div>
       )}
@@ -93,7 +99,7 @@ const StepPersonal = ({ form }: Props) => (
             max={300}
             step={0.1}
             value={field.state.value || ''}
-            onChange={(e) => field.handleChange(Number(e.target.value))}
+            onChange={(e) => field.handleChange(parseNumberInput(e.target.value))}
           />
         </div>
       )}

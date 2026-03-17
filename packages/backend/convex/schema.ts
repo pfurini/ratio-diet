@@ -37,7 +37,14 @@ const templateMealValidator = v.object({
   ),
 });
 
-const macroSnapshotValidator = v.object({
+const macroAchievedSnapshotValidator = v.object({
+  achievedCalories: v.number(),
+  carbGrams: v.number(),
+  fatGrams: v.number(),
+  proteinGrams: v.number(),
+});
+
+const macroTargetSnapshotValidator = v.object({
   calorieTarget: v.number(),
   carbGrams: v.number(),
   fatGrams: v.number(),
@@ -48,8 +55,8 @@ const macroSnapshotValidator = v.object({
 export default defineSchema({
   dailyPlans: defineTable({
     date: v.string(),
-    macrosAchieved: macroSnapshotValidator,
-    macrosTarget: macroSnapshotValidator,
+    macrosAchieved: macroAchievedSnapshotValidator,
+    macrosTarget: macroTargetSnapshotValidator,
     meals: v.array(mealValidator),
     status: v.union(v.literal('draft'), v.literal('complete')),
     templateId: v.optional(v.id('templates')),
@@ -81,7 +88,16 @@ export default defineSchema({
   subscriptions: defineTable({
     nextRenewalDate: v.string(),
     startDate: v.string(),
-    status: v.union(v.literal('active'), v.literal('cancelled'), v.literal('past_due')),
+    status: v.union(
+      v.literal('incomplete'),
+      v.literal('incomplete_expired'),
+      v.literal('trialing'),
+      v.literal('active'),
+      v.literal('past_due'),
+      v.literal('canceled'),
+      v.literal('unpaid'),
+      v.literal('paused')
+    ),
     stripeCustomerId: v.string(),
     stripeSubscriptionId: v.string(),
     userId: v.string(),
@@ -124,7 +140,7 @@ export default defineSchema({
     heightCm: v.number(),
     lastRecalcWeightKg: v.number(),
     legalGateAccepted: v.boolean(),
-    macros: macroSnapshotValidator,
+    macros: macroTargetSnapshotValidator,
     sex: v.union(v.literal('M'), v.literal('F')),
     userId: v.string(),
     weightKg: v.number(),
@@ -149,7 +165,7 @@ export default defineSchema({
 
   weightLogs: defineTable({
     date: v.string(),
-    macrosAtLog: macroSnapshotValidator,
+    macrosAtLog: macroTargetSnapshotValidator,
     userId: v.string(),
     weightKg: v.number(),
   }).index('by_userId_date', ['userId', 'date']),

@@ -31,6 +31,7 @@ const profileInputValidator = {
     v.literal('ricomposizione')
   ),
   heightCm: v.number(),
+  legalGateAccepted: v.literal(true),
   sex: v.union(v.literal('M'), v.literal('F')),
   weightKg: v.number(),
 };
@@ -39,6 +40,7 @@ interface ProfileInput {
   sex: 'M' | 'F';
   dateOfBirth: string;
   heightCm: number;
+  legalGateAccepted: true;
   weightKg: number;
   bodyBuild: 'snello' | 'medio' | 'robusto';
   goal: 'dimagrimento' | 'mantenimento' | 'aumento_massa' | 'ricomposizione';
@@ -48,6 +50,19 @@ interface ProfileInput {
   dietaryPreference: 'onnivoro' | 'vegetariano' | 'vegano' | 'pescetariano';
   followedByNutritionist: boolean;
 }
+
+const MAX_WEIGHT_KG = 500;
+const MAX_HEIGHT_CM = 300;
+
+const assertValidAnthropometrics = ({ heightCm, weightKg }: Pick<ProfileInput, 'heightCm' | 'weightKg'>): void => {
+  if (weightKg <= 0 || weightKg > MAX_WEIGHT_KG) {
+    throw new ConvexError({ code: 'INVALID_INPUT', message: 'Peso non valido' });
+  }
+
+  if (heightCm <= 0 || heightCm > MAX_HEIGHT_CM) {
+    throw new ConvexError({ code: 'INVALID_INPUT', message: 'Altezza non valida' });
+  }
+};
 
 const computeProfileMacros = (args: ProfileInput) => {
   const age = getAgeFromDateOfBirth(args.dateOfBirth);
@@ -80,12 +95,12 @@ export const create = mutation({
     }
 
     assertAdultDateOfBirth(args.dateOfBirth);
+    assertValidAnthropometrics(args);
     const macros = computeProfileMacros(args);
 
     return await ctx.db.insert('userProfiles', {
       ...args,
       lastRecalcWeightKg: args.weightKg,
-      legalGateAccepted: true,
       macros,
       userId: user._id,
     });
@@ -127,6 +142,7 @@ export const update = mutation({
     }
 
     assertAdultDateOfBirth(args.dateOfBirth);
+    assertValidAnthropometrics(args);
     const macros = computeProfileMacros(args);
 
     await ctx.db.patch(profile._id, {

@@ -52,20 +52,20 @@
   {
     "name": "Tonno sott'olio sgocciolato",
     "category": "pesce",
-    "kcalPer100g": 198,
-    "proteinPer100g": 29.1,
+    "kcalPer100g": 192,
+    "proteinPer100g": 25.2,
     "carbPer100g": 0,
-    "fatPer100g": 8.1,
-    "allergenTags": [],
+    "fatPer100g": 10.1,
+    "allergenTags": ["pesce"],
     "foodType": "animale"
   },
   {
     "name": "Olio extravergine di oliva",
     "category": "condimenti",
-    "kcalPer100g": 884,
+    "kcalPer100g": 899,
     "proteinPer100g": 0,
     "carbPer100g": 0,
-    "fatPer100g": 100,
+    "fatPer100g": 99.9,
     "allergenTags": [],
     "foodType": "vegetale"
   },
@@ -82,9 +82,9 @@
   {
     "name": "Banana",
     "category": "frutta",
-    "kcalPer100g": 89,
-    "proteinPer100g": 1.1,
-    "carbPer100g": 23,
+    "kcalPer100g": 76,
+    "proteinPer100g": 1.2,
+    "carbPer100g": 17.4,
     "fatPer100g": 0.3,
     "allergenTags": [],
     "foodType": "vegetale"
@@ -102,9 +102,9 @@
   {
     "name": "Lenticchie secche",
     "category": "legumi",
-    "kcalPer100g": 325,
-    "proteinPer100g": 25,
-    "carbPer100g": 54,
+    "kcalPer100g": 319,
+    "proteinPer100g": 22.7,
+    "carbPer100g": 51.1,
     "fatPer100g": 1,
     "allergenTags": [],
     "foodType": "vegetale"
@@ -116,7 +116,7 @@
     "proteinPer100g": 20,
     "carbPer100g": 0,
     "fatPer100g": 13,
-    "allergenTags": [],
+    "allergenTags": ["pesce"],
     "foodType": "animale"
   },
   {
@@ -152,10 +152,10 @@
   {
     "name": "Mandorle",
     "category": "frutta_secca",
-    "kcalPer100g": 575,
-    "proteinPer100g": 21,
-    "carbPer100g": 22,
-    "fatPer100g": 49,
+    "kcalPer100g": 628,
+    "proteinPer100g": 22,
+    "carbPer100g": 4.6,
+    "fatPer100g": 55.3,
     "allergenTags": ["frutta_a_guscio"],
     "foodType": "vegetale"
   },
