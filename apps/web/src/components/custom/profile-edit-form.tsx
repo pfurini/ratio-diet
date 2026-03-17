@@ -7,6 +7,7 @@ import { Label } from '@ratio-diet/ui/components/label';
 import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import DateOfBirthField, { validateDateOfBirth } from './date-of-birth-field';
 
 type Sex = 'M' | 'F';
 type BodyBuild = 'snello' | 'medio' | 'robusto';
@@ -105,16 +106,12 @@ const PersonalFields = ({
         <option value="F">Femmina</option>
       </select>
     </div>
-    <div className="space-y-2">
-      <Label htmlFor="pef-dob">Data di nascita</Label>
-      <Input
-        id="pef-dob"
-        type="date"
-        value={form.dateOfBirth}
-        onChange={(e) => setField('dateOfBirth', e.target.value)}
-        required
-      />
-    </div>
+    <DateOfBirthField
+      id="pef-dob"
+      value={form.dateOfBirth}
+      onChange={(value) => setField('dateOfBirth', value)}
+      required
+    />
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-2">
         <Label htmlFor="pef-height">Altezza (cm)</Label>
@@ -283,6 +280,12 @@ const ProfileEditForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const dateOfBirthError = validateDateOfBirth(currentForm.dateOfBirth);
+    if (dateOfBirthError) {
+      toast.error(dateOfBirthError);
+      return;
+    }
+
     try {
       await updateProfile({
         sex: currentForm.sex,

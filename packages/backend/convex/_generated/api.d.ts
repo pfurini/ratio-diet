@@ -14,6 +14,7 @@ import type * as foods from "../foods.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
 import type * as lib_calculations from "../lib/calculations.js";
+import type * as lib_dateOfBirth from "../lib/dateOfBirth.js";
 import type * as lib_optimizer from "../lib/optimizer.js";
 import type * as lib_shoppingList from "../lib/shoppingList.js";
 import type * as lib_weeklyPlanGenerator from "../lib/weeklyPlanGenerator.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   healthCheck: typeof healthCheck;
   http: typeof http;
   "lib/calculations": typeof lib_calculations;
+  "lib/dateOfBirth": typeof lib_dateOfBirth;
   "lib/optimizer": typeof lib_optimizer;
   "lib/shoppingList": typeof lib_shoppingList;
   "lib/weeklyPlanGenerator": typeof lib_weeklyPlanGenerator;

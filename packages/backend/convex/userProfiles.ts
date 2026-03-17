@@ -3,6 +3,7 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { authComponent } from './auth';
 import { calculateMacros, getAgeFromDateOfBirth } from './lib/calculations';
+import { assertAdultDateOfBirth } from './lib/dateOfBirth';
 
 const profileInputValidator = {
   activityLevel: v.union(
@@ -78,6 +79,7 @@ export const create = mutation({
       throw new Error('Profilo già esistente');
     }
 
+    assertAdultDateOfBirth(args.dateOfBirth);
     const macros = computeProfileMacros(args);
 
     return await ctx.db.insert('userProfiles', {
@@ -124,6 +126,7 @@ export const update = mutation({
       throw new Error('Profilo non trovato');
     }
 
+    assertAdultDateOfBirth(args.dateOfBirth);
     const macros = computeProfileMacros(args);
 
     await ctx.db.patch(profile._id, {

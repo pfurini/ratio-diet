@@ -2,8 +2,10 @@
 
 import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
 
-import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
+import { Input } from '@ratio-diet/ui/components/input';
+
+import DateOfBirthField from '../date-of-birth-field';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>;
@@ -56,15 +58,11 @@ const StepPersonal = ({ form }: Props) => (
 
     <form.Field name="dateOfBirth">
       {(field: AnyFieldApi) => (
-        <div className="space-y-2">
-          <Label htmlFor="dateOfBirth">Data di nascita</Label>
-          <Input
-            id="dateOfBirth"
-            type="date"
-            value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
-          />
-        </div>
+        <DateOfBirthField
+          id="dateOfBirth"
+          value={field.state.value}
+          onChange={(value) => field.handleChange(value)}
+        />
       )}
     </form.Field>
 

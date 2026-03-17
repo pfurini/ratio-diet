@@ -14,6 +14,7 @@ import StepGoal from './onboarding/step-goal';
 import StepLegal from './onboarding/step-legal';
 import StepPersonal from './onboarding/step-personal';
 import { STEPS, type FormValues } from './onboarding/types';
+import { validateDateOfBirth } from './date-of-birth-field';
 
 const DEFAULT_VALUES: FormValues = {
   isOver18: false,
@@ -40,7 +41,8 @@ const validateLegal = (values: FormValues): string | null => {
 };
 
 const validatePersonal = (values: FormValues): string | null => {
-  if (!values.dateOfBirth) return 'Inserisci la data di nascita.';
+  const dateOfBirthError = validateDateOfBirth(values.dateOfBirth);
+  if (dateOfBirthError) return dateOfBirthError;
   if (values.heightCm < 100 || values.heightCm > 250) return 'Inserisci un\'altezza valida.';
   if (values.weightKg < 30 || values.weightKg > 300) return 'Inserisci un peso valido.';
   return null;
