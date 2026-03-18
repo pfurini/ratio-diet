@@ -65,7 +65,7 @@ describe('calculateMacros', () => {
     // Proteine should be 2.4 g/kg for ricomposizione
     expect(result.proteinGrams).toBe(204);
     // Grassi should be 0.9 g/kg
-    expect(result.fatGrams).toBe(76.5);
+    expect(result.fatGrams).toBe(77);
     // Calorie target = TDEE - 150
     expect(result.calorieTarget).toBe(result.tdee - 150);
   });

@@ -67,6 +67,32 @@ export const getStatus = query({
   },
 });
 
+const ACTIVE_TRIALING_STATUSES = new Set(['active', 'trialing']);
+
+const hasActiveSubscriptionForPrice = async (
+  stripe: Stripe,
+  stripeCustomerId: string,
+  priceId: string
+): Promise<boolean> => {
+  const subscriptions = await stripe.subscriptions.list({
+    customer: stripeCustomerId,
+    status: 'all',
+  });
+  for (const sub of subscriptions.data) {
+    if (!ACTIVE_TRIALING_STATUSES.has(sub.status)) {
+      continue;
+    }
+    const hasMatchingPrice = sub.items.data.some((item) => {
+      const p = item.price;
+      return (typeof p === 'string' ? p : p?.id) === priceId;
+    });
+    if (hasMatchingPrice) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const createCheckoutSession = action({
   args: {},
   handler: async (ctx): Promise<{ url: string | null }> => {
@@ -79,6 +105,14 @@ export const createCheckoutSession = action({
     const stripe = new Stripe(getStripeKey());
     const siteUrl = getSiteUrl();
     const priceId = getPriceId();
+
+    const existingSub = await ctx.runQuery(api.subscriptions.getSubscriptionForPortal, {});
+    if (existingSub?.stripeCustomerId) {
+      const alreadyActive = await hasActiveSubscriptionForPrice(stripe, existingSub.stripeCustomerId, priceId);
+      if (alreadyActive) {
+        return { url: null };
+      }
+    }
 
     const session = await stripe.checkout.sessions.create(buildCheckoutSessionCreateParams(user._id, siteUrl, priceId));
 
