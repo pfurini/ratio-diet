@@ -68,7 +68,7 @@ const normalizeAllergiesOther = (allergiesOther?: string): string | undefined =>
   if (normalized.length > MAX_ALLERGIES_OTHER_LENGTH) {
     throw new ConvexError({
       code: 'INVALID_INPUT',
-      message: `Il campo "altre allergie" non puo superare ${MAX_ALLERGIES_OTHER_LENGTH} caratteri`,
+      message: `Il campo "altre allergie" non può superare ${MAX_ALLERGIES_OTHER_LENGTH} caratteri`,
     });
   }
 
