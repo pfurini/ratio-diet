@@ -9,6 +9,7 @@ import { addFoodToShoppingMap, buildShoppingList, buildShoppingListFromMap } fro
 import { calcItemsMacros, findFood, generateWithRetry } from './lib/weeklyPlanGenerator';
 import type { DayPlan, FoodDoc, MacroTarget, MealItem, WeeklyPlanResult } from './lib/weeklyPlanGenerator';
 import { buildWeeklyPlanPrompt } from './lib/weeklyPlanPrompt';
+import { mealTypeValidator } from './schema';
 
 // --- Interfaces ---
 
@@ -85,13 +86,7 @@ export const createDailyPlan = internalMutation({
     meals: v.array(
       v.object({
         items: v.array(v.object({ foodId: v.id('foods'), quantityGrams: v.number() })),
-        type: v.union(
-          v.literal('colazione'),
-          v.literal('pranzo'),
-          v.literal('cena'),
-          v.literal('spuntino_mattina'),
-          v.literal('spuntino_pomeriggio')
-        ),
+        type: mealTypeValidator,
       })
     ),
     userId: v.string(),
@@ -413,13 +408,7 @@ export const updateMealItem = mutation({
   args: {
     dailyPlanId: v.id('dailyPlans'),
     foodId: v.id('foods'),
-    mealType: v.union(
-      v.literal('colazione'),
-      v.literal('pranzo'),
-      v.literal('cena'),
-      v.literal('spuntino_mattina'),
-      v.literal('spuntino_pomeriggio')
-    ),
+    mealType: mealTypeValidator,
     quantityGrams: v.number(),
     weeklyPlanId: v.id('weeklyPlans'),
   },

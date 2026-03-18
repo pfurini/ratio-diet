@@ -2,7 +2,7 @@ import { resolveUserIdForSubscriptionEvent } from './http';
 
 type ResolveParams = Parameters<typeof resolveUserIdForSubscriptionEvent>;
 
-describe('resolveUserIdForSubscriptionEvent', () => {
+describe(resolveUserIdForSubscriptionEvent, () => {
   it('uses subscription metadata.userId first', async () => {
     const runQuery = vi.fn();
     const userId = await resolveUserIdForSubscriptionEvent(
@@ -22,7 +22,7 @@ describe('resolveUserIdForSubscriptionEvent', () => {
     );
 
     expect(userId).toBe('user_from_sub');
-    expect(runQuery).toHaveBeenCalledOnce();
+    expect(runQuery).toHaveBeenCalledTimes(1);
     expect(runQuery).toHaveBeenCalledWith(expect.anything(), { stripeSubscriptionId: 'sub_1' });
   });
 

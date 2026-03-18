@@ -5,6 +5,7 @@ import { internal } from './_generated/api';
 import type { ActionCtx } from './_generated/server';
 import { httpAction } from './_generated/server';
 import { authComponent, createAuth } from './auth';
+import { importStripe } from './lib/stripe';
 
 const http = httpRouter();
 
@@ -52,11 +53,6 @@ const getCurrentPeriodEnd = (subscription: StripeSubscription): number => {
   }
 
   throw new TypeError('Stripe subscription is missing current_period_end');
-};
-
-const importStripe = async () => {
-  const stripeModule = await import('stripe');
-  return stripeModule.default;
 };
 
 type StripeInstance = Awaited<ReturnType<typeof importStripe>>;

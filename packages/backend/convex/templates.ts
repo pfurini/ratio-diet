@@ -1,8 +1,8 @@
 import { ConvexError, v } from 'convex/values';
 
-import type { Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 import { authComponent } from './auth';
+import { mealTypeValidator } from './schema';
 
 const mealItemValidator = v.object({
   constraintMax: v.optional(v.number()),
@@ -13,16 +13,10 @@ const mealItemValidator = v.object({
 
 const mealValidator = v.object({
   items: v.array(mealItemValidator),
-  type: v.union(
-    v.literal('colazione'),
-    v.literal('pranzo'),
-    v.literal('cena'),
-    v.literal('spuntino_mattina'),
-    v.literal('spuntino_pomeriggio')
-  ),
+  type: mealTypeValidator,
 });
 
-export const buildTemplateInsertDoc = <TMeals>(userId: Id<'user'>, args: { meals: TMeals; name: string }) => ({
+export const buildTemplateInsertDoc = <TMeals>(userId: string, args: { meals: TMeals; name: string }) => ({
   meals: args.meals,
   name: args.name,
   userId,

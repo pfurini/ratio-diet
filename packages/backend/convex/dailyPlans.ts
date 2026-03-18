@@ -5,6 +5,7 @@ import { mutation, query } from './_generated/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { authComponent } from './auth';
 import { distributeMacrosToMeals, optimizeMealQuantities } from './lib/optimizer';
+import { mealTypeValidator } from './schema';
 
 // --- Validators ---
 
@@ -16,13 +17,7 @@ const mealItemInput = v.object({
 
 const mealInput = v.object({
   items: v.array(mealItemInput),
-  type: v.union(
-    v.literal('colazione'),
-    v.literal('pranzo'),
-    v.literal('cena'),
-    v.literal('spuntino_mattina'),
-    v.literal('spuntino_pomeriggio')
-  ),
+  type: mealTypeValidator,
 });
 
 // --- Types ---

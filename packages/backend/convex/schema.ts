@@ -1,6 +1,16 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
+export const mealTypeValidator = v.union(
+  v.literal('colazione'),
+  v.literal('pranzo'),
+  v.literal('cena'),
+  v.literal('spuntino_mattina'),
+  v.literal('spuntino_pomeriggio')
+);
+
+export type MealType = 'colazione' | 'pranzo' | 'cena' | 'spuntino_mattina' | 'spuntino_pomeriggio';
+
 const mealItemValidator = v.object({
   constraintMax: v.optional(v.number()),
   constraintMin: v.optional(v.number()),
@@ -17,24 +27,12 @@ const templateMealItemValidator = v.object({
 
 const mealValidator = v.object({
   items: v.array(mealItemValidator),
-  type: v.union(
-    v.literal('colazione'),
-    v.literal('pranzo'),
-    v.literal('cena'),
-    v.literal('spuntino_mattina'),
-    v.literal('spuntino_pomeriggio')
-  ),
+  type: mealTypeValidator,
 });
 
 const templateMealValidator = v.object({
   items: v.array(templateMealItemValidator),
-  type: v.union(
-    v.literal('colazione'),
-    v.literal('pranzo'),
-    v.literal('cena'),
-    v.literal('spuntino_mattina'),
-    v.literal('spuntino_pomeriggio')
-  ),
+  type: mealTypeValidator,
 });
 
 const macroAchievedSnapshotValidator = v.object({

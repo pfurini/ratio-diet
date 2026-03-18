@@ -1,6 +1,6 @@
 import { optimizeMealQuantities } from './optimizer';
 
-describe('optimizeMealQuantities', () => {
+describe(optimizeMealQuantities, () => {
   const chickenBreast = {
     carbPer100g: 0,
     fatPer100g: 3.6,

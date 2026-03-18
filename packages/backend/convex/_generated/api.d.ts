@@ -17,6 +17,7 @@ import type * as lib_calculations from "../lib/calculations.js";
 import type * as lib_dateOfBirth from "../lib/dateOfBirth.js";
 import type * as lib_optimizer from "../lib/optimizer.js";
 import type * as lib_shoppingList from "../lib/shoppingList.js";
+import type * as lib_stripe from "../lib/stripe.js";
 import type * as lib_weeklyPlanGenerator from "../lib/weeklyPlanGenerator.js";
 import type * as lib_weeklyPlanPrompt from "../lib/weeklyPlanPrompt.js";
 import type * as subscriptions from "../subscriptions.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   "lib/dateOfBirth": typeof lib_dateOfBirth;
   "lib/optimizer": typeof lib_optimizer;
   "lib/shoppingList": typeof lib_shoppingList;
+  "lib/stripe": typeof lib_stripe;
   "lib/weeklyPlanGenerator": typeof lib_weeklyPlanGenerator;
   "lib/weeklyPlanPrompt": typeof lib_weeklyPlanPrompt;
   subscriptions: typeof subscriptions;

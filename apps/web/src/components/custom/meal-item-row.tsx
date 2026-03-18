@@ -2,6 +2,7 @@
 
 import { api } from '@ratio-diet/backend/convex/_generated/api';
 import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
+import type { MealType } from '@ratio-diet/backend/convex/schema';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { useMutation, useQuery } from 'convex/react';
@@ -16,7 +17,7 @@ interface MealItemRowProps {
   canEdit: boolean;
   weeklyPlanId: Id<'weeklyPlans'>;
   dailyPlanId: Id<'dailyPlans'>;
-  mealType: string;
+  mealType: MealType;
 }
 
 const useEditState = (initial: number) => {

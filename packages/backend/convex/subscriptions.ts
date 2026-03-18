@@ -4,11 +4,7 @@ import type { Stripe } from 'stripe';
 import { api } from './_generated/api';
 import { action, internalMutation, internalQuery, query } from './_generated/server';
 import { authComponent } from './auth';
-
-const importStripe = async () => {
-  const stripeModule = await import('stripe');
-  return stripeModule.default;
-};
+import { importStripe } from './lib/stripe';
 
 const getStripeKey = () => {
   const key = process.env.STRIPE_SECRET_KEY;

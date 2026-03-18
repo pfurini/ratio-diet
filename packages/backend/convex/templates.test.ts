@@ -1,6 +1,6 @@
 import { buildTemplateInsertDoc } from './templates';
 
-describe('buildTemplateInsertDoc', () => {
+describe(buildTemplateInsertDoc, () => {
   it('allows template meal items without quantityGrams', () => {
     const doc = buildTemplateInsertDoc('user_1', {
       meals: [{ items: [{ foodId: 'food_1' }], type: 'pranzo' }],
