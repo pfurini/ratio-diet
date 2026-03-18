@@ -1,15 +1,9 @@
 'use client';
 
-type MacroSnapshot = {
-  tdee: number;
-  calorieTarget: number;
-  proteinGrams: number;
-  carbGrams: number;
-  fatGrams: number;
-};
+import type { MacroTarget } from '@/types/macros';
 
 type Props = {
-  macros: MacroSnapshot;
+  macros: MacroTarget;
 };
 
 const MacroColumn = ({

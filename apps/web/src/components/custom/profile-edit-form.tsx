@@ -9,6 +9,7 @@ import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import DateOfBirthField, { validateDateOfBirth } from './date-of-birth-field';
+import { ACTIVITY_OPTIONS, ALLERGEN_OPTIONS, DIETARY_OPTIONS, GOAL_OPTIONS, toggleAllergen } from '@/lib/profile-options';
 
 type Sex = 'M' | 'F';
 type BodyBuild = 'snello' | 'medio' | 'robusto';
@@ -34,43 +35,6 @@ interface ProfileFormState {
   dietaryPreference: DietaryPreference;
   followedByNutritionist: boolean;
 }
-
-const ALLERGEN_OPTIONS = [
-  { value: 'glutine', label: 'Glutine' },
-  { value: 'lattosio', label: 'Lattosio' },
-  { value: 'frutta_a_guscio', label: 'Frutta a guscio' },
-  { value: 'uova', label: 'Uova' },
-  { value: 'crostacei', label: 'Crostacei' },
-] as const;
-
-const GOAL_OPTIONS = [
-  { value: 'dimagrimento', label: 'Dimagrimento' },
-  { value: 'mantenimento', label: 'Mantenimento' },
-  { value: 'aumento_massa', label: 'Aumento massa' },
-  { value: 'ricomposizione', label: 'Ricomposizione' },
-] as const;
-
-const ACTIVITY_OPTIONS = [
-  { value: 'sedentario', label: 'Sedentario' },
-  { value: 'leggermente_attivo', label: 'Leggermente attivo' },
-  { value: 'moderatamente_attivo', label: 'Moderatamente attivo' },
-  { value: 'molto_attivo', label: 'Molto attivo' },
-  { value: 'atleta', label: 'Atleta' },
-] as const;
-
-const DIETARY_OPTIONS = [
-  { value: 'onnivoro', label: 'Onnivoro' },
-  { value: 'vegetariano', label: 'Vegetariano' },
-  { value: 'vegano', label: 'Vegano' },
-  { value: 'pescetariano', label: 'Pescetariano' },
-] as const;
-
-const toggleAllergen = (current: string[], value: string): string[] => {
-  if (current.includes(value)) {
-    return current.filter((a) => a !== value);
-  }
-  return [...current, value];
-};
 
 type ProfileApi = Doc<'userProfiles'>;
 

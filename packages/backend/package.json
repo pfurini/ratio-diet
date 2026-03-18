@@ -7,7 +7,9 @@
   "scripts": {
     "check-types": "tsc --noEmit --project convex/tsconfig.json",
     "dev": "convex dev",
-    "dev:setup": "convex dev --configure --until-success"
+    "dev:setup": "convex dev --configure --until-success",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@convex-dev/better-auth": "catalog:",

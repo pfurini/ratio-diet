@@ -2,7 +2,7 @@ import { ConvexError, v } from 'convex/values';
 
 import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
-import { action, internalMutation, mutation, query } from './_generated/server';
+import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
 import type { ActionCtx, MutationCtx } from './_generated/server';
 import { authComponent } from './auth';
 import { hasPremiumAccess } from './lib/premiumAccess';
@@ -66,6 +66,19 @@ const buildDayMeals = (day: DayPlan, foods: FoodDoc[]) => [
   { items: buildMealItems(day.cena, foods), type: 'cena' as const },
 ];
 
+// --- Internal queries ---
+
+export const countRecentPlans = internalQuery({
+  args: { since: v.number(), userId: v.string() },
+  handler: async (ctx, args) => {
+    const plans = await ctx.db
+      .query('weeklyPlans')
+      .withIndex('by_userId', (q) => q.eq('userId', args.userId))
+      .collect();
+    return plans.filter((p) => p._creationTime >= args.since).length;
+  },
+});
+
 // --- Internal mutations ---
 
 export const createDailyPlan = internalMutation({
@@ -127,6 +140,11 @@ export const create = internalMutation({
     }),
 });
 
+// --- Rate limit constants ---
+
+const DAILY_GENERATION_LIMIT = 5;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
 // --- Action helpers ---
 
 const validateSubscription = async (ctx: ActionCtx): Promise<string> => {
@@ -141,6 +159,17 @@ const validateSubscription = async (ctx: ActionCtx): Promise<string> => {
   }
 
   return user._id;
+};
+
+const assertRateLimitNotExceeded = async (ctx: ActionCtx, userId: string): Promise<void> => {
+  const since = Date.now() - ONE_DAY_MS;
+  const count = await ctx.runQuery(internal.weeklyPlans.countRecentPlans, { since, userId });
+  if (count >= DAILY_GENERATION_LIMIT) {
+    throw new ConvexError({
+      code: 'RATE_LIMIT_EXCEEDED',
+      message: `Hai raggiunto il limite di ${DAILY_GENERATION_LIMIT} generazioni al giorno`,
+    });
+  }
 };
 
 const fetchProfileForPlan = async (ctx: ActionCtx) => {
@@ -268,6 +297,7 @@ export const generate = action({
   args: {},
   handler: async (ctx): Promise<Id<'weeklyPlans'>> => {
     const userId = await validateSubscription(ctx);
+    await assertRateLimitNotExceeded(ctx, userId);
     const profile = await fetchProfileForPlan(ctx);
     const foods = await fetchFoodsForPlan(ctx);
 

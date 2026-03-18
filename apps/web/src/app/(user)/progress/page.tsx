@@ -9,21 +9,10 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import WeightChart from '@/components/custom/weight-chart';
+import { getLocalDateString } from '@/lib/date-utils';
+import type { MacroTarget } from '@/types/macros';
 
-const getTodayDate = (): string => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-
-interface MacroData {
-  proteinGrams: number;
-  carbGrams: number;
-  fatGrams: number;
-  calorieTarget: number;
-  tdee: number;
-}
-
-const showWeightToast = (result: { recalculated: boolean; newMacros?: MacroData }) => {
+const showWeightToast = (result: { recalculated: boolean; newMacros?: MacroTarget }) => {
   if (result.recalculated && result.newMacros) {
     const { proteinGrams, carbGrams, fatGrams } = result.newMacros;
     const desc = `Proteine: ${Math.round(proteinGrams)}g · Carbo: ${Math.round(carbGrams)}g · Grassi: ${Math.round(fatGrams)}g`;
@@ -49,7 +38,7 @@ const submitWeight = async (
 
 const WeightLogForm = () => {
   const [weightKg, setWeightKg] = useState('');
-  const [date, setDate] = useState(getTodayDate());
+  const [date, setDate] = useState(getLocalDateString());
   const [submitting, setSubmitting] = useState(false);
   const logWeight = useMutation(api.weightLogs.log);
 
@@ -110,7 +99,7 @@ const MacroRow = ({ label, value, unit }: { label: string; value: number; unit: 
   </div>
 );
 
-const MacroTargets = ({ macros }: { macros: MacroData }) => (
+const MacroTargets = ({ macros }: { macros: MacroTarget }) => (
   <section className="space-y-2 rounded-xl border p-4">
     <h2 className="font-semibold">Target attuali</h2>
     <MacroRow label="Calorie" value={macros.calorieTarget} unit="kcal" />

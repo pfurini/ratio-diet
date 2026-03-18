@@ -9,6 +9,7 @@ import { assertDateOnly } from './lib/dateOnly';
 
 const RECALC_THRESHOLD_KG = 2;
 const DEFAULT_MAX_WEIGHT_LOGS = 1000;
+const MAX_WEIGHT_KG = 500;
 
 const shouldRecalculate = (currentWeight: number, lastRecalcWeight: number): boolean =>
   Math.abs(currentWeight - lastRecalcWeight) >= RECALC_THRESHOLD_KG;
@@ -104,8 +105,8 @@ export const log = mutation({
       throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
-    if (args.weightKg <= 0) {
-      throw new ConvexError({ code: 'INVALID_INPUT', message: 'Il peso deve essere positivo' });
+    if (args.weightKg <= 0 || args.weightKg > MAX_WEIGHT_KG) {
+      throw new ConvexError({ code: 'INVALID_INPUT', message: `Il peso deve essere tra 0 e ${MAX_WEIGHT_KG} kg` });
     }
 
     const profile = await getAuthenticatedProfile(ctx, user._id);

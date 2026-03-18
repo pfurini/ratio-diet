@@ -136,15 +136,18 @@ const runOptimizationLoop = (
   }
 };
 
-const computeGap = (target: MacroTarget, achieved: MacroTarget): { protein: number; carb: number; fat: number } => {
-  const gapFor = (targetG: number, achievedG: number) =>
-    targetG > 0 ? (achievedG - targetG) / targetG : achievedG > 0 ? Number.POSITIVE_INFINITY : 0;
-  return {
-    carb: gapFor(target.carbGrams, achieved.carbGrams),
-    fat: gapFor(target.fatGrams, achieved.fatGrams),
-    protein: gapFor(target.proteinGrams, achieved.proteinGrams),
-  };
+const computeMacroGap = (targetG: number, achievedG: number): number => {
+  if (targetG > 0) {
+    return (achievedG - targetG) / targetG;
+  }
+  return achievedG > 0 ? Number.POSITIVE_INFINITY : 0;
 };
+
+const computeGap = (target: MacroTarget, achieved: MacroTarget): { protein: number; carb: number; fat: number } => ({
+  carb: computeMacroGap(target.carbGrams, achieved.carbGrams),
+  fat: computeMacroGap(target.fatGrams, achieved.fatGrams),
+  protein: computeMacroGap(target.proteinGrams, achieved.proteinGrams),
+});
 
 const isConstraintBound = (
   foods: FoodNutrition[],

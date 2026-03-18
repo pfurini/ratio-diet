@@ -96,6 +96,6 @@ describe(optimizeMealQuantities, () => {
     expect(result.success).toBeFalsy();
     expect(result.gap).toBeDefined();
     expect(result.macrosAchieved.fatGrams).toBeGreaterThan(0);
-    expect(result.gap!.fat).toBe(Number.POSITIVE_INFINITY);
+    expect(result.gap?.fat).toBe(Number.POSITIVE_INFINITY);
   });
 });

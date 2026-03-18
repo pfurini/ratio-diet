@@ -3,7 +3,7 @@
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
-import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
+import type { AnyFieldApi } from '@tanstack/react-form';
 import { useForm } from '@tanstack/react-form';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -11,9 +11,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { authClient } from '@/lib/auth-client';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>;
+import type { AnyReactFormApi } from '@/lib/form-types';
 
 const handleSignInError = (error: { error?: { message?: string; statusText?: string } }) => {
   toast.error(error?.error?.message ?? error?.error?.statusText ?? 'Errore imprevisto durante il login');

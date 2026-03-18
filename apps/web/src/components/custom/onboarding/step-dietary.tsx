@@ -1,31 +1,15 @@
 'use client';
 
-import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
+import type { AnyFieldApi } from '@tanstack/react-form';
 
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
 
-import { ALLERGEN_OPTIONS } from './types';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>;
+import type { AnyReactFormApi } from '@/lib/form-types';
+import { ALLERGEN_OPTIONS, DIETARY_OPTIONS, toggleAllergen } from '@/lib/profile-options';
 
 type Props = {
   form: AnyReactFormApi;
-};
-
-const DIETARY_OPTIONS = [
-  { value: 'onnivoro', label: 'Onnivoro' },
-  { value: 'vegetariano', label: 'Vegetariano' },
-  { value: 'vegano', label: 'Vegano' },
-  { value: 'pescetariano', label: 'Pescetariano' },
-] as const;
-
-const toggleAllergen = (current: string[], value: string): string[] => {
-  if (current.includes(value)) {
-    return current.filter((a) => a !== value);
-  }
-  return [...current, value];
 };
 
 const StepDietary = ({ form }: Props) => (

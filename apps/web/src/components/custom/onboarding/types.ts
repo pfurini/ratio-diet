@@ -22,12 +22,4 @@ type FormValues = {
 
 const STEPS = ['Consenso', 'Dati personali', 'Obiettivo', 'Alimentazione'] as const;
 
-const ALLERGEN_OPTIONS = [
-  { value: 'glutine', label: 'Glutine' },
-  { value: 'lattosio', label: 'Lattosio' },
-  { value: 'frutta_a_guscio', label: 'Frutta a guscio' },
-  { value: 'uova', label: 'Uova' },
-  { value: 'crostacei', label: 'Crostacei' },
-] as const;
-
-export { type FormValues, STEPS, ALLERGEN_OPTIONS };
+export { type FormValues, STEPS };

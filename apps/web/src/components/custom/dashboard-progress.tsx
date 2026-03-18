@@ -1,21 +1,14 @@
 'use client';
 
-type MacroSnapshot = {
-  achievedCalories?: number;
-  tdee?: number;
-  calorieTarget?: number;
-  proteinGrams: number;
-  carbGrams: number;
-  fatGrams: number;
-};
+import type { MacroAchieved, MacroTarget } from '@/types/macros';
 
 type DailyPlan = {
-  macrosAchieved: MacroSnapshot;
-  macrosTarget: MacroSnapshot;
+  macrosAchieved: MacroAchieved;
+  macrosTarget: MacroAchieved;
 };
 
 type Props = {
-  macros: MacroSnapshot;
+  macros: MacroTarget;
   plan: DailyPlan | null;
 };
 

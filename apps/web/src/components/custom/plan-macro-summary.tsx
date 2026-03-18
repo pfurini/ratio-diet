@@ -4,22 +4,16 @@ import { api } from '@ratio-diet/backend/convex/_generated/api';
 import { useQuery } from 'convex/react';
 
 import MacroProgressBar from './macro-progress-bar';
-
-interface MacroSnapshot {
-  proteinGrams: number;
-  carbGrams: number;
-  fatGrams: number;
-  calories: number;
-}
+import type { MacroSummary } from '@/types/macros';
 
 interface PlanMacroSummaryProps {
-  achieved: MacroSnapshot;
-  target: MacroSnapshot;
+  achieved: MacroSummary;
+  target: MacroSummary;
 }
 
 const GAP_THRESHOLD = 0.15;
 
-const computeMacroGaps = (achieved: MacroSnapshot, target: MacroSnapshot) => [
+const computeMacroGaps = (achieved: MacroSummary, target: MacroSummary) => [
   {
     gap: target.proteinGrams > 0
       ? Math.abs(achieved.proteinGrams - target.proteinGrams) / target.proteinGrams
@@ -40,7 +34,7 @@ const computeMacroGaps = (achieved: MacroSnapshot, target: MacroSnapshot) => [
   },
 ];
 
-const hasBigGap = (achieved: MacroSnapshot, target: MacroSnapshot): boolean => {
+const hasBigGap = (achieved: MacroSummary, target: MacroSummary): boolean => {
   const gaps = computeMacroGaps(achieved, target);
   const proteinGap = gaps.find(({ macro }) => macro === 'protein')?.gap ?? 0;
   const carbGap = gaps.find(({ macro }) => macro === 'carb')?.gap ?? 0;
@@ -49,8 +43,8 @@ const hasBigGap = (achieved: MacroSnapshot, target: MacroSnapshot): boolean => {
 };
 
 const findGapMacro = (
-  achieved: MacroSnapshot,
-  target: MacroSnapshot,
+  achieved: MacroSummary,
+  target: MacroSummary,
 ): 'protein' | 'carb' | 'fat' => {
   const gaps = computeMacroGaps(achieved, target);
   return gaps.toSorted((a, b) => b.gap - a.gap)[0]?.macro ?? 'protein';

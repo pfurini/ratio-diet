@@ -1,14 +1,12 @@
 'use client';
 
-import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
+import type { AnyFieldApi } from '@tanstack/react-form';
 
 import { Label } from '@ratio-diet/ui/components/label';
 import { Input } from '@ratio-diet/ui/components/input';
 
 import DateOfBirthField from '../date-of-birth-field';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>;
+import type { AnyReactFormApi } from '@/lib/form-types';
 
 type Props = {
   form: AnyReactFormApi;

@@ -2,6 +2,7 @@
 
 import { api } from '@ratio-diet/backend/convex/_generated/api';
 import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
+import type { MealType } from '@ratio-diet/backend/convex/schema';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { useQuery } from 'convex/react';
@@ -10,12 +11,7 @@ import { useState } from 'react';
 import FoodName from './food-name';
 import FoodSelector from './food-selector';
 
-export type MealType =
-  | 'colazione'
-  | 'pranzo'
-  | 'cena'
-  | 'spuntino_mattina'
-  | 'spuntino_pomeriggio';
+export type { MealType };
 
 export interface MealItem {
   foodId: Id<'foods'>;

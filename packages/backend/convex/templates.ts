@@ -1,8 +1,14 @@
 import { ConvexError, v } from 'convex/values';
 
 import { mutation, query } from './_generated/server';
+import type { MutationCtx } from './_generated/server';
 import { authComponent } from './auth';
 import { mealTypeValidator } from './schema';
+
+const TEMPLATE_LIMIT = 50;
+const MAX_MEALS_PER_PLAN = 6;
+const MAX_ITEMS_PER_MEAL = 30;
+const MAX_TEMPLATE_NAME_LENGTH = 100;
 
 const mealItemValidator = v.object({
   constraintMax: v.optional(v.number()),
@@ -15,6 +21,16 @@ const mealValidator = v.object({
   items: v.array(mealItemValidator),
   type: mealTypeValidator,
 });
+
+const assertTemplateLimitNotReached = async (ctx: MutationCtx, userId: string): Promise<void> => {
+  const existing = await ctx.db
+    .query('templates')
+    .withIndex('by_userId', (q) => q.eq('userId', userId))
+    .take(TEMPLATE_LIMIT);
+  if (existing.length >= TEMPLATE_LIMIT) {
+    throw new ConvexError({ code: 'LIMIT_REACHED', message: `Template limit of ${TEMPLATE_LIMIT} reached` });
+  }
+};
 
 export const buildTemplateInsertDoc = <TMeals>(userId: string, args: { meals: TMeals; name: string }) => ({
   meals: args.meals,
@@ -31,6 +47,24 @@ export const save = mutation({
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
+    }
+
+    if (args.name.length < 1 || args.name.length > MAX_TEMPLATE_NAME_LENGTH) {
+      throw new ConvexError({
+        code: 'INVALID_INPUT',
+        message: `Template name must be 1-${MAX_TEMPLATE_NAME_LENGTH} characters`,
+      });
+    }
+
+    await assertTemplateLimitNotReached(ctx, user._id);
+
+    if (args.meals.length > MAX_MEALS_PER_PLAN) {
+      throw new ConvexError({ code: 'INVALID_INPUT', message: `Max ${MAX_MEALS_PER_PLAN} meals per template` });
+    }
+    for (const meal of args.meals) {
+      if (meal.items.length > MAX_ITEMS_PER_MEAL) {
+        throw new ConvexError({ code: 'INVALID_INPUT', message: `Max ${MAX_ITEMS_PER_MEAL} items per meal` });
+      }
     }
 
     return await ctx.db.insert('templates', buildTemplateInsertDoc(user._id, args));

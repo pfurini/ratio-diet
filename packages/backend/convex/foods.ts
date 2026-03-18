@@ -151,6 +151,34 @@ const assertNonNegativeNutritionValues = (args: AddCustomFoodArgs): void => {
   }
 };
 
+const MAX_FOOD_NAME_LENGTH = 200;
+const MAX_FOOD_CATEGORY_LENGTH = 100;
+const MAX_ALLERGEN_TAGS = 20;
+const MAX_ALLERGEN_TAG_LENGTH = 50;
+
+const assertFoodStringLengths = (args: AddCustomFoodArgs): void => {
+  if (args.name.length < 1 || args.name.length > MAX_FOOD_NAME_LENGTH) {
+    throw new ConvexError({ code: 'INVALID_INPUT', message: `Name must be 1-${MAX_FOOD_NAME_LENGTH} characters` });
+  }
+  if (args.category.length < 1 || args.category.length > MAX_FOOD_CATEGORY_LENGTH) {
+    throw new ConvexError({
+      code: 'INVALID_INPUT',
+      message: `Category must be 1-${MAX_FOOD_CATEGORY_LENGTH} characters`,
+    });
+  }
+  if (args.allergenTags.length > MAX_ALLERGEN_TAGS) {
+    throw new ConvexError({ code: 'INVALID_INPUT', message: `Max ${MAX_ALLERGEN_TAGS} allergen tags allowed` });
+  }
+  for (const tag of args.allergenTags) {
+    if (tag.length > MAX_ALLERGEN_TAG_LENGTH) {
+      throw new ConvexError({
+        code: 'INVALID_INPUT',
+        message: `Each allergen tag must be max ${MAX_ALLERGEN_TAG_LENGTH} characters`,
+      });
+    }
+  }
+};
+
 const assertCustomFoodLimitNotReached = async (ctx: MutationCtx, userId: string): Promise<void> => {
   const existing = await ctx.db
     .query('foods')
@@ -235,6 +263,7 @@ export const addCustomFood = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthenticatedUserId(ctx);
+    assertFoodStringLengths(args);
     assertNonNegativeNutritionValues(args);
     await assertCustomFoodLimitNotReached(ctx, userId);
     return ctx.db.insert('foods', {

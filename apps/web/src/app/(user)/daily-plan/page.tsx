@@ -11,14 +11,8 @@ import type { MealItem, MealType } from '@/components/custom/meal-builder';
 import MealBuilder from '@/components/custom/meal-builder';
 import PlanMacroSummary from '@/components/custom/plan-macro-summary';
 import PlanTemplateBar from '@/components/custom/plan-template-bar';
-
-const getLocalDate = (): string => {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
+import { getLocalDateString } from '@/lib/date-utils';
+import type { MacroAchieved, MacroTarget } from '@/types/macros';
 
 interface MealState {
   type: MealType;
@@ -26,15 +20,6 @@ interface MealState {
 }
 
 const MEAL_ORDER: MealType[] = ['colazione', 'pranzo', 'cena', 'spuntino_mattina', 'spuntino_pomeriggio'];
-
-interface MacroSnapshot {
-  proteinGrams: number;
-  carbGrams: number;
-  fatGrams: number;
-  calorieTarget: number;
-  tdee: number;
-  achievedCalories?: number;
-}
 
 const isSpuntino = (type: MealType) => type === 'spuntino_mattina' || type === 'spuntino_pomeriggio';
 
@@ -53,7 +38,7 @@ const getVisibleMeals = (meals: MealState[], showSpuntini: boolean): MealState[]
 const updateMealItems = (meals: MealState[], mealType: MealType, items: MealItem[]): MealState[] =>
   meals.map((m) => (m.type === mealType ? { ...m, items } : m));
 
-const getAchievedCalories = (macrosAchieved: MacroSnapshot): number => macrosAchieved.achievedCalories ?? 0;
+const getAchievedCalories = (macrosAchieved: MacroAchieved): number => macrosAchieved.achievedCalories ?? 0;
 
 const DatePicker = ({ date, onChange }: { date: string; onChange: (d: string) => void }) => (
   <div className="flex items-center gap-2">
@@ -100,15 +85,17 @@ const OptimizeButton = ({ meals, date, onOptimized }: OptimizeButtonProps) => {
   );
 };
 
-const isMacroSnapshot = (obj: unknown): obj is MacroSnapshot =>
-  typeof obj === 'object' && obj !== null &&
-  'proteinGrams' in obj && 'carbGrams' in obj && 'fatGrams' in obj;
+const isMacroTarget = (obj: unknown): obj is MacroTarget =>
+  typeof obj === 'object' && obj !== null && 'proteinGrams' in obj && 'carbGrams' in obj && 'fatGrams' in obj;
+
+const isMacroAchieved = (obj: unknown): obj is MacroAchieved =>
+  typeof obj === 'object' && obj !== null && 'proteinGrams' in obj && 'carbGrams' in obj && 'fatGrams' in obj;
 
 const usePlanData = (date: string) => {
   const profile = useQuery(api.userProfiles.get);
   const existingPlan = useQuery(api.dailyPlans.get, { date });
-  const macrosTarget = isMacroSnapshot(profile?.macros) ? profile.macros : undefined;
-  const macrosAchieved = isMacroSnapshot(existingPlan?.macrosAchieved) ? existingPlan.macrosAchieved : undefined;
+  const macrosTarget = isMacroTarget(profile?.macros) ? profile.macros : undefined;
+  const macrosAchieved = isMacroAchieved(existingPlan?.macrosAchieved) ? existingPlan.macrosAchieved : undefined;
   const resolvedPlanId = (existingPlan?._id as Id<'dailyPlans'> | null) ?? null;
   return { existingPlan, macrosAchieved, macrosTarget, resolvedPlanId };
 };
@@ -135,7 +122,7 @@ interface OptimizedPlanRef {
 }
 
 const DailyPlanPage = () => {
-  const [date, setDate] = useState(getLocalDate);
+  const [date, setDate] = useState(getLocalDateString);
   const [meals, setMeals] = useState<MealState[]>(DEFAULT_MEALS);
   const [showSpuntini, setShowSpuntini] = useState(false);
   const [optimizedPlan, setOptimizedPlan] = useState<OptimizedPlanRef | null>(null);

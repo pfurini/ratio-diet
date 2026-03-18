@@ -2,31 +2,22 @@
 
 import { api } from '@ratio-diet/backend/convex/_generated/api';
 import { useQuery } from 'convex/react';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import DashboardActions from '@/components/custom/dashboard-actions';
 import DashboardHero from '@/components/custom/dashboard-hero';
 import DashboardProgress from '@/components/custom/dashboard-progress';
-
-const getLocalDate = (): string => {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
+import { getLocalDateString } from '@/lib/date-utils';
 
 const DashboardPage = () => {
-  const [sessionDate, setSessionDate] = useState<string>(() => getLocalDate());
+  const [sessionDate, setSessionDate] = useState<string>(() => getLocalDateString());
   const profile = useQuery(api.userProfiles.get);
   const todayPlan = useQuery(api.dailyPlans.get, profile ? { date: sessionDate } : 'skip');
-  const router = useRouter();
 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        setSessionDate(getLocalDate());
+        setSessionDate(getLocalDateString());
       }
     };
 
@@ -35,12 +26,6 @@ const DashboardPage = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
-
-  useEffect(() => {
-    if (profile === null) {
-      router.replace('/onboarding');
-    }
-  }, [profile, router]);
 
   if (!profile) {
     return (

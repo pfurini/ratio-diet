@@ -8,6 +8,11 @@ import { assertDateOnly } from './lib/dateOnly';
 import { distributeMacrosToMeals, optimizeMealQuantities } from './lib/optimizer';
 import { mealTypeValidator } from './schema';
 
+// --- Constants ---
+
+const MAX_MEALS_PER_PLAN = 6;
+const MAX_ITEMS_PER_MEAL = 30;
+
 // --- Validators ---
 
 const mealItemInput = v.object({
@@ -234,6 +239,15 @@ export const optimize = mutation({
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
+    }
+
+    if (args.meals.length > MAX_MEALS_PER_PLAN) {
+      throw new ConvexError({ code: 'INVALID_INPUT', message: `Max ${MAX_MEALS_PER_PLAN} meals per plan` });
+    }
+    for (const meal of args.meals) {
+      if (meal.items.length > MAX_ITEMS_PER_MEAL) {
+        throw new ConvexError({ code: 'INVALID_INPUT', message: `Max ${MAX_ITEMS_PER_MEAL} items per meal` });
+      }
     }
 
     const profileMacros = await fetchProfileMacros(ctx, user._id);

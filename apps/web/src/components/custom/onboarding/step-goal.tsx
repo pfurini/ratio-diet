@@ -1,54 +1,15 @@
 'use client';
 
-import type { AnyFieldApi, ReactFormExtendedApi } from '@tanstack/react-form';
+import type { AnyFieldApi } from '@tanstack/react-form';
 
 import { Label } from '@ratio-diet/ui/components/label';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyReactFormApi = ReactFormExtendedApi<any, any, any, any, any, any, any, any, any, any, any, any>;
+import type { AnyReactFormApi } from '@/lib/form-types';
+import { ACTIVITY_OPTIONS, GOAL_OPTIONS } from '@/lib/profile-options';
 
 type Props = {
   form: AnyReactFormApi;
 };
-
-const GOAL_OPTIONS = [
-  { value: 'dimagrimento', label: 'Dimagrimento', description: 'Perdere peso in modo graduale' },
-  { value: 'mantenimento', label: 'Mantenimento', description: 'Mantenere il peso attuale' },
-  {
-    value: 'aumento_massa',
-    label: 'Aumento massa',
-    description: 'Guadagnare massa muscolare',
-  },
-  {
-    value: 'ricomposizione',
-    label: 'Ricomposizione',
-    description: 'Perdere grasso e guadagnare muscolo',
-  },
-] as const;
-
-const ACTIVITY_OPTIONS = [
-  { value: 'sedentario', label: 'Sedentario', description: 'Poco o nessun esercizio' },
-  {
-    value: 'leggermente_attivo',
-    label: 'Leggermente attivo',
-    description: 'Esercizio leggero 1–3 giorni/settimana',
-  },
-  {
-    value: 'moderatamente_attivo',
-    label: 'Moderatamente attivo',
-    description: 'Esercizio moderato 3–5 giorni/settimana',
-  },
-  {
-    value: 'molto_attivo',
-    label: 'Molto attivo',
-    description: 'Esercizio intenso 6–7 giorni/settimana',
-  },
-  {
-    value: 'atleta',
-    label: 'Atleta',
-    description: 'Allenamento professionale o doppia sessione',
-  },
-] as const;
 
 const StepGoal = ({ form }: Props) => (
   <div className="space-y-6">
