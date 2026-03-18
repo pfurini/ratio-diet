@@ -5,6 +5,7 @@ import type { Id } from './_generated/dataModel';
 import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
 import type { ActionCtx, MutationCtx } from './_generated/server';
 import { authComponent } from './auth';
+import { assertDateOnly } from './lib/dateOnly';
 import { hasPremiumAccess } from './lib/premiumAccess';
 import { addFoodToShoppingMap, buildShoppingList, buildShoppingListFromMap } from './lib/shoppingList';
 import { calcItemsMacros, findFood, generateWithRetry } from './lib/weeklyPlanGenerator';
@@ -23,13 +24,9 @@ interface ShoppingEntry {
 
 // --- Date helpers ---
 
-const getWeekStartDate = (): string => {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const daysUntilMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + daysUntilMonday);
-  return monday.toISOString().split('T')[0] as string;
+const getWeekStartDate = (weekStartDate: string): string => {
+  assertDateOnly(weekStartDate);
+  return weekStartDate;
 };
 
 const addDays = (dateStr: string, days: number): string => {
@@ -294,8 +291,8 @@ const saveWeeklyPlan = async (
 // --- Public action ---
 
 export const generate = action({
-  args: {},
-  handler: async (ctx): Promise<Id<'weeklyPlans'>> => {
+  args: { weekStartDate: v.string() },
+  handler: async (ctx, args): Promise<Id<'weeklyPlans'>> => {
     const userId = await validateSubscription(ctx);
     await assertRateLimitNotExceeded(ctx, userId);
     const profile = await fetchProfileForPlan(ctx);
@@ -308,7 +305,7 @@ export const generate = action({
     const macros: MacroTarget = { ...profile.macros };
     const prompt = buildPromptForProfile(profile, foods);
     const result = await generateWithRetry(prompt, foods, macros);
-    const weekStart = getWeekStartDate();
+    const weekStart = getWeekStartDate(args.weekStartDate);
 
     return saveWeeklyPlan(ctx, userId, weekStart, result, foods, macros);
   },

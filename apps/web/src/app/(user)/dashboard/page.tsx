@@ -29,8 +29,10 @@ const DashboardPage = () => {
 
   if (!profile) {
     return (
-      <div className="flex min-h-svh items-center justify-center">
-        <p className="text-muted-foreground">Caricamento...</p>
+      <div className="flex min-h-svh items-center justify-center" aria-busy="true">
+        <p className="text-muted-foreground" role="status" aria-live="polite">
+          Caricamento...
+        </p>
       </div>
     );
   }

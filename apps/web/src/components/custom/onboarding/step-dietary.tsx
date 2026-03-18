@@ -24,8 +24,8 @@ const StepDietary = ({ form }: Props) => (
     <form.Field name="dietaryPreference">
       {(field: AnyFieldApi) => (
         <div className="space-y-2">
-          <Label>Regime alimentare</Label>
-          <div className="flex flex-wrap gap-3">
+          <Label id="dietaryPreference-label">Regime alimentare</Label>
+          <div className="flex flex-wrap gap-3" role="radiogroup" aria-labelledby="dietaryPreference-label">
             {DIETARY_OPTIONS.map((opt) => (
               <label key={opt.value} className="flex cursor-pointer items-center gap-2">
                 <input

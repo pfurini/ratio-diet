@@ -92,11 +92,37 @@ const buildOptimizerFoods = (foodDocs: FoodDoc[]): OptimizerFood[] =>
     proteinPer100g: doc.proteinPer100g,
   }));
 
+// --- Helper: merge duplicate food entries by taking min of constraintMins and max of constraintMaxs ---
+
+const mergeDuplicateFoodItems = (items: MealItem[]): MealItem[] => {
+  const merged = new Map<string, MealItem>();
+  for (const item of items) {
+    const existing = merged.get(item.foodId);
+    if (existing) {
+      merged.set(item.foodId, {
+        constraintMax:
+          existing.constraintMax !== undefined && item.constraintMax !== undefined
+            ? existing.constraintMax + item.constraintMax
+            : (existing.constraintMax ?? item.constraintMax),
+        constraintMin:
+          existing.constraintMin !== undefined && item.constraintMin !== undefined
+            ? existing.constraintMin + item.constraintMin
+            : (existing.constraintMin ?? item.constraintMin),
+        foodId: item.foodId,
+      });
+    } else {
+      merged.set(item.foodId, { ...item });
+    }
+  }
+  return [...merged.values()];
+};
+
 // --- Helper: build constraints record from meal items ---
 
 const buildConstraints = (items: MealItem[]): Record<string, { min?: number; max?: number }> => {
+  const deduped = mergeDuplicateFoodItems(items);
   const constraints: Record<string, { min?: number; max?: number }> = {};
-  for (const item of items) {
+  for (const item of deduped) {
     const constraint: { min?: number; max?: number } = {};
     if (item.constraintMin !== undefined) {
       constraint.min = item.constraintMin;
@@ -129,11 +155,12 @@ const optimizeSingleMeal = async (
   meal: Meal,
   mealTarget: MacroTarget
 ): Promise<MealResult> => {
-  const foodDocs = await fetchFoodsForMeal(ctx, meal.items);
+  const dedupedItems = mergeDuplicateFoodItems(meal.items);
+  const foodDocs = await fetchFoodsForMeal(ctx, dedupedItems);
   const foods = buildOptimizerFoods(foodDocs);
-  const constraints = buildConstraints(meal.items);
+  const constraints = buildConstraints(dedupedItems);
   const result = optimizeMealQuantities({ constraints, foods, macroTarget: mealTarget });
-  const optimizedItems = buildMealItems(meal.items, result.quantities);
+  const optimizedItems = buildMealItems(dedupedItems, result.quantities);
   return { macrosAchieved: result.macrosAchieved, optimizedItems, type: meal.type };
 };
 

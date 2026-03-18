@@ -1,3 +1,5 @@
+import type { AllergenTag } from '@ratio-diet/backend/convex/lib/validators';
+
 export const ALLERGEN_OPTIONS = [
   { label: 'Glutine', value: 'glutine' },
   { label: 'Lattosio', value: 'lattosio' },
@@ -32,7 +34,7 @@ export const DIETARY_OPTIONS = [
   { label: 'Pescetariano', value: 'pescetariano' },
 ] as const;
 
-export const toggleAllergen = (current: string[], value: string): string[] => {
+export const toggleAllergen = (current: AllergenTag[], value: AllergenTag): AllergenTag[] => {
   if (current.includes(value)) {
     return current.filter((a) => a !== value);
   }

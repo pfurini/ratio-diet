@@ -69,11 +69,11 @@ const CustomFoodRow = ({
 };
 
 const CustomFoodList = () => {
-  const allFoods = useQuery(api.foods.search, {});
+  const customFoodsResult = useQuery(api.foods.listCustom);
   const customCount = useQuery(api.foods.getCustomFoodCount);
   const deleteCustomFood = useMutation(api.foods.deleteCustomFood);
 
-  const customFoods = allFoods?.filter(isCustomFood) ?? [];
+  const customFoods = customFoodsResult?.filter(isCustomFood) ?? [];
 
   const handleDelete = async (foodId: Id<'foods'>) => {
     try {
@@ -84,8 +84,12 @@ const CustomFoodList = () => {
     }
   };
 
-  if (allFoods === undefined) {
-    return <p className="text-muted-foreground text-sm">Caricamento...</p>;
+  if (customFoodsResult === undefined) {
+    return (
+      <p className="text-muted-foreground text-sm" role="status" aria-live="polite" aria-busy="true">
+        Caricamento...
+      </p>
+    );
   }
 
   return (

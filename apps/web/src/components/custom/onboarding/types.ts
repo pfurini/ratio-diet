@@ -1,3 +1,5 @@
+import type { AllergenTag } from '@ratio-diet/backend/convex/lib/validators';
+
 type FormValues = {
   isOver18: boolean;
   noPathologies: boolean;
@@ -14,7 +16,7 @@ type FormValues = {
     | 'moderatamente_attivo'
     | 'molto_attivo'
     | 'atleta';
-  allergies: string[];
+  allergies: AllergenTag[];
   allergiesOther: string;
   dietaryPreference: 'onnivoro' | 'vegetariano' | 'vegano' | 'pescetariano';
   followedByNutritionist: boolean;

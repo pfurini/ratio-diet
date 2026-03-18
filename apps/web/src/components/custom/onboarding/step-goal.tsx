@@ -23,8 +23,8 @@ const StepGoal = ({ form }: Props) => (
     <form.Field name="goal">
       {(field: AnyFieldApi) => (
         <div className="space-y-2">
-          <Label>Obiettivo</Label>
-          <div className="space-y-2">
+          <Label id="goal-label">Obiettivo</Label>
+          <div className="space-y-2" role="radiogroup" aria-labelledby="goal-label">
             {GOAL_OPTIONS.map((opt) => (
               <label
                 key={opt.value}
@@ -60,8 +60,8 @@ const StepGoal = ({ form }: Props) => (
     <form.Field name="activityLevel">
       {(field: AnyFieldApi) => (
         <div className="space-y-2">
-          <Label>Livello di attività fisica</Label>
-          <div className="space-y-2">
+          <Label id="activityLevel-label">Livello di attività fisica</Label>
+          <div className="space-y-2" role="radiogroup" aria-labelledby="activityLevel-label">
             {ACTIVITY_OPTIONS.map((opt) => (
               <label
                 key={opt.value}

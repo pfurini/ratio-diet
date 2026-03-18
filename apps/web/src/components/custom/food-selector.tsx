@@ -13,6 +13,8 @@ import { Input } from '@ratio-diet/ui/components/input';
 import { useQuery } from 'convex/react';
 import { useEffect, useState } from 'react';
 
+import { useDebounce } from '@/hooks/use-debounce';
+
 import CustomFoodForm from './custom-food-form';
 import FoodName from './food-name';
 import Loader from './loader';
@@ -88,6 +90,7 @@ const FoodSelector = ({ onSelect, open, onOpenChange }: FoodSelectorProps) => {
   const [term, setTerm] = useState('');
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [showForm, setShowForm] = useState(false);
+  const debouncedTerm = useDebounce(term, 250);
 
   useEffect(() => {
     if (!open) {
@@ -97,7 +100,7 @@ const FoodSelector = ({ onSelect, open, onOpenChange }: FoodSelectorProps) => {
     }
   }, [open]);
 
-  const foods = useQuery(api.foods.search, { category, term: term || undefined });
+  const foods = useQuery(api.foods.search, { category, term: debouncedTerm || undefined });
   const categories = useQuery(api.foods.getCategories);
 
   const handleSelect = (foodId: Id<'foods'>) => {

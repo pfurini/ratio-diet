@@ -4,6 +4,8 @@ import { mutation, query } from './_generated/server';
 import { authComponent } from './auth';
 import { calculateMacros, getAgeFromDateOfBirth } from './lib/calculations';
 import { assertAdultDateOfBirth } from './lib/dateOfBirth';
+import { allergenValidator } from './lib/validators';
+import type { AllergenTag } from './lib/validators';
 
 const profileInputValidator = {
   activityLevel: v.union(
@@ -13,7 +15,7 @@ const profileInputValidator = {
     v.literal('molto_attivo'),
     v.literal('atleta')
   ),
-  allergies: v.array(v.string()),
+  allergies: v.array(allergenValidator),
   allergiesOther: v.optional(v.string()),
   bodyBuild: v.union(v.literal('snello'), v.literal('medio'), v.literal('robusto')),
   dateOfBirth: v.string(),
@@ -45,7 +47,7 @@ interface ProfileInput {
   bodyBuild: 'snello' | 'medio' | 'robusto';
   goal: 'dimagrimento' | 'mantenimento' | 'aumento_massa' | 'ricomposizione';
   activityLevel: 'sedentario' | 'leggermente_attivo' | 'moderatamente_attivo' | 'molto_attivo' | 'atleta';
-  allergies: string[];
+  allergies: AllergenTag[];
   allergiesOther?: string;
   dietaryPreference: 'onnivoro' | 'vegetariano' | 'vegano' | 'pescetariano';
   followedByNutritionist: boolean;

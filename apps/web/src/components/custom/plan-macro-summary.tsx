@@ -34,21 +34,17 @@ const computeMacroGaps = (achieved: MacroSummary, target: MacroSummary) => [
   },
 ];
 
-const hasBigGap = (achieved: MacroSummary, target: MacroSummary): boolean => {
-  const gaps = computeMacroGaps(achieved, target);
+type MacroGaps = ReturnType<typeof computeMacroGaps>;
+
+const checkHasBigGap = (gaps: MacroGaps): boolean => {
   const proteinGap = gaps.find(({ macro }) => macro === 'protein')?.gap ?? 0;
   const carbGap = gaps.find(({ macro }) => macro === 'carb')?.gap ?? 0;
   const fatGap = gaps.find(({ macro }) => macro === 'fat')?.gap ?? 0;
   return proteinGap > GAP_THRESHOLD || carbGap > GAP_THRESHOLD || fatGap > GAP_THRESHOLD;
 };
 
-const findGapMacro = (
-  achieved: MacroSummary,
-  target: MacroSummary,
-): 'protein' | 'carb' | 'fat' => {
-  const gaps = computeMacroGaps(achieved, target);
-  return gaps.toSorted((a, b) => b.gap - a.gap)[0]?.macro ?? 'protein';
-};
+const findGapMacroFromGaps = (gaps: MacroGaps): 'protein' | 'carb' | 'fat' =>
+  gaps.toSorted((a, b) => b.gap - a.gap)[0]?.macro ?? 'protein';
 
 const MACRO_LABEL: Record<'protein' | 'carb' | 'fat', string> = {
   carb: 'carboidrati',
@@ -66,12 +62,12 @@ const GapWarning = ({ macro }: GapWarningProps) => {
   const suggestions = queryResult ?? [];
 
   return (
-    <div className="rounded-lg border border-yellow-400 bg-yellow-50 p-3 dark:bg-yellow-950">
+    <div className="rounded-lg border border-yellow-400 bg-yellow-50 p-3 dark:bg-yellow-950" aria-busy={isLoading}>
       <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
         Divario elevato su {MACRO_LABEL[macro]}
       </p>
       {isLoading && (
-        <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-300">Loading...</p>
+        <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-300" role="status" aria-live="polite">Loading...</p>
       )}
       {suggestions && suggestions.length > 0 && (
         <ul className="mt-1 space-y-0.5">
@@ -87,8 +83,9 @@ const GapWarning = ({ macro }: GapWarningProps) => {
 };
 
 const PlanMacroSummary = ({ achieved, target }: PlanMacroSummaryProps) => {
-  const showWarning = hasBigGap(achieved, target);
-  const gapMacro = showWarning ? findGapMacro(achieved, target) : null;
+  const gaps = computeMacroGaps(achieved, target);
+  const showWarning = checkHasBigGap(gaps);
+  const gapMacro = showWarning ? findGapMacroFromGaps(gaps) : null;
 
   return (
     <section className="space-y-3 rounded-xl border p-4">

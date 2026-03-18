@@ -51,7 +51,11 @@ const TemplateList = () => {
   };
 
   if (templates === undefined) {
-    return <p className="text-muted-foreground text-sm">Caricamento...</p>;
+    return (
+      <p className="text-muted-foreground text-sm" role="status" aria-live="polite" aria-busy="true">
+        Caricamento...
+      </p>
+    );
   }
 
   if (templates.length === 0) {

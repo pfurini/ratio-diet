@@ -7,7 +7,7 @@ import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { useMutation, useQuery } from 'convex/react';
 import { Pencil, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import FoodName from './food-name';
 
@@ -23,12 +23,8 @@ interface MealItemRowProps {
 const useEditState = (initial: number) => {
   const [editing, setEditing] = useState(false);
   const [qty, setQty] = useState(initial.toString());
-  useEffect(() => {
-    if (!editing) {
-      setQty(initial.toString());
-    }
-  }, [initial, editing]);
-  return { editing, qty, setEditing, setQty };
+  const displayQty = editing ? qty : initial.toString();
+  return { editing, qty: displayQty, setEditing, setQty };
 };
 
 interface EditControlsProps {
@@ -145,7 +141,7 @@ const MealItemRow = ({
           {food ? (
             <FoodName name={food.name} source={food.source} />
           ) : (
-            <span className="text-muted-foreground">Caricamento...</span>
+            <span className="text-muted-foreground" role="status" aria-live="polite" aria-busy="true">Caricamento...</span>
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">

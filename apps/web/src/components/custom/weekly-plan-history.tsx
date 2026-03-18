@@ -66,7 +66,7 @@ const WeeklyPlanHistory = ({ onSelect, selectedId }: WeeklyPlanHistoryProps) => 
 
   if (plans === undefined) {
     return (
-      <div className="text-sm text-muted-foreground py-2">Caricamento storico...</div>
+      <div className="text-sm text-muted-foreground py-2" aria-busy="true" role="status" aria-live="polite">Caricamento storico...</div>
     );
   }
 

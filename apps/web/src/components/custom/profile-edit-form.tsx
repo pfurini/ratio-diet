@@ -2,6 +2,7 @@
 
 import { api } from '@ratio-diet/backend/convex/_generated/api';
 import type { Doc } from '@ratio-diet/backend/convex/_generated/dataModel';
+import type { AllergenTag } from '@ratio-diet/backend/convex/lib/validators';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
@@ -30,7 +31,7 @@ interface ProfileFormState {
   bodyBuild: BodyBuild;
   goal: Goal;
   activityLevel: ActivityLevel;
-  allergies: string[];
+  allergies: AllergenTag[];
   allergiesOther: string;
   dietaryPreference: DietaryPreference;
   followedByNutritionist: boolean;
@@ -258,7 +259,11 @@ const ProfileEditForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (profile === undefined) {
-    return <p className="text-muted-foreground text-sm">Caricamento...</p>;
+    return (
+      <p className="text-muted-foreground text-sm" role="status" aria-live="polite" aria-busy="true">
+        Caricamento...
+      </p>
+    );
   }
 
   if (profile === null) {

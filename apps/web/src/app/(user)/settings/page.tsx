@@ -39,7 +39,11 @@ const SubscriptionSection = () => {
   };
 
   if (subscription === undefined) {
-    return <p className="text-muted-foreground text-sm">Caricamento...</p>;
+    return (
+      <p className="text-muted-foreground text-sm" role="status" aria-live="polite" aria-busy="true">
+        Caricamento...
+      </p>
+    );
   }
 
   return (

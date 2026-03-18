@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@ratio-diet/ui/compone
 import { useQuery } from 'convex/react';
 import { AlertCircle, Printer } from 'lucide-react';
 
+import { handlePrint } from '@/lib/print';
+
 import DayView from './day-view';
 import ShoppingList from './shopping-list';
 
@@ -28,10 +30,6 @@ const formatDate = (dateStr: string): string => {
     date = new Date(dateStr);
   }
   return date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
-};
-
-const handlePrint = () => {
-  window.print();
 };
 
 interface ReadOnlyBannerProps {
@@ -124,8 +122,8 @@ const WeeklyPlanView = ({ weeklyPlanId, canEdit }: WeeklyPlanViewProps) => {
 
   if (plan === undefined) {
     return (
-      <div className="rounded-xl border p-6 text-center text-sm text-muted-foreground">
-        Caricamento piano...
+      <div className="rounded-xl border p-6 text-center text-sm text-muted-foreground" aria-busy="true">
+        <p role="status" aria-live="polite">Caricamento piano...</p>
       </div>
     );
   }

@@ -6,6 +6,8 @@ import type { Id } from './_generated/dataModel';
 import { internalMutation, mutation, query } from './_generated/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { authComponent } from './auth';
+import { allergenValidator } from './lib/validators';
+import type { AllergenTag } from './lib/validators';
 
 const CUSTOM_FOOD_LIMIT = 100;
 const CREA_SEED_BATCH_SIZE = 25;
@@ -102,7 +104,7 @@ export const seedCREA = internalMutation({
     for (const batch of batches) {
       const insertPromises = batch.map((food) =>
         ctx.db.insert('foods', {
-          allergenTags: food.allergenTags,
+          allergenTags: food.allergenTags as AllergenTag[],
           carbPer100g: food.carbPer100g,
           category: food.category,
           fatPer100g: food.fatPer100g,
@@ -196,12 +198,13 @@ export const search = query({
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    const profile = user
-      ? await ctx.db
-          .query('userProfiles')
-          .withIndex('by_userId', (q) => q.eq('userId', user._id))
-          .unique()
-      : null;
+    if (!user) {
+      throw new ConvexError('Unauthenticated');
+    }
+    const profile = await ctx.db
+      .query('userProfiles')
+      .withIndex('by_userId', (q) => q.eq('userId', user._id))
+      .unique();
 
     const { term, category } = args;
     const shouldLimitCreaResults = !term && !category;
@@ -226,7 +229,7 @@ export const search = query({
         .collect();
     }
 
-    const customResults = user ? await fetchCustomFoods(ctx, user._id, term) : [];
+    const customResults = await fetchCustomFoods(ctx, user._id, term);
 
     const combined = [...creaResults, ...customResults] as FoodDoc[];
     const byCat = filterFoodsByCategory(combined, category);
@@ -240,6 +243,11 @@ export const search = query({
 export const getCategories = query({
   args: {},
   handler: async (ctx) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new ConvexError('Unauthenticated');
+    }
+
     const foods = await ctx.db
       .query('foods')
       .withIndex('by_source', (q) => q.eq('source', 'crea'))
@@ -252,7 +260,7 @@ export const getCategories = query({
 
 export const addCustomFood = mutation({
   args: {
-    allergenTags: v.array(v.string()),
+    allergenTags: v.array(allergenValidator),
     carbPer100g: v.number(),
     category: v.string(),
     fatPer100g: v.number(),
@@ -357,12 +365,13 @@ export const suggestForMacro = query({
   },
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
-    const profile = user
-      ? await ctx.db
-          .query('userProfiles')
-          .withIndex('by_userId', (q) => q.eq('userId', user._id))
-          .unique()
-      : null;
+    if (!user) {
+      throw new ConvexError('Unauthenticated');
+    }
+    const profile = await ctx.db
+      .query('userProfiles')
+      .withIndex('by_userId', (q) => q.eq('userId', user._id))
+      .unique();
 
     const allFoods = await fetchAllCreaFoods(ctx);
     const userAllergens = profile?.allergies ?? [];
@@ -374,5 +383,21 @@ export const suggestForMacro = query({
       (a: FoodDoc, b: FoodDoc) => (b[sortField] as number) - (a[sortField] as number)
     );
     return sorted.slice(0, args.limit ?? 5);
+  },
+});
+
+export const listCustom = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new ConvexError('Unauthenticated');
+    }
+
+    return ctx.db
+      .query('foods')
+      .withIndex('by_userId', (q) => q.eq('userId', user._id))
+      .filter((q) => q.eq(q.field('source'), 'custom'))
+      .collect();
   },
 });

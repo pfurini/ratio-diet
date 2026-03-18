@@ -175,13 +175,13 @@ const PlanTemplateBar = ({ meals, onLoadTemplate, planId }: PlanTemplateBarProps
             className="border-input bg-background w-full rounded-md border px-3 py-1.5 text-sm"
             defaultValue=""
             onChange={(e) => {
-              const t = (templates as TemplateDoc[]).find((tpl) => tpl._id === e.target.value);
+              const t = templates.find((tpl) => tpl._id === e.target.value);
               if (t) handleLoadTemplate(t);
               e.target.value = '';
             }}
           >
             <option value="" disabled>Seleziona template...</option>
-            {(templates as TemplateDoc[]).map((t) => (
+            {templates.map((t) => (
               <option key={t._id} value={t._id}>{t.name}</option>
             ))}
           </select>

@@ -6,7 +6,7 @@ import type { MealType } from '@ratio-diet/backend/convex/schema';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { useQuery } from 'convex/react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import FoodName from './food-name';
 import FoodSelector from './food-selector';
@@ -59,7 +59,7 @@ const FoodItemRow = ({ item, index, onConstraintChange, onRemove }: FoodItemRowP
             className="text-sm font-medium"
           />
         ) : (
-          <span className="text-muted-foreground text-sm">Caricamento...</span>
+          <span className="text-muted-foreground text-sm" role="status" aria-live="polite" aria-busy="true">Caricamento...</span>
         )}
         <Button
           type="button"
@@ -106,25 +106,30 @@ const FoodItemRow = ({ item, index, onConstraintChange, onRemove }: FoodItemRowP
 const MealBuilder = ({ mealType, items, onItemsChange }: MealBuilderProps) => {
   const [selectorOpen, setSelectorOpen] = useState(false);
 
-  const handleAdd = (foodId: Id<'foods'>) => {
-    onItemsChange([...items, { foodId }]);
-  };
+  const handleAdd = useCallback(
+    (foodId: Id<'foods'>) => {
+      onItemsChange([...items, { foodId }]);
+    },
+    [items, onItemsChange],
+  );
 
-  const handleRemove = (index: number) => {
-    onItemsChange(items.filter((_, i) => i !== index));
-  };
+  const handleRemove = useCallback(
+    (index: number) => {
+      onItemsChange(items.filter((_, i) => i !== index));
+    },
+    [items, onItemsChange],
+  );
 
-  const handleConstraintChange = (
-    index: number,
-    field: 'constraintMin' | 'constraintMax',
-    val: string,
-  ) => {
-    const updated = items.map((item, i) => {
-      if (i !== index) return item;
-      return { ...item, [field]: parseOptionalNum(val) };
-    });
-    onItemsChange(updated);
-  };
+  const handleConstraintChange = useCallback(
+    (index: number, field: 'constraintMin' | 'constraintMax', val: string) => {
+      const updated = items.map((item, i) => {
+        if (i !== index) return item;
+        return { ...item, [field]: parseOptionalNum(val) };
+      });
+      onItemsChange(updated);
+    },
+    [items, onItemsChange],
+  );
 
   return (
     <section className="rounded-xl border p-4">

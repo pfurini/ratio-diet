@@ -136,8 +136,10 @@ const WeeklyPlanPage = () => {
 
   if (subscriptionStatus === undefined) {
     return (
-      <div className="mx-auto max-w-md px-4 py-8">
-        <p className="text-center text-muted-foreground text-sm">Caricamento...</p>
+      <div className="mx-auto max-w-md px-4 py-8" aria-busy="true">
+        <p className="text-center text-muted-foreground text-sm" role="status" aria-live="polite">
+          Caricamento...
+        </p>
       </div>
     );
   }

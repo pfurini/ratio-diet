@@ -20,7 +20,13 @@ const WeeklyPlanGenerator = ({ onGenerated }: WeeklyPlanGeneratorProps) => {
     setLoading(true);
     setError(null);
     try {
-      const planId = await generatePlan({});
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0 = Sunday
+      const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(today);
+      monday.setDate(today.getDate() + daysToMonday);
+      const weekStartDate = monday.toISOString().slice(0, 10);
+      const planId = await generatePlan({ weekStartDate });
       onGenerated(planId as Id<'weeklyPlans'>);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Errore durante la generazione';
@@ -31,7 +37,7 @@ const WeeklyPlanGenerator = ({ onGenerated }: WeeklyPlanGeneratorProps) => {
   };
 
   return (
-    <div className="rounded-xl border p-6 space-y-4">
+    <div className="rounded-xl border p-6 space-y-4" aria-busy={loading}>
       <div>
         <h2 className="text-lg font-semibold">Genera piano settimanale</h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -60,7 +66,7 @@ const WeeklyPlanGenerator = ({ onGenerated }: WeeklyPlanGeneratorProps) => {
         )}
       </Button>
       {loading && (
-        <p className="text-xs text-center text-muted-foreground">
+        <p className="text-xs text-center text-muted-foreground" role="status" aria-live="polite">
           L&apos;AI sta creando il tuo piano personalizzato, attendere prego...
         </p>
       )}

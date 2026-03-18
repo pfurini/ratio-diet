@@ -29,7 +29,10 @@ const initialState: CustomFoodFormState = {
   protein: '',
 };
 
-const parseNum = (val: string): number => parseFloat(val) || 0;
+const parseNum = (val: string): number => {
+  const n = parseFloat(val);
+  return Number.isNaN(n) ? Number.NaN : n;
+};
 
 interface CustomFoodFormProps {
   onAdded: () => void;
@@ -53,17 +56,25 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
       return;
     }
     setError('');
+    const kcal = parseNum(form.kcal);
+    const protein = parseNum(form.protein);
+    const carbs = parseNum(form.carbs);
+    const fat = parseNum(form.fat);
+    if ([kcal, protein, carbs, fat].some(Number.isNaN)) {
+      setError('Inserisci valori numerici validi per i macronutrienti');
+      return;
+    }
     setIsSubmitting(true);
     try {
       await addCustomFood({
         allergenTags: [],
-        carbPer100g: parseNum(form.carbs),
+        carbPer100g: carbs,
         category: form.category,
-        fatPer100g: parseNum(form.fat),
+        fatPer100g: fat,
         foodType: form.foodType,
-        kcalPer100g: parseNum(form.kcal),
+        kcalPer100g: kcal,
         name: form.name,
-        proteinPer100g: parseNum(form.protein),
+        proteinPer100g: protein,
       });
       setForm(initialState);
       onAdded();

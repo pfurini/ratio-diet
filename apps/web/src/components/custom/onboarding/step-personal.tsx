@@ -41,8 +41,8 @@ const StepPersonal = ({ form }: Props) => (
     <form.Field name="sex">
       {(field: AnyFieldApi) => (
         <div className="space-y-2">
-          <Label>Sesso</Label>
-          <div className="flex gap-4">
+          <Label id="sex-label">Sesso</Label>
+          <div className="flex gap-4" role="radiogroup" aria-labelledby="sex-label">
             {SEX_OPTIONS.map((opt) => (
               <label key={opt.value} className="flex cursor-pointer items-center gap-2">
                 <input
@@ -106,8 +106,8 @@ const StepPersonal = ({ form }: Props) => (
     <form.Field name="bodyBuild">
       {(field: AnyFieldApi) => (
         <div className="space-y-2">
-          <Label>Corporatura</Label>
-          <div className="flex gap-4">
+          <Label id="bodyBuild-label">Corporatura</Label>
+          <div className="flex gap-4" role="radiogroup" aria-labelledby="bodyBuild-label">
             {BODY_BUILD_OPTIONS.map((opt) => (
               <label key={opt.value} className="flex cursor-pointer items-center gap-2">
                 <input

@@ -4,6 +4,8 @@ import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Printer } from 'lucide-react';
 
+import { handlePrint } from '@/lib/print';
+
 interface ShoppingItem {
   foodId: Id<'foods'>;
   name: string;
@@ -52,10 +54,6 @@ const CategorySection = ({ category, items }: CategorySectionProps) => (
     </ul>
   </div>
 );
-
-const handlePrint = () => {
-  window.print();
-};
 
 const ShoppingList = ({ shoppingList }: ShoppingListProps) => {
   const grouped = groupByCategory(shoppingList);

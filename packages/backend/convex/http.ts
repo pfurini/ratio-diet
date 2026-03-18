@@ -73,7 +73,11 @@ const upsertSubscription = async (ctx: ActionCtx, userId: string, subscription: 
   if (!stripeCustomerId) {
     return;
   }
-  const status = STATUS_MAP[subscription.status] ?? 'past_due';
+  const mappedStatus = STATUS_MAP[subscription.status];
+  if (mappedStatus === undefined) {
+    console.warn(`Unknown Stripe subscription status: ${subscription.status}, defaulting to past_due`);
+  }
+  const status = mappedStatus ?? 'past_due';
   const startDate = toDateString(subscription.start_date);
   const nextRenewalDate = toDateString(getCurrentPeriodEnd(subscription));
 

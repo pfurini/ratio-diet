@@ -37,7 +37,7 @@ interface OptimizerResult {
 const DEFAULT_MAX_GRAMS = 500;
 const MAX_ITERATIONS = 100;
 const LEARNING_RATE = 0.5;
-const GAP_THRESHOLD = 0.15;
+const GAP_THRESHOLD = 0.08;
 
 const WEIGHTS = { carb: 0.8, fat: 0.8, protein: 1 };
 
@@ -228,15 +228,14 @@ export const distributeMacrosToMeals = (dailyMacros: MacroTarget, mealTypes: str
   const result: Record<string, MacroTarget> = {};
   for (const mealType of mealTypes) {
     if (!(mealType in distribution)) {
-      throw new ConvexError({
-        code: 'INVALID_INPUT',
-        message:
-          `Unrecognized meal type: "${mealType}". ` +
-          `mealTypes: ${JSON.stringify(mealTypes)}, ` +
-          `distribution keys: ${JSON.stringify(Object.keys(distribution))}, ` +
-          `result so far: ${JSON.stringify(result)}, ` +
-          `dailyMacros: ${JSON.stringify(dailyMacros)}`,
-      });
+      console.error(
+        `Unrecognized meal type: "${mealType}".`,
+        `mealTypes: ${JSON.stringify(mealTypes)},`,
+        `distribution keys: ${JSON.stringify(Object.keys(distribution))},`,
+        `result so far: ${JSON.stringify(result)},`,
+        `dailyMacros: ${JSON.stringify(dailyMacros)}`
+      );
+      throw new ConvexError('Unrecognized meal type encountered during optimization');
     }
     const factor = distribution[mealType as keyof typeof distribution];
     result[mealType] = {
