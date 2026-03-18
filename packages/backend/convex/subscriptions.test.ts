@@ -1,5 +1,6 @@
 import { buildCheckoutSessionCreateParams } from './subscriptions';
 
+// eslint-disable-next-line jest/valid-title
 describe(buildCheckoutSessionCreateParams, () => {
   it('writes userId to both session and subscription metadata', () => {
     const params = buildCheckoutSessionCreateParams('user_123', 'https://app.example.com', 'price_abc');

@@ -53,6 +53,27 @@ interface ProfileInput {
 
 const MAX_WEIGHT_KG = 500;
 const MAX_HEIGHT_CM = 300;
+const MAX_ALLERGIES_OTHER_LENGTH = 300;
+
+const normalizeAllergiesOther = (allergiesOther?: string): string | undefined => {
+  if (!allergiesOther) {
+    return undefined;
+  }
+
+  const normalized = allergiesOther.replaceAll(/\s+/g, ' ').trim();
+  if (normalized.length === 0) {
+    return undefined;
+  }
+
+  if (normalized.length > MAX_ALLERGIES_OTHER_LENGTH) {
+    throw new ConvexError({
+      code: 'INVALID_INPUT',
+      message: `Il campo "altre allergie" non puo superare ${MAX_ALLERGIES_OTHER_LENGTH} caratteri`,
+    });
+  }
+
+  return normalized;
+};
 
 const assertValidAnthropometrics = ({ heightCm, weightKg }: Pick<ProfileInput, 'heightCm' | 'weightKg'>): void => {
   if (weightKg <= 0 || weightKg > MAX_WEIGHT_KG) {
@@ -96,10 +117,12 @@ export const create = mutation({
 
     assertAdultDateOfBirth(args.dateOfBirth);
     assertValidAnthropometrics(args);
+    const allergiesOther = normalizeAllergiesOther(args.allergiesOther);
     const macros = computeProfileMacros(args);
 
     return await ctx.db.insert('userProfiles', {
       ...args,
+      allergiesOther,
       lastRecalcWeightKg: args.weightKg,
       macros,
       userId: user._id,
@@ -143,10 +166,12 @@ export const update = mutation({
 
     assertAdultDateOfBirth(args.dateOfBirth);
     assertValidAnthropometrics(args);
+    const allergiesOther = normalizeAllergiesOther(args.allergiesOther);
     const macros = computeProfileMacros(args);
 
     await ctx.db.patch(profile._id, {
       ...args,
+      allergiesOther,
       lastRecalcWeightKg: args.weightKg,
       macros,
     });

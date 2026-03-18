@@ -34,10 +34,6 @@ interface MacroSnapshot {
   calorieTarget: number;
   tdee: number;
   achievedCalories?: number;
-  calories?: number;
-  caloriesConsumed?: number;
-  caloriesAchieved?: number;
-  kcal?: number;
 }
 
 const isSpuntino = (type: MealType) => type === 'spuntino_mattina' || type === 'spuntino_pomeriggio';
@@ -57,13 +53,7 @@ const getVisibleMeals = (meals: MealState[], showSpuntini: boolean): MealState[]
 const updateMealItems = (meals: MealState[], mealType: MealType, items: MealItem[]): MealState[] =>
   meals.map((m) => (m.type === mealType ? { ...m, items } : m));
 
-const getAchievedCalories = (macrosAchieved: MacroSnapshot): number =>
-  macrosAchieved.achievedCalories ??
-  macrosAchieved.calories ??
-  macrosAchieved.caloriesConsumed ??
-  macrosAchieved.caloriesAchieved ??
-  macrosAchieved.kcal ??
-  0;
+const getAchievedCalories = (macrosAchieved: MacroSnapshot): number => macrosAchieved.achievedCalories ?? 0;
 
 const DatePicker = ({ date, onChange }: { date: string; onChange: (d: string) => void }) => (
   <div className="flex items-center gap-2">

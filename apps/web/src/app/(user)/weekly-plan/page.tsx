@@ -17,6 +17,7 @@ const DUPLICATE_SUBSCRIPTION_MESSAGE =
   'Hai gia un abbonamento attivo o in prova per questo piano. Apri il Portale Cliente per gestirlo.';
 const PORTAL_OPEN_ERROR_MESSAGE = 'Impossibile aprire il portale.';
 const PORTAL_OPEN_UNEXPECTED_ERROR_MESSAGE = "Errore durante l'apertura del portale.";
+const PREMIUM_ACCESS_STATUSES = new Set(['active', 'trialing']);
 
 const useCheckoutRedirect = () => {
   const createSession = useAction(api.subscriptions.createCheckoutSession);
@@ -140,17 +141,19 @@ const WeeklyPlanPage = () => {
     );
   }
 
-  const isActive = subscriptionStatus?.status === 'active';
+  const hasPremiumAccess = PREMIUM_ACCESS_STATUSES.has(subscriptionStatus?.status ?? '');
   const hasSubscription = subscriptionStatus !== null;
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-8">
       <h1 className="text-2xl font-bold">Piano settimanale</h1>
-      {(!hasSubscription || (hasSubscription && !isActive)) && <UpgradePrompt />}
-      {hasSubscription && isActive && (
+      {(!hasSubscription || (hasSubscription && !hasPremiumAccess)) && <UpgradePrompt />}
+      {hasSubscription && hasPremiumAccess && (
         <ActiveView selectedPlanId={selectedPlanId} onSelect={setSelectedPlanId} onGenerated={handleGenerated} />
       )}
-      {hasSubscription && !isActive && <InactiveView selectedPlanId={selectedPlanId} onSelect={setSelectedPlanId} />}
+      {hasSubscription && !hasPremiumAccess && (
+        <InactiveView selectedPlanId={selectedPlanId} onSelect={setSelectedPlanId} />
+      )}
     </div>
   );
 };

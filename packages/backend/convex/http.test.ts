@@ -2,6 +2,7 @@ import { resolveUserIdForSubscriptionEvent } from './http';
 
 type ResolveParams = Parameters<typeof resolveUserIdForSubscriptionEvent>;
 
+// eslint-disable-next-line jest/valid-title
 describe(resolveUserIdForSubscriptionEvent, () => {
   it('uses subscription metadata.userId first', async () => {
     const runQuery = vi.fn();

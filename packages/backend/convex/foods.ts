@@ -9,6 +9,7 @@ import { authComponent } from './auth';
 
 const CUSTOM_FOOD_LIMIT = 100;
 const CREA_SEED_BATCH_SIZE = 25;
+const UNFILTERED_CREA_SEARCH_LIMIT = 120;
 
 const HIDDEN_CATEGORIES: Record<string, string[]> = {
   onnivoro: [],
@@ -175,18 +176,27 @@ export const search = query({
       : null;
 
     const { term, category } = args;
+    const shouldLimitCreaResults = !term && !category;
     const dietaryPreference = profile?.dietaryPreference ?? 'onnivoro';
     const excludeAllergens = profile?.allergies ?? [];
 
-    const creaResults = term
-      ? await ctx.db
-          .query('foods')
-          .withSearchIndex('search_name', (q) => q.search('name', term).eq('source', 'crea'))
-          .collect()
-      : await ctx.db
-          .query('foods')
-          .withIndex('by_source', (q) => q.eq('source', 'crea'))
-          .collect();
+    let creaResults;
+    if (term) {
+      creaResults = await ctx.db
+        .query('foods')
+        .withSearchIndex('search_name', (q) => q.search('name', term).eq('source', 'crea'))
+        .collect();
+    } else if (shouldLimitCreaResults) {
+      creaResults = await ctx.db
+        .query('foods')
+        .withIndex('by_source', (q) => q.eq('source', 'crea'))
+        .take(UNFILTERED_CREA_SEARCH_LIMIT);
+    } else {
+      creaResults = await ctx.db
+        .query('foods')
+        .withIndex('by_source', (q) => q.eq('source', 'crea'))
+        .collect();
+    }
 
     const customResults = user ? await fetchCustomFoods(ctx, user._id, term) : [];
 

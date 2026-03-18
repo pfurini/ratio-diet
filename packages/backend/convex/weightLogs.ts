@@ -5,6 +5,7 @@ import { mutation, query } from './_generated/server';
 import type { MutationCtx } from './_generated/server';
 import { authComponent } from './auth';
 import { calculateMacros, getAgeFromDateOfBirth } from './lib/calculations';
+import { assertDateOnly } from './lib/dateOnly';
 
 const RECALC_THRESHOLD_KG = 2;
 const DEFAULT_MAX_WEIGHT_LOGS = 1000;
@@ -97,6 +98,7 @@ export const log = mutation({
     weightKg: v.number(),
   },
   handler: async (ctx, args) => {
+    assertDateOnly(args.date);
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });

@@ -4,6 +4,7 @@ import type { Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { authComponent } from './auth';
+import { assertDateOnly } from './lib/dateOnly';
 import { distributeMacrosToMeals, optimizeMealQuantities } from './lib/optimizer';
 import { mealTypeValidator } from './schema';
 
@@ -229,6 +230,7 @@ export const optimize = mutation({
     meals: v.array(mealInput),
   },
   handler: async (ctx, args) => {
+    assertDateOnly(args.date);
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
@@ -262,6 +264,7 @@ export const get = query({
     date: v.string(),
   },
   handler: async (ctx, args) => {
+    assertDateOnly(args.date);
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       return null;

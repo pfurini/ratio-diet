@@ -1,5 +1,6 @@
 import { calculateMacros } from './calculations';
 
+// eslint-disable-next-line jest/valid-title
 describe(calculateMacros, () => {
   it('calculates correctly for a 30yo male, 80kg, 180cm, moderately active, maintenance', () => {
     const result = calculateMacros({

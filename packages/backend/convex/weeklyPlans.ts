@@ -5,6 +5,7 @@ import type { Id } from './_generated/dataModel';
 import { action, internalMutation, mutation, query } from './_generated/server';
 import type { ActionCtx, MutationCtx } from './_generated/server';
 import { authComponent } from './auth';
+import { hasPremiumAccess } from './lib/premiumAccess';
 import { addFoodToShoppingMap, buildShoppingList, buildShoppingListFromMap } from './lib/shoppingList';
 import { calcItemsMacros, findFood, generateWithRetry } from './lib/weeklyPlanGenerator';
 import type { DayPlan, FoodDoc, MacroTarget, MealItem, WeeklyPlanResult } from './lib/weeklyPlanGenerator';
@@ -22,10 +23,10 @@ interface ShoppingEntry {
 
 // --- Date helpers ---
 
-const getNextMonday = (): string => {
+const getWeekStartDate = (): string => {
   const now = new Date();
   const dayOfWeek = now.getDay();
-  const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7;
   const monday = new Date(now);
   monday.setDate(now.getDate() + daysUntilMonday);
   return monday.toISOString().split('T')[0] as string;
@@ -135,7 +136,7 @@ const validateSubscription = async (ctx: ActionCtx): Promise<string> => {
   }
 
   const sub = await ctx.runQuery(api.subscriptions.getStatus, {});
-  if (!sub || sub.status !== 'active') {
+  if (!sub || !hasPremiumAccess(sub.status)) {
     throw new ConvexError({ code: 'FORBIDDEN', message: 'Abbonamento non attivo' });
   }
 
@@ -277,7 +278,7 @@ export const generate = action({
     const macros: MacroTarget = { ...profile.macros };
     const prompt = buildPromptForProfile(profile, foods);
     const result = await generateWithRetry(prompt, foods, macros);
-    const weekStart = getNextMonday();
+    const weekStart = getWeekStartDate();
 
     return saveWeeklyPlan(ctx, userId, weekStart, result, foods, macros);
   },
@@ -331,7 +332,7 @@ const verifyEditAccess = async (ctx: MutationCtx, weeklyPlanId: Id<'weeklyPlans'
     .query('subscriptions')
     .withIndex('by_userId', (q) => q.eq('userId', user._id))
     .unique();
-  if (!sub || sub.status !== 'active') {
+  if (!sub || !hasPremiumAccess(sub.status)) {
     throw new ConvexError({ code: 'FORBIDDEN', message: 'Abbonamento attivo richiesto per modificare il piano' });
   }
 

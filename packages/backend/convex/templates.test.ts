@@ -1,5 +1,6 @@
 import { buildTemplateInsertDoc } from './templates';
 
+// eslint-disable-next-line jest/valid-title
 describe(buildTemplateInsertDoc, () => {
   it('allows template meal items without quantityGrams', () => {
     const doc = buildTemplateInsertDoc('user_1', {

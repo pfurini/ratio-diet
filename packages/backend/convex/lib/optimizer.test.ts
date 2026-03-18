@@ -1,5 +1,6 @@
 import { optimizeMealQuantities } from './optimizer';
 
+// eslint-disable-next-line jest/valid-title
 describe(optimizeMealQuantities, () => {
   const chickenBreast = {
     carbPer100g: 0,

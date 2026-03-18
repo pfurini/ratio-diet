@@ -19,6 +19,8 @@ interface PromptInput {
   dietaryPreference: string;
 }
 
+const MAX_PROMPT_ALLERGIES_OTHER_LENGTH = 300;
+
 const buildFoodList = (foods: FoodForPrompt[]): string =>
   foods
     .map(
@@ -27,9 +29,21 @@ const buildFoodList = (foods: FoodForPrompt[]): string =>
     )
     .join('\n');
 
+const sanitizeForPrompt = (value: string): string =>
+  value
+    // eslint-disable-next-line no-control-regex
+    .replaceAll(/[\u0000-\u001F\u007F]/g, ' ')
+    .replaceAll(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_PROMPT_ALLERGIES_OTHER_LENGTH);
+
 const buildAllergyNote = (allergies: string[], allergiesOther?: string): string =>
   allergies.length > 0 || allergiesOther
-    ? `Allergie/intolleranze: ${allergies.length > 0 ? allergies.join(', ') : ''}${allergiesOther ? `${allergies.length > 0 ? '. ' : ''}Altro: ${allergiesOther}` : ''}\n`
+    ? `Allergie/intolleranze: ${allergies.length > 0 ? allergies.join(', ') : ''}${
+        allergiesOther
+          ? `${allergies.length > 0 ? '. ' : ''}Altro (testo utente): ${JSON.stringify(sanitizeForPrompt(allergiesOther))}`
+          : ''
+      }\n`
     : '';
 
 export const buildWeeklyPlanPrompt = (input: PromptInput): string => {
