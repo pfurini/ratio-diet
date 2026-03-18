@@ -85,4 +85,17 @@ describe(optimizeMealQuantities, () => {
     expect(result.success).toBeFalsy();
     expect(result.gap).toBeDefined();
   });
+
+  it('reports overshoot when target macro is zero but achieved > 0', () => {
+    const result = optimizeMealQuantities({
+      constraints: {},
+      foods: [oliveOil],
+      macroTarget: { carbGrams: 0, fatGrams: 0, proteinGrams: 0 },
+    });
+
+    expect(result.success).toBeFalsy();
+    expect(result.gap).toBeDefined();
+    expect(result.macrosAchieved.fatGrams).toBeGreaterThan(0);
+    expect(result.gap!.fat).toBe(Number.POSITIVE_INFINITY);
+  });
 });

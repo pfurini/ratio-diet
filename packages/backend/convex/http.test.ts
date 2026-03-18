@@ -23,7 +23,7 @@ describe(resolveUserIdForSubscriptionEvent, () => {
     );
 
     expect(userId).toBe('user_from_sub');
-    expect(runQuery).toHaveBeenCalledTimes(1);
+    expect(runQuery).toHaveBeenCalledOnce();
     expect(runQuery).toHaveBeenCalledWith(expect.anything(), { stripeSubscriptionId: 'sub_1' });
   });
 

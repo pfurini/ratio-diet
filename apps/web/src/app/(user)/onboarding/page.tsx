@@ -40,7 +40,7 @@ const OnboardingPage = () => {
       <div className="mx-auto max-w-2xl px-4 py-8">
         <h1 className="mb-2 text-2xl font-bold">Errore nel caricamento del profilo</h1>
         <p className="text-muted-foreground mb-6">
-          {queryError.message || 'Si e verificato un errore. Riprova tra qualche istante.'}
+          {queryError.message || 'Si è verificato un errore. Riprova tra qualche istante.'}
         </p>
         <button
           className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2"

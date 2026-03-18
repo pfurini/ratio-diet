@@ -110,7 +110,11 @@ export const createCheckoutSession = action({
       }
     }
 
-    const session = await stripe.checkout.sessions.create(buildCheckoutSessionCreateParams(user._id, siteUrl, priceId));
+    const sessionParams = buildCheckoutSessionCreateParams(user._id, siteUrl, priceId);
+    if (existingSub?.stripeCustomerId) {
+      sessionParams.customer = existingSub.stripeCustomerId;
+    }
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return { url: session.url };
   },

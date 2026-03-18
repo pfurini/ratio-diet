@@ -46,7 +46,8 @@ const useCheckoutRedirect = () => {
   const handleManageSubscription = async () => {
     setPortalLoading(true);
     try {
-      const { url } = await createPortalSession({});
+      const result = await createPortalSession({});
+      const url = result?.url;
       if (url) {
         // Keep loading state during navigation.
         window.location.href = url;

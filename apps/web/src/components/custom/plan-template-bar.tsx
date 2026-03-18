@@ -25,7 +25,12 @@ interface TemplateDoc {
   name: string;
   meals: Array<{
     type: MealType;
-    items: Array<{ foodId: Id<'foods'>; constraintMin?: number; constraintMax?: number }>;
+    items: Array<{
+      foodId: Id<'foods'>;
+      constraintMin?: number;
+      constraintMax?: number;
+      quantityGrams?: number;
+    }>;
   }>;
 }
 
@@ -67,7 +72,7 @@ const TemplateSaveForm = ({ meals }: { meals: MealState[] }) => {
       setErrorMessage(
         `Impossibile salvare il template. ${getErrorDetail(
           error,
-          'Si e verificato un errore imprevisto.',
+          'Si è verificato un errore imprevisto.',
         )}`,
       );
     } finally {
@@ -120,7 +125,7 @@ const CompleteButton = ({ planId }: CompleteButtonProps) => {
       setErrorMessage(
         `Impossibile completare la giornata. ${getErrorDetail(
           error,
-          'Si e verificato un errore imprevisto.',
+          'Si è verificato un errore imprevisto.',
         )}`,
       );
     }
@@ -151,6 +156,7 @@ const PlanTemplateBar = ({ meals, onLoadTemplate, planId }: PlanTemplateBarProps
         constraintMax: item.constraintMax,
         constraintMin: item.constraintMin,
         foodId: item.foodId,
+        quantityGrams: item.quantityGrams,
       })),
       type: m.type,
     }));

@@ -21,6 +21,7 @@ export interface MealItem {
   foodId: Id<'foods'>;
   constraintMin?: number;
   constraintMax?: number;
+  quantityGrams?: number;
 }
 
 interface MealBuilderProps {

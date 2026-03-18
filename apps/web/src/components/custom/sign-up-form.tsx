@@ -81,10 +81,9 @@ const SignUpForm = () => {
           { email: value.email, name: value.name, password: value.password },
           {
             onError: handleSignUpError,
-            onSuccess: () => {},
+            onSuccess: () => handleSignUpSuccess(router),
           }
         );
-        handleSignUpSuccess(router);
       } catch (error) {
         handleSignUpError(error as { error?: { message?: string; statusText?: string } });
       }

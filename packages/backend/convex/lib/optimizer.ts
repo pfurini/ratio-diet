@@ -101,7 +101,7 @@ const roundQuantities = (quantities: Record<FoodId, number>, constraints: Record
   for (const id of Object.keys(quantities)) {
     const roundedValue = Math.round(quantities[id]);
     const min = constraints[id]?.min ?? 0;
-    const max = constraints[id]?.max ?? Number.MAX_SAFE_INTEGER;
+    const max = constraints[id]?.max ?? DEFAULT_MAX_GRAMS;
     quantities[id] = Math.min(max, Math.max(min, roundedValue));
   }
 };
@@ -136,11 +136,15 @@ const runOptimizationLoop = (
   }
 };
 
-const computeGap = (target: MacroTarget, achieved: MacroTarget): { protein: number; carb: number; fat: number } => ({
-  carb: target.carbGrams > 0 ? (achieved.carbGrams - target.carbGrams) / target.carbGrams : 0,
-  fat: target.fatGrams > 0 ? (achieved.fatGrams - target.fatGrams) / target.fatGrams : 0,
-  protein: target.proteinGrams > 0 ? (achieved.proteinGrams - target.proteinGrams) / target.proteinGrams : 0,
-});
+const computeGap = (target: MacroTarget, achieved: MacroTarget): { protein: number; carb: number; fat: number } => {
+  const gapFor = (targetG: number, achievedG: number) =>
+    targetG > 0 ? (achievedG - targetG) / targetG : achievedG > 0 ? Number.POSITIVE_INFINITY : 0;
+  return {
+    carb: gapFor(target.carbGrams, achieved.carbGrams),
+    fat: gapFor(target.fatGrams, achieved.fatGrams),
+    protein: gapFor(target.proteinGrams, achieved.proteinGrams),
+  };
+};
 
 const isConstraintBound = (
   foods: FoodNutrition[],

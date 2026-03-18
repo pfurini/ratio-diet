@@ -57,6 +57,7 @@ const WeightLogForm = () => {
     e.preventDefault();
     const kg = parseWeight(weightKg);
     if (!kg) {
+      toast.error('Peso non valido');
       return;
     }
     setSubmitting(true);

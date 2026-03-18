@@ -1,6 +1,7 @@
 'use client';
 
 import { api } from '@ratio-diet/backend/convex/_generated/api';
+import type { Doc } from '@ratio-diet/backend/convex/_generated/dataModel';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
@@ -71,7 +72,46 @@ const toggleAllergen = (current: string[], value: string): string[] => {
   return [...current, value];
 };
 
-const buildDefaultState = (profile: ProfileFormState): ProfileFormState => ({ ...profile });
+type ProfileApi = Doc<'userProfiles'>;
+
+const mapProfileToFormState = (profile: ProfileApi): ProfileFormState | null => {
+  try {
+    const allergies = Array.isArray(profile.allergies) ? profile.allergies : [];
+    const allergiesOther = typeof profile.allergiesOther === 'string' ? profile.allergiesOther : '';
+    const followedByNutritionist =
+      typeof profile.followedByNutritionist === 'boolean' ? profile.followedByNutritionist : false;
+
+    return {
+      activityLevel: profile.activityLevel,
+      allergies,
+      allergiesOther,
+      bodyBuild: profile.bodyBuild,
+      dateOfBirth: profile.dateOfBirth,
+      dietaryPreference: profile.dietaryPreference,
+      followedByNutritionist,
+      goal: profile.goal,
+      heightCm: profile.heightCm,
+      sex: profile.sex,
+      weightKg: profile.weightKg,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const getDefaultFormState = (): ProfileFormState => ({
+  activityLevel: 'moderatamente_attivo',
+  allergies: [],
+  allergiesOther: '',
+  bodyBuild: 'medio',
+  dateOfBirth: '',
+  dietaryPreference: 'onnivoro',
+  followedByNutritionist: false,
+  goal: 'mantenimento',
+  heightCm: 170,
+  sex: 'M',
+  weightKg: 70,
+});
 
 const PersonalFields = ({
   form,
@@ -261,7 +301,8 @@ const ProfileEditForm = () => {
     return <p className="text-muted-foreground text-sm">Profilo non trovato.</p>;
   }
 
-  const currentForm: ProfileFormState = form ?? buildDefaultState(profile as unknown as ProfileFormState);
+  const currentForm: ProfileFormState =
+    form ?? mapProfileToFormState(profile) ?? getDefaultFormState();
 
   const setField = <K extends keyof ProfileFormState>(key: K, value: ProfileFormState[K]) => {
     setForm((prev) => ({ ...(prev ?? currentForm), [key]: value }));

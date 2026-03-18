@@ -4,7 +4,7 @@ import { api } from '@ratio-diet/backend/convex/_generated/api';
 import type { Id } from '@ratio-diet/backend/convex/_generated/dataModel';
 import { Button } from '@ratio-diet/ui/components/button';
 import { useMutation, useQuery } from 'convex/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { MealItem, MealType } from '@/components/custom/meal-builder';
@@ -100,13 +100,17 @@ const OptimizeButton = ({ meals, date, onOptimized }: OptimizeButtonProps) => {
   );
 };
 
+const isMacroSnapshot = (obj: unknown): obj is MacroSnapshot =>
+  typeof obj === 'object' && obj !== null &&
+  'proteinGrams' in obj && 'carbGrams' in obj && 'fatGrams' in obj;
+
 const usePlanData = (date: string) => {
   const profile = useQuery(api.userProfiles.get);
   const existingPlan = useQuery(api.dailyPlans.get, { date });
-  const macrosTarget = profile?.macros as MacroSnapshot | undefined;
-  const macrosAchieved = existingPlan?.macrosAchieved as MacroSnapshot | undefined;
+  const macrosTarget = isMacroSnapshot(profile?.macros) ? profile.macros : undefined;
+  const macrosAchieved = isMacroSnapshot(existingPlan?.macrosAchieved) ? existingPlan.macrosAchieved : undefined;
   const resolvedPlanId = (existingPlan?._id as Id<'dailyPlans'> | null) ?? null;
-  return { macrosAchieved, macrosTarget, resolvedPlanId };
+  return { existingPlan, macrosAchieved, macrosTarget, resolvedPlanId };
 };
 
 const usePlanHandlers = (
@@ -135,11 +139,30 @@ const DailyPlanPage = () => {
   const [meals, setMeals] = useState<MealState[]>(DEFAULT_MEALS);
   const [showSpuntini, setShowSpuntini] = useState(false);
   const [optimizedPlan, setOptimizedPlan] = useState<OptimizedPlanRef | null>(null);
+  const lastSyncedPlanKeyRef = useRef<string | null>(null);
 
   const visibleMeals = getVisibleMeals(meals, showSpuntini);
-  const { macrosAchieved, macrosTarget, resolvedPlanId } = usePlanData(date);
+  const { existingPlan, macrosAchieved, macrosTarget, resolvedPlanId } = usePlanData(date);
   const { handleItemsChange, handleLoadTemplate } = usePlanHandlers(setMeals, setShowSpuntini);
   const effectivePlanId = resolvedPlanId ?? (optimizedPlan?.date === date ? optimizedPlan.id : null);
+
+  useEffect(() => {
+    const planKey = `${date}:${resolvedPlanId ?? 'none'}`;
+    if (lastSyncedPlanKeyRef.current === planKey) {
+      return;
+    }
+
+    if (existingPlan?.meals) {
+      const normalized = normalizeMeals(existingPlan.meals as MealState[]);
+      setMeals(normalized);
+      setShowSpuntini(normalized.some((meal) => isSpuntino(meal.type) && meal.items.length > 0));
+    } else {
+      setMeals(DEFAULT_MEALS);
+      setShowSpuntini(false);
+    }
+
+    lastSyncedPlanKeyRef.current = planKey;
+  }, [date, existingPlan, resolvedPlanId]);
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-8">
@@ -158,7 +181,7 @@ const DailyPlanPage = () => {
       <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => setShowSpuntini((v) => !v)}>
         {showSpuntini ? 'Rimuovi spuntini' : 'Aggiungi spuntini'}
       </Button>
-      <OptimizeButton meals={visibleMeals} date={date} onOptimized={(id) => setOptimizedPlan({ date, id })} />
+      <OptimizeButton meals={meals} date={date} onOptimized={(id) => setOptimizedPlan({ date, id })} />
       {macrosAchieved && macrosTarget && (
         <PlanMacroSummary
           achieved={{ ...macrosAchieved, calories: getAchievedCalories(macrosAchieved) }}
