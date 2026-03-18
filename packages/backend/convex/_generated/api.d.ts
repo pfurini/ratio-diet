@@ -9,20 +9,25 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as dailyPlans from "../dailyPlans.js";
 import type * as foods from "../foods.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
 import type * as lib_calculations from "../lib/calculations.js";
 import type * as lib_dateOfBirth from "../lib/dateOfBirth.js";
+import type * as lib_dateOnly from "../lib/dateOnly.js";
 import type * as lib_optimizer from "../lib/optimizer.js";
+import type * as lib_premiumAccess from "../lib/premiumAccess.js";
 import type * as lib_shoppingList from "../lib/shoppingList.js";
 import type * as lib_stripe from "../lib/stripe.js";
+import type * as lib_validators from "../lib/validators.js";
 import type * as lib_weeklyPlanGenerator from "../lib/weeklyPlanGenerator.js";
 import type * as lib_weeklyPlanPrompt from "../lib/weeklyPlanPrompt.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as templates from "../templates.js";
 import type * as userProfiles from "../userProfiles.js";
+import type * as webhookCleanup from "../webhookCleanup.js";
 import type * as weeklyPlans from "../weeklyPlans.js";
 import type * as weightLogs from "../weightLogs.js";
 
@@ -34,20 +39,25 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  crons: typeof crons;
   dailyPlans: typeof dailyPlans;
   foods: typeof foods;
   healthCheck: typeof healthCheck;
   http: typeof http;
   "lib/calculations": typeof lib_calculations;
   "lib/dateOfBirth": typeof lib_dateOfBirth;
+  "lib/dateOnly": typeof lib_dateOnly;
   "lib/optimizer": typeof lib_optimizer;
+  "lib/premiumAccess": typeof lib_premiumAccess;
   "lib/shoppingList": typeof lib_shoppingList;
   "lib/stripe": typeof lib_stripe;
+  "lib/validators": typeof lib_validators;
   "lib/weeklyPlanGenerator": typeof lib_weeklyPlanGenerator;
   "lib/weeklyPlanPrompt": typeof lib_weeklyPlanPrompt;
   subscriptions: typeof subscriptions;
   templates: typeof templates;
   userProfiles: typeof userProfiles;
+  webhookCleanup: typeof webhookCleanup;
   weeklyPlans: typeof weeklyPlans;
   weightLogs: typeof weightLogs;
 }>;
