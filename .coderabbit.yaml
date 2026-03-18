@@ -5,8 +5,10 @@ inheritance: false
 knowledge_base:
   learnings:
     scope: local
-  pull_requests: local
-  issues: local
+  pull_requests:
+    scope: local
+  issues:
+    scope: local
 reviews:
   high_level_summary: true
   sequence_diagrams: true
@@ -15,29 +17,22 @@ reviews:
   collapse_walkthrough: false
   changed_files_summary: true
   path_filters:
-    - "!**/.github/**"
-    - "!**/.vscode/**"
-    - "!**/.cursor/**"
-    - "!**/.junie/**"
-    - "!**/.claude/**"
-    - "!**/.gemini/**"
-    - "!**/.prompts/**"
-    - "!**/.prds/**"
+    - "apps/**"
+    - "packages/**"
+    - "CLAUDE.md"
+    - "README.md"
+    - "AGENTS.md"
+    - "package.json"
+    - "turbo.json"
+    - "tsconfig.json"
+    - ".oxlintrc.json"
+    - ".oxfmtrc.jsonc"
     - "!**/.temp/**" # Exclude temporary files
-    - "!**/node_modules/**" # Exclude dependencies
     - "!**/supabase/migrations/**" # Exclude migrations
     - "!**/turbo/**" # Exclude turbo
     - "!**/.turbo/**" # Exclude turbo cache
-    - "!**/tooling/**" # Exclude tooling
-    - "!**/dev-tool/**" # Exclude dev tool
-    - "!**/*.md" # Exclude markdown files
-    - "!**/*.yaml" # Exclude yaml files
-    - "!**/*.html" # Exclude html files
-    - "!**/*.css" # Exclude css files
     - "!**/playwright-report/**" # Exclude playwright report
     - "!**/test-results/**" # Exclude test results
-    - "!**/coolify/**" # Exclude coolify
-    - "!**/.augment/**" # Exclude augment
     - "!packages/ui/src/components/**" # Exclude shadcn ui components
 chat:
   auto_reply: true

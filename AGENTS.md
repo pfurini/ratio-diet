@@ -32,7 +32,7 @@
 
 ### Code Size Limits
 - **Max 500 lines per source file.** If a file approaches this limit, split it into focused sub-modules.
-- **Max 10 statements per function** (ESLint `max-statements` rule). Extract helpers, compose smaller functions, or split into multiple focused functions. This applies to all function blocks including handlers, callbacks, and arrow functions.
+- **Max 20 statements per function** (oxlint `max-statements` rule). Extract helpers, compose smaller functions, or split into multiple focused functions. This applies to all function blocks including handlers, callbacks, and arrow functions.
 
 ### AI Provider
 - Use **Vercel AI SDK** (`ai` package) as the unified interface

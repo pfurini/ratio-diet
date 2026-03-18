@@ -36,6 +36,17 @@
         "--mcp",
         "--mcp-auto-workspace"
       ]
+    },
+    "magic": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@21st-dev/magic@latest"
+      ],
+      "env": {
+        "API_KEY": "b6872f8cd0b74b0c00c23e0477a139e882ecb562acf5168d7124a24f5ca3c179"
+      }
     }
   }
 }

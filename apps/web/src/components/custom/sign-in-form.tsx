@@ -1,123 +1,139 @@
+'use client';
+
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
+import type { AnyFieldApi } from '@tanstack/react-form';
 import { useForm } from '@tanstack/react-form';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { authClient } from '@/lib/auth-client';
+import type { AnyReactFormApi } from '@/lib/form-types';
 
-export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
+const handleSignInError = (error: { error?: { message?: string; statusText?: string } }) => {
+  toast.error(error?.error?.message ?? error?.error?.statusText ?? 'Errore imprevisto durante il login');
+};
+
+const getFieldErrorMessage = (error: unknown): string => {
+  if (typeof error === 'string') return error;
+  if (error != null && typeof error === 'object' && 'message' in error) {
+    const msg = (error as { message: unknown }).message;
+    return typeof msg === 'string' ? msg : String(msg ?? 'Errore di validazione');
+  }
+  return error != null ? String(error) : 'Errore di validazione';
+};
+
+const handleSignInSuccess = (router: ReturnType<typeof useRouter>) => {
+  toast.success('Accesso effettuato con successo');
+  router.push('/dashboard');
+};
+
+const EmailField = ({ form }: { form: AnyReactFormApi }) => (
+  <div>
+    <form.Field name="email">
+      {(field: AnyFieldApi) => (
+        <div className="space-y-2">
+          <Label htmlFor={field.name}>Email</Label>
+          <Input
+            id={field.name}
+            name={field.name}
+            type="email"
+            value={field.state.value as string}
+            onBlur={field.handleBlur}
+            onChange={(e) => field.handleChange(e.target.value)}
+          />
+          {field.state.meta.errors.map((error: unknown, index: number) => (
+            <p key={index} className="text-sm text-destructive">
+              {getFieldErrorMessage(error)}
+            </p>
+          ))}
+        </div>
+      )}
+    </form.Field>
+  </div>
+);
+
+const PasswordField = ({ form }: { form: AnyReactFormApi }) => (
+  <div>
+    <form.Field name="password">
+      {(field: AnyFieldApi) => (
+        <div className="space-y-2">
+          <Label htmlFor={field.name}>Password</Label>
+          <Input
+            id={field.name}
+            name={field.name}
+            type="password"
+            value={field.state.value as string}
+            onBlur={field.handleBlur}
+            onChange={(e) => field.handleChange(e.target.value)}
+          />
+          {field.state.meta.errors.map((error: unknown, index: number) => (
+            <p key={index} className="text-sm text-destructive">
+              {getFieldErrorMessage(error)}
+            </p>
+          ))}
+        </div>
+      )}
+    </form.Field>
+  </div>
+);
+
+const SubmitButton = ({ form }: { form: AnyReactFormApi }) => (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  <form.Subscribe selector={(state: any) => ({ canSubmit: state.canSubmit as boolean, isSubmitting: state.isSubmitting as boolean })}>
+    {({ canSubmit, isSubmitting }: { canSubmit: boolean; isSubmitting: boolean }) => (
+      <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
+        {isSubmitting ? 'Accesso in corso...' : 'Accedi'}
+      </Button>
+    )}
+  </form.Subscribe>
+);
+
+const SignInForm = () => {
   const router = useRouter();
 
   const form = useForm({
-    defaultValues: {
-      email: '',
-      password: '',
-    },
+    defaultValues: { email: '', password: '' },
     onSubmit: async ({ value }) => {
       await authClient.signIn.email(
+        { email: value.email, password: value.password },
         {
-          email: value.email,
-          password: value.password,
-        },
-        {
-          onError: (error) => {
-            toast.error(error?.error?.message || error?.error?.statusText || 'An unexpected error occurred');
-          },
-          onSuccess: () => {
-            router.push('/');
-            toast.success('Sign in successful');
-          },
+          onError: handleSignInError,
+          onSuccess: () => handleSignInSuccess(router),
         }
       );
     },
     validators: {
       onSubmit: z.object({
-        email: z.email('Invalid email address'),
-        password: z.string().min(8, 'Password must be at least 8 characters'),
+        email: z.email('Indirizzo email non valido'),
+        password: z.string().min(8, 'La password deve contenere almeno 8 caratteri'),
       }),
     },
   });
 
   return (
-    <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        className="space-y-4"
-      >
-        <div>
-          <form.Field name="email">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Email</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type="email"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-                {field.state.meta.errors.map((error, index) => (
-                  <p key={index} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
-            )}
-          </form.Field>
-        </div>
-
-        <div>
-          <form.Field name="password">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Password</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type="password"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-                {field.state.meta.errors.map((error, index) => (
-                  <p key={index} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
-            )}
-          </form.Field>
-        </div>
-
-        <form.Subscribe
-          selector={(state) => ({
-            canSubmit: state.canSubmit,
-            isSubmitting: state.isSubmitting,
-          })}
-        >
-          {({ canSubmit, isSubmitting }) => (
-            <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Sign In'}
-            </Button>
-          )}
-        </form.Subscribe>
-      </form>
-
-      <div className="mt-4 text-center">
-        <Button variant="link" onClick={onSwitchToSignUp} className="text-indigo-600 hover:text-indigo-800">
-          Need an account? Sign Up
-        </Button>
-      </div>
-    </div>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+      className="space-y-4"
+    >
+      <EmailField form={form} />
+      <PasswordField form={form} />
+      <SubmitButton form={form} />
+      <p className="mt-4 text-center text-sm">
+        Non hai un account?{' '}
+        <Link href="/signup" className="font-medium underline underline-offset-4">
+          Registrati
+        </Link>
+      </p>
+    </form>
   );
-}
+};
+
+export default SignInForm;

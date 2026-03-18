@@ -3,148 +3,119 @@
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
+import type { AnyFieldApi } from '@tanstack/react-form';
 import { useForm } from '@tanstack/react-form';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { authClient } from '@/lib/auth-client';
+import type { AnyReactFormApi } from '@/lib/form-types';
 
-export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
+const handleSignUpError = (error: { error?: { message?: string; statusText?: string } }) => {
+  toast.error(error?.error?.message ?? error?.error?.statusText ?? 'Errore imprevisto durante la registrazione');
+};
+
+const handleSignUpSuccess = (router: ReturnType<typeof useRouter>) => {
+  toast.success('Account creato con successo');
+  router.push('/onboarding');
+};
+
+const FormField = ({
+  form,
+  name,
+  label,
+  type = 'text',
+}: {
+  form: AnyReactFormApi;
+  name: string;
+  label: string;
+  type?: string;
+}) => (
+  <div>
+    <form.Field name={name}>
+      {(field: AnyFieldApi) => (
+        <div className="space-y-2">
+          <Label htmlFor={field.name}>{label}</Label>
+          <Input
+            id={field.name}
+            name={field.name}
+            type={type}
+            value={field.state.value as string}
+            onBlur={field.handleBlur}
+            onChange={(e) => field.handleChange(e.target.value)}
+          />
+          {field.state.meta.errors.map((error: unknown) => (
+            <p key={String(error)} className="text-sm text-destructive">
+              {(error as { message?: string })?.message}
+            </p>
+          ))}
+        </div>
+      )}
+    </form.Field>
+  </div>
+);
+
+const SubmitButton = ({ form }: { form: AnyReactFormApi }) => (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  <form.Subscribe selector={(state: any) => ({ canSubmit: state.canSubmit as boolean, isSubmitting: state.isSubmitting as boolean })}>
+    {({ canSubmit, isSubmitting }: { canSubmit: boolean; isSubmitting: boolean }) => (
+      <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
+        {isSubmitting ? 'Creazione in corso...' : 'Crea account'}
+      </Button>
+    )}
+  </form.Subscribe>
+);
+
+const SignUpForm = () => {
   const router = useRouter();
 
   const form = useForm({
-    defaultValues: {
-      email: '',
-      name: '',
-      password: '',
-    },
+    defaultValues: { name: '', email: '', password: '' },
     onSubmit: async ({ value }) => {
-      await authClient.signUp.email(
-        {
-          email: value.email,
-          name: value.name,
-          password: value.password,
-        },
-        {
-          onError: (error) => {
-            toast.error(error?.error?.message ?? error?.error?.statusText ?? String(error));
-          },
-          onSuccess: () => {
-            router.push('/dashboard');
-            toast.success('Sign up successful');
-          },
-        }
-      );
+      try {
+        await authClient.signUp.email(
+          { email: value.email, name: value.name, password: value.password },
+          {
+            onError: handleSignUpError,
+            onSuccess: () => handleSignUpSuccess(router),
+          }
+        );
+      } catch (error) {
+        handleSignUpError(error as { error?: { message?: string; statusText?: string } });
+      }
     },
     validators: {
       onSubmit: z.object({
-        email: z.email('Invalid email address'),
-        name: z.string().min(2, 'Name must be at least 2 characters'),
-        password: z.string().min(8, 'Password must be at least 8 characters'),
+        name: z.string().min(2, 'Il nome deve contenere almeno 2 caratteri'),
+        email: z.email('Indirizzo email non valido'),
+        password: z.string().min(8, 'La password deve contenere almeno 8 caratteri'),
       }),
     },
   });
 
   return (
-    <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Create Account</h1>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        className="space-y-4"
-      >
-        <div>
-          <form.Field name="name">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Name</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
-            )}
-          </form.Field>
-        </div>
-
-        <div>
-          <form.Field name="email">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Email</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type="email"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
-            )}
-          </form.Field>
-        </div>
-
-        <div>
-          <form.Field name="password">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name}>Password</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type="password"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
-                    {error?.message}
-                  </p>
-                ))}
-              </div>
-            )}
-          </form.Field>
-        </div>
-
-        <form.Subscribe
-          selector={(state) => ({
-            canSubmit: state.canSubmit,
-            isSubmitting: state.isSubmitting,
-          })}
-        >
-          {({ canSubmit, isSubmitting }) => (
-            <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Sign Up'}
-            </Button>
-          )}
-        </form.Subscribe>
-      </form>
-
-      <div className="mt-4 text-center">
-        <Button variant="link" onClick={onSwitchToSignIn} className="text-indigo-600 hover:text-indigo-800">
-          Already have an account? Sign In
-        </Button>
-      </div>
-    </div>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+      className="space-y-4"
+    >
+      <FormField form={form} name="name" label="Nome" />
+      <FormField form={form} name="email" label="Email" type="email" />
+      <FormField form={form} name="password" label="Password" type="password" />
+      <SubmitButton form={form} />
+      <p className="mt-4 text-center text-sm">
+        Hai già un account?{' '}
+        <Link href="/login" className="font-medium underline underline-offset-4">
+          Accedi
+        </Link>
+      </p>
+    </form>
   );
-}
+};
+
+export default SignUpForm;

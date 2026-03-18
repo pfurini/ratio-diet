@@ -5,22 +5,26 @@
   "license": "ISC",
   "author": "",
   "scripts": {
+    "check-types": "tsc --noEmit --project convex/tsconfig.json",
     "dev": "convex dev",
-    "dev:setup": "convex dev --configure --until-success"
+    "dev:setup": "convex dev --configure --until-success",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.52",
-    "@convex-dev/agent": "catalog:",
     "@convex-dev/better-auth": "catalog:",
+    "@openrouter/ai-sdk-provider": "1.5.4",
     "ai": "^5.0.117",
     "better-auth": "catalog:",
     "convex": "catalog:",
     "dotenv": "catalog:",
+    "stripe": "20.4.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@ratio-diet/config": "workspace:*",
     "@types/node": "^24.3.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "4.1.0"
   }
 }

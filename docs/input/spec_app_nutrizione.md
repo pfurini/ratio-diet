@@ -1,17 +1,20 @@
 # SPECIFICHE APPLICAZIONE
-**Working title:** *MacroGuide*  
-*(nome provvisorio - suggerirò alternative in fondo)*
+
+**Working title:** _MacroGuide_  
+_(nome provvisorio - suggerirò alternative in fondo)_
 
 ## 1. Obiettivo dell’app
 
 Fornire a persone **sane** (non patologiche) uno strumento semplice per:
+
 - capire **quante calorie e macronutrienti** assumere
 - scegliere **cosa mangiare**
 - ricevere **quantità indicative per alimento**
 - mantenere “binari” nutrizionali realistici, non ossessivi
 
 L’app **non sostituisce un nutrizionista** ma funge da:
-> *assistente alimentare basato su regole semplici, buon senso e personalizzazione*
+
+> _assistente alimentare basato su regole semplici, buon senso e personalizzazione_
 
 ---
 
@@ -51,6 +54,7 @@ All’avvio e in onboarding:
 > In presenza di patologie o disturbi alimentari, consultare un professionista.”
 
 Blocco esplicito se l’utente dichiara:
+
 - diabete
 - disturbi metabolici
 - DCA
@@ -117,6 +121,7 @@ Blocco esplicito se l’utente dichiara:
 ### 6.1 Calcolo fabbisogno energetico
 
 Base semplificata (come nel video):
+
 - **1 kcal x kg x 24h**
 - Correzione soft:
   - +/- 5-15% in base a:
@@ -125,6 +130,7 @@ Base semplificata (come nel video):
     - obiettivo
 
 Output:
+
 - Calorie target giornaliere
 - Range minimo consigliato (non scendere sotto)
 
@@ -145,6 +151,7 @@ Regole iniziali (configurabili):
   - Per differenza calorica
 
 Output chiaro:
+
 - Grammi di proteine / grassi / carbo
 - Calorie per macro
 - Percentuale macro (solo informativa)
@@ -156,12 +163,14 @@ Output chiaro:
 ### 7.1 Flusso giornaliero
 
 L’utente seleziona per:
+
 - Colazione
 - Pranzo
 - Cena
 - Spuntini (opzionali)
 
 Per ogni pasto:
+
 - sceglie **gli alimenti**
 - imposta eventuali **limiti**
   - “max 50g”
@@ -172,6 +181,7 @@ Per ogni pasto:
 ### 7.2 Motore AI di distribuzione
 
 L’AI:
+
 - prende i macro target
 - conosce:
   - valori nutrizionali medi
@@ -211,10 +221,12 @@ Non serve precisione assoluta, ma **coerenza**.
 ### 9.1 Piano alimentare settimanale
 
 Input:
+
 - Cibi che voglio mangiare nella settimana
 - Frequenza (es. pesce 3x, carne 2x…)
 
 Output:
+
 - Piano settimanale:
   - Colazione / Pranzo / Cena
 - Macro rispettati giorno per giorno
@@ -233,6 +245,7 @@ Output:
   - dispensa
 
 Export:
+
 - PDF
 - Note
 - WhatsApp / Email
@@ -252,6 +265,7 @@ Export:
 ## 10. Architettura tecnica (vibe coding)
 
 ### 10.1 Frontend
+
 - WebApp responsive
 - Mobile-first
 - Stack possibile:
@@ -280,16 +294,19 @@ Export:
 ## 11. Roadmap MVP
 
 **Fase 1 - MVP**
+
 - Onboarding
 - Calcolo macro
 - Scelta cibi giornaliera
 - Quantità suggerite
 
 **Fase 2**
+
 - Piano settimanale
 - Lista spesa
 
 **Fase 3**
+
 - AI adattiva
 - Tracking semplificato
 - Integrazioni (export, reminder)

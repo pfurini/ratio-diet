@@ -3,7 +3,6 @@ packages:
   - packages/*
 
 catalog:
-  '@convex-dev/agent': ^0.3.2
   '@convex-dev/better-auth': ^0.10.13
   '@types/react': ^19.2.10
   '@types/react-dom': ^19.2.3

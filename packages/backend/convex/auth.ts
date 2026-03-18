@@ -14,6 +14,12 @@ if (!siteUrl) {
   throw new Error('SITE_URL environment variable is required');
 }
 
+const secret = process.env.BETTER_AUTH_SECRET;
+
+if (!secret) {
+  throw new Error('BETTER_AUTH_SECRET environment variable is required');
+}
+
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
 const createAuth = (ctx: GenericCtx<DataModel>) =>
@@ -22,6 +28,7 @@ const createAuth = (ctx: GenericCtx<DataModel>) =>
     database: authComponent.adapter(ctx),
     emailAndPassword: {
       enabled: true,
+      // PROD: Enable email verification before production launch
       requireEmailVerification: false,
     },
     plugins: [
@@ -30,6 +37,7 @@ const createAuth = (ctx: GenericCtx<DataModel>) =>
         jwksRotateOnTokenGenerationError: true,
       }),
     ],
+    secret,
     trustedOrigins: [siteUrl],
   });
 

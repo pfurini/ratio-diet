@@ -1,11 +1,15 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["vitest"],
   "extends": [
     "./node_modules/ultracite/config/oxlint/core/.oxlintrc.json",
     "./node_modules/ultracite/config/oxlint/next/.oxlintrc.json"
   ],
   "rules": {
-    "unicorn/filename-case": "off"
+    "unicorn/filename-case": "off",
+    "vitest/prefer-called-times": "off",
+    "vitest/require-hook": "off",
+    "max-statements": ["error", { "max": 20 }]
   },
   "ignorePatterns": [
     ".*/**",

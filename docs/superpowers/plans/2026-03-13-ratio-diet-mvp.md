@@ -36,6 +36,7 @@ The following items were flagged during plan review and must be addressed during
 ### Task 1: Clean up existing placeholder code
 
 **Files:**
+
 - Delete: `packages/backend/convex/todos.ts`
 - Delete: `packages/backend/convex/chat.ts`
 - Delete: `packages/backend/convex/agent.ts`
@@ -47,6 +48,7 @@ The following items were flagged during plan review and must be addressed during
 - [ ] **Step 1: Delete placeholder Convex functions**
 
 Remove files that are part of the starter template and not needed:
+
 - `packages/backend/convex/todos.ts`
 - `packages/backend/convex/chat.ts`
 - `packages/backend/convex/agent.ts`
@@ -94,6 +96,7 @@ git commit -m "chore: remove starter template placeholders and configure OpenRou
 ### Task 2: Define Convex schema
 
 **Files:**
+
 - Create: `packages/backend/convex/schema.ts`
 
 - [ ] **Step 1: Write the full schema**
@@ -115,7 +118,7 @@ const mealValidator = v.object({
     v.literal('pranzo'),
     v.literal('cena'),
     v.literal('spuntino_mattina'),
-    v.literal('spuntino_pomeriggio'),
+    v.literal('spuntino_pomeriggio')
   ),
   items: v.array(mealItemValidator),
 });
@@ -140,14 +143,14 @@ export default defineSchema({
       v.literal('dimagrimento'),
       v.literal('mantenimento'),
       v.literal('aumento_massa'),
-      v.literal('ricomposizione'),
+      v.literal('ricomposizione')
     ),
     activityLevel: v.union(
       v.literal('sedentario'),
       v.literal('leggermente_attivo'),
       v.literal('moderatamente_attivo'),
       v.literal('molto_attivo'),
-      v.literal('atleta'),
+      v.literal('atleta')
     ),
     allergies: v.array(v.string()),
     allergiesOther: v.optional(v.string()),
@@ -155,14 +158,13 @@ export default defineSchema({
       v.literal('onnivoro'),
       v.literal('vegetariano'),
       v.literal('vegano'),
-      v.literal('pescetariano'),
+      v.literal('pescetariano')
     ),
     followedByNutritionist: v.boolean(),
     legalGateAccepted: v.boolean(),
     macros: macroSnapshotValidator,
     lastRecalcWeightKg: v.number(),
-  })
-    .index('by_userId', ['userId']),
+  }).index('by_userId', ['userId']),
 
   foods: defineTable({
     name: v.string(),
@@ -189,15 +191,13 @@ export default defineSchema({
     macrosAchieved: macroSnapshotValidator,
     macrosTarget: macroSnapshotValidator,
     templateId: v.optional(v.id('templates')),
-  })
-    .index('by_userId_date', ['userId', 'date']),
+  }).index('by_userId_date', ['userId', 'date']),
 
   templates: defineTable({
     userId: v.string(),
     name: v.string(),
     meals: v.array(mealValidator),
-  })
-    .index('by_userId', ['userId']),
+  }).index('by_userId', ['userId']),
 
   weeklyPlans: defineTable({
     userId: v.string(),
@@ -209,7 +209,7 @@ export default defineSchema({
         name: v.string(),
         totalGrams: v.number(),
         category: v.string(),
-      }),
+      })
     ),
     status: v.union(v.literal('generato'), v.literal('modificato'), v.literal('archiviato')),
   })
@@ -221,8 +221,7 @@ export default defineSchema({
     date: v.string(),
     weightKg: v.number(),
     macrosAtLog: macroSnapshotValidator,
-  })
-    .index('by_userId_date', ['userId', 'date']),
+  }).index('by_userId_date', ['userId', 'date']),
 
   subscriptions: defineTable({
     userId: v.string(),
@@ -239,8 +238,7 @@ export default defineSchema({
 
 - [ ] **Step 2: Verify schema compiles**
 
-Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable`
-Expected: Schema should be accepted without errors.
+Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable` Expected: Schema should be accepted without errors.
 
 - [ ] **Step 3: Commit**
 
@@ -254,6 +252,7 @@ git commit -m "feat: define complete Convex schema for Ratio Diet"
 ### Task 3: Build the calculation engine
 
 **Files:**
+
 - Create: `packages/backend/convex/lib/calculations.ts`
 - Create: `packages/backend/convex/lib/calculations.test.ts`
 
@@ -340,8 +339,7 @@ describe('calculateMacros', () => {
 
 - [ ] **Step 2: Verify tests fail**
 
-Run: `cd /workspace/packages/backend && npx vitest run convex/lib/calculations.test.ts`
-Expected: FAIL — module not found
+Run: `cd /workspace/packages/backend && npx vitest run convex/lib/calculations.test.ts` Expected: FAIL — module not found
 
 - [ ] **Step 3: Implement the calculation engine**
 
@@ -450,8 +448,7 @@ export const getAgeFromDateOfBirth = (dateOfBirth: string): number => {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /workspace/packages/backend && npx vitest run convex/lib/calculations.test.ts`
-Expected: 3 tests PASS
+Run: `cd /workspace/packages/backend && npx vitest run convex/lib/calculations.test.ts` Expected: 3 tests PASS
 
 - [ ] **Step 5: Commit**
 
@@ -465,6 +462,7 @@ git commit -m "feat: implement TDEE and macro calculation engine with tests"
 ### Task 4: Build the meal optimizer
 
 **Files:**
+
 - Create: `packages/backend/convex/lib/optimizer.ts`
 - Create: `packages/backend/convex/lib/optimizer.test.ts`
 
@@ -569,8 +567,7 @@ describe('optimizeMealQuantities', () => {
 
 - [ ] **Step 2: Verify tests fail**
 
-Run: `cd /workspace/packages/backend && npx vitest run convex/lib/optimizer.test.ts`
-Expected: FAIL — module not found
+Run: `cd /workspace/packages/backend && npx vitest run convex/lib/optimizer.test.ts` Expected: FAIL — module not found
 
 - [ ] **Step 3: Implement the optimizer**
 
@@ -686,7 +683,7 @@ export const optimizeMealQuantities = (input: OptimizerInput): OptimizerResult =
 
 const computeAchieved = (
   foods: FoodNutrition[],
-  quantities: Record<FoodId, number>,
+  quantities: Record<FoodId, number>
 ): MacroTarget & { kcal: number } => {
   let proteinGrams = 0;
   let carbGrams = 0;
@@ -705,10 +702,7 @@ const computeAchieved = (
   return { proteinGrams, carbGrams, fatGrams, kcal };
 };
 
-const computeGap = (
-  target: MacroTarget,
-  achieved: MacroTarget,
-): { protein: number; carb: number; fat: number } => ({
+const computeGap = (target: MacroTarget, achieved: MacroTarget): { protein: number; carb: number; fat: number } => ({
   protein: target.proteinGrams > 0 ? (achieved.proteinGrams - target.proteinGrams) / target.proteinGrams : 0,
   carb: target.carbGrams > 0 ? (achieved.carbGrams - target.carbGrams) / target.carbGrams : 0,
   fat: target.fatGrams > 0 ? (achieved.fatGrams - target.fatGrams) / target.fatGrams : 0,
@@ -717,22 +711,19 @@ const computeGap = (
 export const MEAL_DISTRIBUTION = {
   withoutSnacks: {
     colazione: 0.25,
-    pranzo: 0.40,
+    pranzo: 0.4,
     cena: 0.35,
   },
   withSnacks: {
-    colazione: 0.20,
-    spuntino_mattina: 0.10,
+    colazione: 0.2,
+    spuntino_mattina: 0.1,
     pranzo: 0.35,
-    spuntino_pomeriggio: 0.10,
+    spuntino_pomeriggio: 0.1,
     cena: 0.25,
   },
 } as const;
 
-export const distributeMacrosToMeals = (
-  dailyMacros: MacroTarget,
-  mealTypes: string[],
-): Record<string, MacroTarget> => {
+export const distributeMacrosToMeals = (dailyMacros: MacroTarget, mealTypes: string[]): Record<string, MacroTarget> => {
   const hasSnacks = mealTypes.some((t) => t.startsWith('spuntino'));
   const distribution = hasSnacks ? MEAL_DISTRIBUTION.withSnacks : MEAL_DISTRIBUTION.withoutSnacks;
 
@@ -751,8 +742,7 @@ export const distributeMacrosToMeals = (
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /workspace/packages/backend && npx vitest run convex/lib/optimizer.test.ts`
-Expected: 5 tests PASS
+Run: `cd /workspace/packages/backend && npx vitest run convex/lib/optimizer.test.ts` Expected: 5 tests PASS
 
 - [ ] **Step 5: Commit**
 
@@ -766,6 +756,7 @@ git commit -m "feat: implement weighted least-squares meal optimizer with tests"
 ### Task 5: Prepare CREA food database seed
 
 **Files:**
+
 - Create: `packages/backend/data/crea-foods.json` (sample structure — full data to be sourced separately)
 - Create: `packages/backend/convex/foods.ts`
 
@@ -1000,7 +991,7 @@ export const seedCREA = internalMutation({
         fatPer100g: v.number(),
         allergenTags: v.array(v.string()),
         foodType: v.union(v.literal('animale'), v.literal('vegetale')),
-      }),
+      })
     ),
   },
   handler: async (ctx, args) => {
@@ -1023,21 +1014,22 @@ export const search = query({
     const user = await authComponent.safeGetAuthUser(ctx);
 
     if (args.searchTerm) {
-      let searchQuery = ctx.db
-        .query('foods')
-        .withSearchIndex('search_name', (q) => {
-          let search = q.search('name', args.searchTerm!);
-          if (args.category) {
-            search = search.eq('category', args.category);
-          }
-          return search;
-        });
+      let searchQuery = ctx.db.query('foods').withSearchIndex('search_name', (q) => {
+        let search = q.search('name', args.searchTerm!);
+        if (args.category) {
+          search = search.eq('category', args.category);
+        }
+        return search;
+      });
 
       const results = await searchQuery.collect();
 
       // Filter: CREA foods + current user's custom foods, excluding allergens
       const userProfile = user
-        ? await ctx.db.query('userProfiles').withIndex('by_userId', (q) => q.eq('userId', user.user.id)).unique()
+        ? await ctx.db
+            .query('userProfiles')
+            .withIndex('by_userId', (q) => q.eq('userId', user.user.id))
+            .unique()
         : null;
       const userAllergens = userProfile?.allergies ?? [];
 
@@ -1059,9 +1051,7 @@ export const search = query({
         .withIndex('by_category', (q) => q.eq('category', args.category!))
         .collect();
 
-      return results.filter(
-        (f) => f.source === 'crea' || (f.source === 'custom' && user && f.userId === user.user.id),
-      );
+      return results.filter((f) => f.source === 'crea' || (f.source === 'custom' && user && f.userId === user.user.id));
     }
 
     // Default: return all CREA foods
@@ -1141,10 +1131,7 @@ const HIDDEN_CATEGORIES: Record<string, string[]> = {
   pescetariano: ['carni', 'salumi'],
 };
 
-const filterByDietaryPreference = (
-  food: { category: string },
-  preference: string,
-): boolean => {
+const filterByDietaryPreference = (food: { category: string }, preference: string): boolean => {
   const hidden = HIDDEN_CATEGORIES[preference] ?? [];
   return !hidden.includes(food.category);
 };
@@ -1152,8 +1139,7 @@ const filterByDietaryPreference = (
 
 - [ ] **Step 3: Verify the module compiles**
 
-Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable`
-Expected: No errors
+Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable` Expected: No errors
 
 - [ ] **Step 4: Commit**
 
@@ -1169,6 +1155,7 @@ git commit -m "feat: add CREA food database seed data and food query/mutation fu
 ### Task 6: Build user profile Convex functions
 
 **Files:**
+
 - Create: `packages/backend/convex/userProfiles.ts`
 
 - [ ] **Step 1: Write the user profile module**
@@ -1192,14 +1179,14 @@ const profileInputValidator = {
     v.literal('dimagrimento'),
     v.literal('mantenimento'),
     v.literal('aumento_massa'),
-    v.literal('ricomposizione'),
+    v.literal('ricomposizione')
   ),
   activityLevel: v.union(
     v.literal('sedentario'),
     v.literal('leggermente_attivo'),
     v.literal('moderatamente_attivo'),
     v.literal('molto_attivo'),
-    v.literal('atleta'),
+    v.literal('atleta')
   ),
   allergies: v.array(v.string()),
   allergiesOther: v.optional(v.string()),
@@ -1207,7 +1194,7 @@ const profileInputValidator = {
     v.literal('onnivoro'),
     v.literal('vegetariano'),
     v.literal('vegano'),
-    v.literal('pescetariano'),
+    v.literal('pescetariano')
   ),
   followedByNutritionist: v.boolean(),
 };
@@ -1297,8 +1284,7 @@ export const update = mutation({
 
 - [ ] **Step 2: Verify it compiles**
 
-Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable`
-Expected: No errors
+Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable` Expected: No errors
 
 - [ ] **Step 3: Commit**
 
@@ -1312,6 +1298,7 @@ git commit -m "feat: add user profile CRUD with macro calculation on create/upda
 ### Task 7: Build weight log Convex functions
 
 **Files:**
+
 - Create: `packages/backend/convex/weightLogs.ts`
 
 - [ ] **Step 1: Write the weight log module**
@@ -1414,8 +1401,7 @@ export const list = query({
 
 - [ ] **Step 2: Verify it compiles**
 
-Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable`
-Expected: No errors
+Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable` Expected: No errors
 
 - [ ] **Step 3: Commit**
 
@@ -1429,6 +1415,7 @@ git commit -m "feat: add weight log with daily upsert and auto-recalculation tri
 ### Task 8: Set up Next.js route groups and onboarding page
 
 **Files:**
+
 - Create: `apps/web/src/app/(marketing)/layout.tsx`
 - Move: `apps/web/src/app/page.tsx` → `apps/web/src/app/(marketing)/page.tsx`
 - Create: `apps/web/src/app/(user)/layout.tsx`
@@ -1441,9 +1428,7 @@ git commit -m "feat: add weight log with daily upsert and auto-recalculation tri
 Create `apps/web/src/app/(marketing)/layout.tsx`:
 
 ```tsx
-const MarketingLayout = ({ children }: { children: React.ReactNode }) => (
-  <div className="min-h-svh">{children}</div>
-);
+const MarketingLayout = ({ children }: { children: React.ReactNode }) => <div className="min-h-svh">{children}</div>;
 
 export default MarketingLayout;
 ```
@@ -1539,6 +1524,7 @@ export default OnboardingPage;
 Create `apps/web/src/app/(user)/dashboard/page.tsx`:
 
 The dashboard is the live hub showing today's nutritional progress. Split into:
+
 - `apps/web/src/app/(user)/dashboard/page.tsx` — orchestrator (~60 lines)
 - `apps/web/src/components/custom/dashboard-hero.tsx` — big kcal number + macro targets (~40 lines)
 - `apps/web/src/components/custom/dashboard-progress.tsx` — MacroProgressBars for today (~50 lines)
@@ -1593,6 +1579,7 @@ export default DashboardPage;
 **`DashboardProgress`**: If `plan` exists, shows `MacroProgressBar` for each macro (achieved vs target). If no plan, shows message "Nessun piano per oggi" with a CTA.
 
 **`DashboardActions`**: Quick-access buttons:
+
 - "Pianifica la giornata" → `/daily-plan` (or "Modifica piano" if plan exists)
 - "Piano settimanale" → `/weekly-plan`
 - "Registra peso" → `/progress`
@@ -1662,11 +1649,19 @@ import StepGoal from './onboarding/step-goal';
 import StepDietary from './onboarding/step-dietary';
 
 const DEFAULT_VALUES: FormValues = {
-  isOver18: false, noPathologies: false, disclaimerRead: false,
-  sex: 'M', dateOfBirth: '', heightCm: 170, weightKg: 70,
-  bodyBuild: 'medio', goal: 'mantenimento',
-  activityLevel: 'moderatamente_attivo', allergies: [],
-  allergiesOther: '', dietaryPreference: 'onnivoro',
+  isOver18: false,
+  noPathologies: false,
+  disclaimerRead: false,
+  sex: 'M',
+  dateOfBirth: '',
+  heightCm: 170,
+  weightKg: 70,
+  bodyBuild: 'medio',
+  goal: 'mantenimento',
+  activityLevel: 'moderatamente_attivo',
+  allergies: [],
+  allergiesOther: '',
+  dietaryPreference: 'onnivoro',
   followedByNutritionist: false,
 };
 
@@ -1682,10 +1677,14 @@ const OnboardingForm = () => {
     defaultValues: DEFAULT_VALUES,
     onSubmit: async ({ value }) => {
       await createProfile({
-        sex: value.sex, dateOfBirth: value.dateOfBirth,
-        heightCm: value.heightCm, weightKg: value.weightKg,
-        bodyBuild: value.bodyBuild, goal: value.goal,
-        activityLevel: value.activityLevel, allergies: value.allergies,
+        sex: value.sex,
+        dateOfBirth: value.dateOfBirth,
+        heightCm: value.heightCm,
+        weightKg: value.weightKg,
+        bodyBuild: value.bodyBuild,
+        goal: value.goal,
+        activityLevel: value.activityLevel,
+        allergies: value.allergies,
         allergiesOther: value.allergiesOther || undefined,
         dietaryPreference: value.dietaryPreference,
         followedByNutritionist: value.followedByNutritionist,
@@ -1705,7 +1704,10 @@ const OnboardingForm = () => {
       {/* Step indicator */}
       <div className="mb-8 flex gap-2">
         {STEPS.map((label, i) => (
-          <div key={label} className={`flex-1 rounded-full py-1 text-center text-xs ${i === step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+          <div
+            key={label}
+            className={`flex-1 rounded-full py-1 text-center text-xs ${i === step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+          >
             {label}
           </div>
         ))}
@@ -1716,8 +1718,18 @@ const OnboardingForm = () => {
         {step === 2 && <StepGoal form={form} />}
         {step === 3 && <StepDietary form={form} />}
         <div className="mt-8 flex justify-between">
-          {step > 0 && <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>Indietro</Button>}
-          <Button type="submit" className="ml-auto" disabled={(step === 0 && !canProceedStep0(form.state.values)) || (step === 1 && !canProceedStep1(form.state.values))}>
+          {step > 0 && (
+            <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
+              Indietro
+            </Button>
+          )}
+          <Button
+            type="submit"
+            className="ml-auto"
+            disabled={
+              (step === 0 && !canProceedStep0(form.state.values)) || (step === 1 && !canProceedStep1(form.state.values))
+            }
+          >
             {step < STEPS.length - 1 ? 'Continua' : 'Calcola i miei macro'}
           </Button>
         </div>
@@ -1727,7 +1739,6 @@ const OnboardingForm = () => {
 };
 
 export default OnboardingForm;
-
 ```
 
 Each step file (`step-legal.tsx`, `step-personal.tsx`, `step-goal.tsx`, `step-dietary.tsx`) receives the TanStack `form` instance as prop and renders its own fields using `form.Field`. Each is under 100 lines. See the orchestrator above for how they compose.
@@ -1738,8 +1749,7 @@ Each step file (`step-legal.tsx`, `step-personal.tsx`, `step-goal.tsx`, `step-di
 
 - [ ] **Step 7: Verify app compiles**
 
-Run: `cd /workspace && pnpm run build`
-Expected: Build succeeds (or at least no TypeScript errors in the new files)
+Run: `cd /workspace && pnpm run build` Expected: Build succeeds (or at least no TypeScript errors in the new files)
 
 - [ ] **Step 8: Commit**
 
@@ -1755,6 +1765,7 @@ git commit -m "feat: add route groups, auth guard, onboarding flow, and dashboar
 ### Task 9: Build daily plan Convex functions
 
 **Files:**
+
 - Create: `packages/backend/convex/dailyPlans.ts`
 
 - [ ] **Step 1: Write the daily plans module**
@@ -1780,7 +1791,7 @@ const mealInput = v.object({
     v.literal('pranzo'),
     v.literal('cena'),
     v.literal('spuntino_mattina'),
-    v.literal('spuntino_pomeriggio'),
+    v.literal('spuntino_pomeriggio')
   ),
   items: v.array(mealItemInput),
 });
@@ -1824,7 +1835,7 @@ export const optimize = mutation({
           const food = await ctx.db.get(item.foodId);
           if (!food) throw new Error(`Alimento non trovato: ${item.foodId}`);
           return food;
-        }),
+        })
       );
 
       const foods = foodDocs.map((doc) => ({
@@ -1929,8 +1940,7 @@ export const complete = mutation({
 
 - [ ] **Step 2: Verify it compiles**
 
-Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable`
-Expected: No errors
+Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable` Expected: No errors
 
 - [ ] **Step 3: Commit**
 
@@ -1944,6 +1954,7 @@ git commit -m "feat: add daily plan optimizer with per-meal macro distribution"
 ### Task 10: Build templates Convex functions
 
 **Files:**
+
 - Create: `packages/backend/convex/templates.ts`
 
 - [ ] **Step 1: Write the templates module**
@@ -1968,7 +1979,7 @@ const mealValidator = v.object({
     v.literal('pranzo'),
     v.literal('cena'),
     v.literal('spuntino_mattina'),
-    v.literal('spuntino_pomeriggio'),
+    v.literal('spuntino_pomeriggio')
   ),
   items: v.array(mealItemValidator),
 });
@@ -2032,8 +2043,7 @@ export const remove = mutation({
 
 - [ ] **Step 2: Verify it compiles**
 
-Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable`
-Expected: No errors
+Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable` Expected: No errors
 
 - [ ] **Step 3: Commit**
 
@@ -2047,6 +2057,7 @@ git commit -m "feat: add template CRUD functions"
 ### Task 11: Set up Stripe subscription backend
 
 **Files:**
+
 - Create: `packages/backend/convex/subscriptions.ts`
 - Modify: `packages/backend/convex/http.ts`
 - Modify: `packages/backend/package.json` (add stripe dependency)
@@ -2154,9 +2165,7 @@ export const upsertFromWebhook = internalMutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('subscriptions')
-      .withIndex('by_stripeSubscriptionId', (q) =>
-        q.eq('stripeSubscriptionId', args.stripeSubscriptionId),
-      )
+      .withIndex('by_stripeSubscriptionId', (q) => q.eq('stripeSubscriptionId', args.stripeSubscriptionId))
       .unique();
 
     if (existing) {
@@ -2169,7 +2178,6 @@ export const upsertFromWebhook = internalMutation({
     }
   },
 });
-
 ```
 
 - [ ] **Step 3: Add Stripe webhook handler to http.ts**
@@ -2214,9 +2222,7 @@ http.route({
     ) {
       const subscription =
         event.type === 'checkout.session.completed'
-          ? await stripe.subscriptions.retrieve(
-              (event.data.object as Stripe.Checkout.Session).subscription as string,
-            )
+          ? await stripe.subscriptions.retrieve((event.data.object as Stripe.Checkout.Session).subscription as string)
           : (event.data.object as Stripe.Subscription);
 
       const userId =
@@ -2242,9 +2248,7 @@ http.route({
         stripeSubscriptionId: subscription.id,
         status: statusMap[subscription.status] ?? 'cancelled',
         startDate: new Date(subscription.start_date * 1000).toISOString().split('T')[0],
-        nextRenewalDate: new Date(subscription.current_period_end * 1000)
-          .toISOString()
-          .split('T')[0],
+        nextRenewalDate: new Date(subscription.current_period_end * 1000).toISOString().split('T')[0],
       });
     }
 
@@ -2257,8 +2261,7 @@ export default http;
 
 - [ ] **Step 4: Verify it compiles**
 
-Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable`
-Expected: No errors
+Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable` Expected: No errors
 
 - [ ] **Step 5: Commit**
 
@@ -2274,6 +2277,7 @@ git commit -m "feat: add Stripe subscription checkout, portal, and webhook handl
 ### Task 12: Build weekly plan AI generation
 
 **Files:**
+
 - Create: `packages/backend/convex/weeklyPlans.ts`
 - Create: `packages/backend/convex/lib/weeklyPlanPrompt.ts`
 
@@ -2307,7 +2311,7 @@ export const buildWeeklyPlanPrompt = (input: PromptInput): string => {
   const foodList = input.foods
     .map(
       (f) =>
-        `- ${f.name}: ${f.kcalPer100g} kcal, ${f.proteinPer100g}g proteine, ${f.carbPer100g}g carbo, ${f.fatPer100g}g grassi (per 100g)`,
+        `- ${f.name}: ${f.kcalPer100g} kcal, ${f.proteinPer100g}g proteine, ${f.carbPer100g}g carbo, ${f.fatPer100g}g grassi (per 100g)`
     )
     .join('\n');
 
@@ -2591,7 +2595,7 @@ export const create = internalMutation({
 const validateWeeklyPlan = (
   plan: z.infer<typeof weeklyPlanSchema>,
   foods: Array<{ name: string; kcalPer100g: number; proteinPer100g: number; carbPer100g: number; fatPer100g: number }>,
-  target: { calorieTarget: number; proteinGrams: number; carbGrams: number; fatGrams: number },
+  target: { calorieTarget: number; proteinGrams: number; carbGrams: number; fatGrams: number }
 ): { maxGapPercent: number } => {
   const foodByName = new Map(foods.map((f) => [f.name.toLowerCase(), f]));
   let maxGap = 0;
@@ -2612,9 +2616,10 @@ const validateWeeklyPlan = (
       }
     }
 
-    const proteinGap = target.proteinGrams > 0 ? Math.abs(protein - target.proteinGrams) / target.proteinGrams * 100 : 0;
-    const carbGap = target.carbGrams > 0 ? Math.abs(carb - target.carbGrams) / target.carbGrams * 100 : 0;
-    const fatGap = target.fatGrams > 0 ? Math.abs(fat - target.fatGrams) / target.fatGrams * 100 : 0;
+    const proteinGap =
+      target.proteinGrams > 0 ? (Math.abs(protein - target.proteinGrams) / target.proteinGrams) * 100 : 0;
+    const carbGap = target.carbGrams > 0 ? (Math.abs(carb - target.carbGrams) / target.carbGrams) * 100 : 0;
+    const fatGap = target.fatGrams > 0 ? (Math.abs(fat - target.fatGrams) / target.fatGrams) * 100 : 0;
 
     maxGap = Math.max(maxGap, proteinGap, carbGap, fatGap);
   }
@@ -2675,10 +2680,16 @@ export const suggestForMacro = query({
   handler: async (ctx, args) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     const profile = user
-      ? await ctx.db.query('userProfiles').withIndex('by_userId', (q) => q.eq('userId', user.user.id)).unique()
+      ? await ctx.db
+          .query('userProfiles')
+          .withIndex('by_userId', (q) => q.eq('userId', user.user.id))
+          .unique()
       : null;
 
-    const allFoods = await ctx.db.query('foods').withIndex('by_source', (q) => q.eq('source', 'crea')).collect();
+    const allFoods = await ctx.db
+      .query('foods')
+      .withIndex('by_source', (q) => q.eq('source', 'crea'))
+      .collect();
     const userAllergens = profile?.allergies ?? [];
     const dietPref = profile?.dietaryPreference ?? 'onnivoro';
 
@@ -2687,20 +2698,17 @@ export const suggestForMacro = query({
       return filterByDietaryPreference(f, dietPref);
     });
 
-    const sortField = args.macro === 'protein' ? 'proteinPer100g'
-      : args.macro === 'carb' ? 'carbPer100g' : 'fatPer100g';
+    const sortField =
+      args.macro === 'protein' ? 'proteinPer100g' : args.macro === 'carb' ? 'carbPer100g' : 'fatPer100g';
 
-    return filtered
-      .sort((a, b) => b[sortField] - a[sortField])
-      .slice(0, args.limit ?? 5);
+    return filtered.sort((a, b) => b[sortField] - a[sortField]).slice(0, args.limit ?? 5);
   },
 });
 ```
 
 - [ ] **Step 4: Verify it compiles**
 
-Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable`
-Expected: No errors
+Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable` Expected: No errors
 
 - [ ] **Step 5: Commit**
 
@@ -2714,6 +2722,7 @@ git commit -m "feat: add AI weekly plan generation with OpenRouter, validation, 
 ### Task 12a: Build weekly plan edit mutations
 
 **Files:**
+
 - Modify: `packages/backend/convex/weeklyPlans.ts`
 - Create: `packages/backend/convex/lib/shoppingList.ts`
 
@@ -2733,7 +2742,7 @@ interface ShoppingItem {
 
 export const buildShoppingList = (
   dailyPlans: Array<Doc<'dailyPlans'> | null>,
-  foodLookup: Map<string, Doc<'foods'>>,
+  foodLookup: Map<string, Doc<'foods'>>
 ): ShoppingItem[] => {
   const map = new Map<string, ShoppingItem>();
 
@@ -2773,10 +2782,7 @@ Add the following mutations to `packages/backend/convex/weeklyPlans.ts`:
 
 ```ts
 // Helper to verify subscription and plan ownership
-const verifyEditAccess = async (
-  ctx: any,
-  weeklyPlanId: Id<'weeklyPlans'>,
-) => {
+const verifyEditAccess = async (ctx: any, weeklyPlanId: Id<'weeklyPlans'>) => {
   const user = await authComponent.safeGetAuthUser(ctx);
   if (!user) throw new Error('Non autenticato');
 
@@ -2855,8 +2861,7 @@ export const recalculateShoppingList = mutation({
 
 - [ ] **Step 3: Verify it compiles**
 
-Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable`
-Expected: No errors
+Run: `cd /workspace/packages/backend && npx convex dev --once --typecheck=disable` Expected: No errors
 
 - [ ] **Step 4: Commit**
 
@@ -2874,12 +2879,14 @@ A Stripe MCP server is connected to the project's test account. Use it to create
 - [ ] **Step 1: Create the product**
 
 Use the Stripe MCP tool `create_product` to create:
+
 - Name: "Ratio Diet Premium"
 - Description: "Piano settimanale AI, lista della spesa, storico piani"
 
 - [ ] **Step 2: Create the price**
 
 Use the Stripe MCP tool `create_price` to create:
+
 - Product: (ID from step 1)
 - Unit amount: 499 (€4.99)
 - Currency: eur
@@ -2906,6 +2913,7 @@ No file changes needed. Backend secrets (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRE
 ### Task 14: Configure PWA manifest and service worker
 
 **Files:**
+
 - Modify: `apps/web/src/app/manifest.ts`
 - Modify: `apps/web/src/app/layout.tsx`
 
@@ -2960,6 +2968,7 @@ git commit -m "feat: configure PWA manifest and set Italian locale"
 ### Task 15: Build the daily planner page
 
 **Files:**
+
 - Create: `apps/web/src/app/(user)/daily-plan/page.tsx`
 - Create: `apps/web/src/components/custom/food-selector.tsx`
 - Create: `apps/web/src/components/custom/meal-builder.tsx`
@@ -2993,7 +3002,9 @@ const MacroProgressBar = ({ label, current, target, unit = 'g' }: MacroProgressB
       <div className="flex justify-between text-sm">
         <span className="font-medium">{label}</span>
         <span className={isOver ? 'text-destructive' : 'text-muted-foreground'}>
-          {Math.round(current)}{unit} / {Math.round(target)}{unit}
+          {Math.round(current)}
+          {unit} / {Math.round(target)}
+          {unit}
         </span>
       </div>
       <div className="bg-muted h-2 rounded-full">
@@ -3023,6 +3034,7 @@ interface FoodSelectorProps {
 ```
 
 **Behavior:**
+
 - Uses `useQuery(api.foods.search, { searchTerm, category })` for live search
 - Uses `useQuery(api.foods.getCategories)` to populate category filter tabs
 - Allergen-incompatible foods are already filtered server-side (no client filtering needed)
@@ -3045,6 +3057,7 @@ interface MealBuilderProps {
 ```
 
 **Behavior:**
+
 - Displays meal type as header (e.g., "Colazione")
 - Lists selected foods — each row: food name (fetched via `useQuery(api.foods.getById)`), min/max constraint inputs (optional `Input` fields), remove button
 - "Aggiungi alimento" button opens `FoodSelector` dialog — on select, appends food to items via `onItemsChange`
@@ -3056,12 +3069,14 @@ interface MealBuilderProps {
 Create `apps/web/src/app/(user)/daily-plan/page.tsx`:
 
 **State management:**
+
 - `date`: string (ISO, defaults to today from client timezone)
 - `meals`: array of `{ type, items }` — one per meal type, managed via `useState`
 - Existing plan loaded via `useQuery(api.dailyPlans.get, { date })`
 - Templates loaded via `useQuery(api.templates.list)`
 
 **UI structure:**
+
 - Date picker (`<Input type="date">`) at top
 - "Carica template" dropdown (populated from templates query) — selecting one pre-populates `meals` state
 - `MealBuilder` component for each active meal (colazione, pranzo, cena by default)
@@ -3072,6 +3087,7 @@ Create `apps/web/src/app/(user)/daily-plan/page.tsx`:
 - "Completa giornata" button → calls `useMutation(api.dailyPlans.complete)`
 
 **Optimizer failure handling:** When the optimizer returns `success: false` (macro gap > 15%):
+
 - Show a warning banner with the gap details (e.g., "Ti mancano ~30g di proteine")
 - Query `useQuery(api.foods.suggestForMacro, { macro: 'protein' })` to show 5 suggested foods
 - Each suggestion has an "Aggiungi" button that adds it to the current meal via the food selector flow
@@ -3093,6 +3109,7 @@ git commit -m "feat: add daily planner page with food selector, meal builder, an
 ### Task 15b: Create reusable FoodName component
 
 **Files:**
+
 - Create: `apps/web/src/components/custom/food-name.tsx`
 
 - [ ] **Step 1: Create FoodName component**
@@ -3111,9 +3128,7 @@ interface FoodNameProps {
 const FoodName = ({ name, source, className }: FoodNameProps) => (
   <span className={`inline-flex items-center gap-1 ${className ?? ''}`}>
     {name}
-    {source === 'crea' && (
-      <BadgeCheck className="text-primary h-4 w-4 shrink-0" aria-label="Verificato CREA" />
-    )}
+    {source === 'crea' && <BadgeCheck className="text-primary h-4 w-4 shrink-0" aria-label="Verificato CREA" />}
   </span>
 );
 
@@ -3134,6 +3149,7 @@ git commit -m "feat: add reusable FoodName component with verificato badge"
 ### Task 16: Build weekly plan page
 
 **Files:**
+
 - Create: `apps/web/src/app/(user)/weekly-plan/page.tsx`
 - Create: `apps/web/src/components/custom/shopping-list.tsx`
 - Create: `apps/web/src/components/custom/weekly-plan-generator.tsx`
@@ -3149,6 +3165,7 @@ Create `apps/web/src/components/custom/shopping-list.tsx` — renders the shoppi
 **`weekly-plan-generator.tsx`**: Food multi-selection interface (reuses `FoodSelector` in multi-select mode). "Genera piano" button → calls `useAction(api.weeklyPlans.generate)` with selected foodIds. Shows loading spinner during AI generation. Displays validation warning if returned.
 
 **`weekly-plan-view.tsx`**: Displays generated plan with edit capability:
+
 - 7 tabs (Lun-Dom), each tab shows colazione/pranzo/cena with `FoodName` + grams
 - Uses `useQuery(api.weeklyPlans.get, { weeklyPlanId })`
 - **Edit mode** (subscription active only): inline edit buttons per food item — change food (opens FoodSelector), change quantity (number input). Calls `useMutation(api.weeklyPlans.updateMealItem)` on change, then `useMutation(api.weeklyPlans.recalculateShoppingList)` to refresh shopping list.
@@ -3162,6 +3179,7 @@ Create `apps/web/src/components/custom/shopping-list.tsx` — renders the shoppi
 - [ ] **Step 3: Create weekly plan page**
 
 Create `apps/web/src/app/(user)/weekly-plan/page.tsx` — orchestrator:
+
 - Subscription gate: `useQuery(api.subscriptions.getStatus)` — if never subscribed, show upgrade prompt with "Abbonati" button → `useAction(api.subscriptions.createCheckoutSession)` → redirect to Stripe
 - If active or has past plans: show `<WeeklyPlanGenerator />` (active only) and/or `<WeeklyPlanView />` based on state
 - `<WeeklyPlanHistory />` always visible below
@@ -3182,6 +3200,7 @@ git commit -m "feat: add weekly plan page with AI generation, edit support, shop
 ### Task 17: Build progress tracking page
 
 **Files:**
+
 - Create: `apps/web/src/app/(user)/progress/page.tsx`
 - Create: `apps/web/src/components/custom/weight-chart.tsx`
 
@@ -3196,6 +3215,7 @@ interface WeightChartProps {
 ```
 
 **Implementation:** Pure SVG component, no external charting library.
+
 - Fixed height (200px), responsive width (100% container)
 - X-axis: dates (show every Nth label to avoid overlap)
 - Y-axis: weight range (min-2kg to max+2kg of data, 5 gridlines)
@@ -3206,6 +3226,7 @@ interface WeightChartProps {
 - [ ] **Step 2: Create progress page**
 
 Create `apps/web/src/app/(user)/progress/page.tsx`:
+
 - Weight log form (single input + "Registra" button)
 - Weight chart showing trend via `<WeightChart data={weightLogs} />`
 - Current macro targets display
@@ -3242,6 +3263,7 @@ git commit -m "feat: add progress tracking page with weight chart and auto-recal
 ### Task 18: Build settings page
 
 **Files:**
+
 - Create: `apps/web/src/app/(user)/settings/page.tsx`
 - Create: `apps/web/src/components/custom/profile-edit-form.tsx`
 - Create: `apps/web/src/components/custom/custom-food-list.tsx`
@@ -3258,6 +3280,7 @@ git commit -m "feat: add progress tracking page with weight chart and auto-recal
 - [ ] **Step 2: Create settings page**
 
 Create `apps/web/src/app/(user)/settings/page.tsx` — composes the sub-components in sections:
+
 - `<ProfileEditForm />` section
 - `<CustomFoodList />` section
 - `<TemplateList />` section
@@ -3280,12 +3303,14 @@ git commit -m "feat: add settings page with profile edit, food/template manageme
 ### Task 19: Build marketing pages
 
 **Files:**
+
 - Modify: `apps/web/src/app/(marketing)/page.tsx`
 - Create: `apps/web/src/app/(marketing)/pricing/page.tsx`
 
 - [ ] **Step 1: Build landing page**
 
 Update `apps/web/src/app/(marketing)/page.tsx`:
+
 - Hero section: tagline "La tua alimentazione basata su numeri, proporzioni e metodo."
 - How it works: 3-step visual (Inserisci dati → Scegli cibi → Ottieni quantità)
 - Free vs Premium comparison
@@ -3295,6 +3320,7 @@ Update `apps/web/src/app/(marketing)/page.tsx`:
 - [ ] **Step 2: Build pricing page**
 
 Create `apps/web/src/app/(marketing)/pricing/page.tsx`:
+
 - Two cards: Free vs Premium (€4.99/mese)
 - Feature comparison list
 - CTA: "Inizia gratis" / "Abbonati"
@@ -3315,6 +3341,7 @@ git commit -m "feat: add landing page and pricing page"
 ### Task 19b: Build auth pages and rewrite auth components
 
 **Files:**
+
 - Rewrite: `apps/web/src/components/custom/sign-in-form.tsx`
 - Rewrite: `apps/web/src/components/custom/sign-up-form.tsx`
 - Create: `apps/web/src/app/(marketing)/login/page.tsx`
@@ -3324,6 +3351,7 @@ git commit -m "feat: add landing page and pricing page"
 - [ ] **Step 1: Rewrite sign-in and sign-up form components**
 
 Rewrite `apps/web/src/components/custom/sign-in-form.tsx` and `sign-up-form.tsx` to align with the app's UI (shadcn components, Tailwind styling, Italian labels). Each form:
+
 - Uses shadcn `Input`, `Button`, `Label` components
 - Italian labels: "Email", "Password", "Accedi" / "Crea account"
 - Error handling with `sonner` toasts
@@ -3374,12 +3402,14 @@ git commit -m "feat: add auth pages with rewritten sign-in/sign-up components"
 ### Task 20: Add app shell navigation
 
 **Files:**
+
 - Create: `apps/web/src/components/custom/app-nav.tsx`
 - Modify: `apps/web/src/app/(user)/layout.tsx`
 
 - [ ] **Step 1: Create mobile-first bottom navigation**
 
 Create `apps/web/src/components/custom/app-nav.tsx` — a fixed bottom navigation bar with icons for:
+
 - Dashboard (home icon)
 - Piano giornaliero (calendar icon)
 - Piano settimanale (calendar-week icon — premium badge)
