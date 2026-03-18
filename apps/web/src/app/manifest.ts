@@ -5,8 +5,8 @@ const manifest = (): MetadataRoute.Manifest => ({
   description: 'La tua alimentazione basata su numeri, proporzioni e metodo.',
   display: 'standalone',
   icons: [
-    { sizes: '192x192', src: '/icon-192.png', type: 'image/png' },
-    { sizes: '512x512', src: '/icon-512.png', type: 'image/png' },
+    { sizes: '192x192', src: '/web-app-manifest-192x192.png', type: 'image/png' },
+    { sizes: '512x512', src: '/web-app-manifest-512x512.png', type: 'image/png' },
   ],
   name: 'Ratio Diet',
   short_name: 'RatioDiet',

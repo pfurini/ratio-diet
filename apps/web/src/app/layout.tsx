@@ -28,6 +28,9 @@ const RootLayout = async ({
   const token = await getToken();
   return (
     <html lang="it" suppressHydrationWarning>
+      <head>
+        <meta name="apple-mobile-web-app-title" content="RatioDiet" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers initialToken={token}>
           <main className="min-h-svh">{children}</main>
