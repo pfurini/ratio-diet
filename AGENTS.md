@@ -42,6 +42,20 @@
 
 ---
 
+## End-of-Session Checklist
+
+After **every** coding session, run these three commands from the repo root before considering the work done:
+
+```bash
+pnpm ultracite      # auto-fix formatting and lint issues
+pnpm check-types    # TypeScript type-check across all packages
+pnpm test           # run the full test suite
+```
+
+All three must pass with no errors. Fix any issues before finishing.
+
+---
+
 # Ultracite Code Standards
 
 This project uses **Ultracite**, a zero-config preset that enforces strict code quality standards through automated formatting and linting.
