@@ -1,11 +1,30 @@
 import type { AllergenTag } from '@ratio-diet/backend/convex/lib/validators';
 
+export const FOOD_CATEGORY_OPTIONS = [
+  { label: 'Carni', value: 'carni' },
+  { label: 'Cereali e derivati', value: 'cereali' },
+  { label: 'Condimenti e oli', value: 'condimenti' },
+  { label: 'Dolci', value: 'dolci' },
+  { label: 'Frutta', value: 'frutta' },
+  { label: 'Frutta secca', value: 'frutta_secca' },
+  { label: 'Latticini', value: 'latticini' },
+  { label: 'Legumi', value: 'legumi' },
+  { label: 'Pesce', value: 'pesce' },
+  { label: 'Salumi', value: 'salumi' },
+  { label: 'Uova', value: 'uova' },
+  { label: 'Verdure e ortaggi', value: 'verdure' },
+] as const;
+
 export const ALLERGEN_OPTIONS = [
   { label: 'Glutine', value: 'glutine' },
   { label: 'Lattosio', value: 'lattosio' },
   { label: 'Frutta a guscio', value: 'frutta_a_guscio' },
   { label: 'Uova', value: 'uova' },
   { label: 'Crostacei', value: 'crostacei' },
+  { label: 'Pesce', value: 'pesce' },
+  { label: 'Arachidi', value: 'arachidi' },
+  { label: 'Soia', value: 'soia' },
+  { label: 'Molluschi', value: 'molluschi' },
 ] as const;
 
 export const GOAL_OPTIONS = [

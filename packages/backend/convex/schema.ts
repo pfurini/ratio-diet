@@ -1,7 +1,7 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
-import { allergenValidator } from './lib/validators';
+import { allergenValidator, foodCategoryValidator, foodTypeValidator } from './lib/validators';
 
 export const mealTypeValidator = v.union(
   v.literal('colazione'),
@@ -66,9 +66,9 @@ export default defineSchema({
   foods: defineTable({
     allergenTags: v.array(allergenValidator),
     carbPer100g: v.number(),
-    category: v.string(),
+    category: foodCategoryValidator,
     fatPer100g: v.number(),
-    foodType: v.union(v.literal('animale'), v.literal('vegetale')),
+    foodType: foodTypeValidator,
     kcalPer100g: v.number(),
     name: v.string(),
     proteinPer100g: v.number(),

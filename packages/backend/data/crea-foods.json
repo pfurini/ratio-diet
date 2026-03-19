@@ -57,7 +57,7 @@
     "carbPer100g": 0,
     "fatPer100g": 10.1,
     "allergenTags": ["pesce"],
-    "foodType": "animale"
+    "foodType": "ittico"
   },
   {
     "name": "Olio extravergine di oliva",
@@ -117,7 +117,7 @@
     "carbPer100g": 0,
     "fatPer100g": 13,
     "allergenTags": ["pesce"],
-    "foodType": "animale"
+    "foodType": "ittico"
   },
   {
     "name": "Yogurt greco 0%",

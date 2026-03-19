@@ -6,8 +6,8 @@ import type { Id } from './_generated/dataModel';
 import { internalMutation, mutation, query } from './_generated/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { authComponent } from './auth';
-import { allergenValidator } from './lib/validators';
-import type { AllergenTag } from './lib/validators';
+import { allergenValidator, foodCategoryValidator, foodTypeValidator } from './lib/validators';
+import type { AllergenTag, FoodCategory, FoodType } from './lib/validators';
 
 const CUSTOM_FOOD_LIMIT = 100;
 const CREA_SEED_BATCH_SIZE = 25;
@@ -35,13 +35,13 @@ const filterByAllergens = (food: { allergenTags: string[] }, excludeAllergens: s
 interface FoodDoc {
   _id: Id<'foods'>;
   name: string;
-  category: string;
+  category: FoodCategory;
   kcalPer100g: number;
   proteinPer100g: number;
   carbPer100g: number;
   fatPer100g: number;
   allergenTags: string[];
-  foodType: 'animale' | 'vegetale';
+  foodType: FoodType;
   source: 'crea' | 'custom';
   userId?: string;
 }
@@ -54,9 +54,9 @@ interface SearchFilters {
 interface AddCustomFoodArgs {
   allergenTags: string[];
   carbPer100g: number;
-  category: string;
+  category: FoodCategory;
   fatPer100g: number;
-  foodType: 'animale' | 'vegetale';
+  foodType: FoodType;
   kcalPer100g: number;
   name: string;
   proteinPer100g: number;
@@ -106,9 +106,9 @@ export const seedCREA = internalMutation({
         ctx.db.insert('foods', {
           allergenTags: food.allergenTags as AllergenTag[],
           carbPer100g: food.carbPer100g,
-          category: food.category,
+          category: food.category as FoodCategory,
           fatPer100g: food.fatPer100g,
-          foodType: food.foodType as 'animale' | 'vegetale',
+          foodType: food.foodType as FoodType,
           kcalPer100g: food.kcalPer100g,
           name: food.name,
           proteinPer100g: food.proteinPer100g,
@@ -154,19 +154,12 @@ const assertNonNegativeNutritionValues = (args: AddCustomFoodArgs): void => {
 };
 
 const MAX_FOOD_NAME_LENGTH = 200;
-const MAX_FOOD_CATEGORY_LENGTH = 100;
 const MAX_ALLERGEN_TAGS = 20;
 const MAX_ALLERGEN_TAG_LENGTH = 50;
 
 const assertFoodStringLengths = (args: AddCustomFoodArgs): void => {
   if (args.name.length < 1 || args.name.length > MAX_FOOD_NAME_LENGTH) {
     throw new ConvexError({ code: 'INVALID_INPUT', message: `Name must be 1-${MAX_FOOD_NAME_LENGTH} characters` });
-  }
-  if (args.category.length < 1 || args.category.length > MAX_FOOD_CATEGORY_LENGTH) {
-    throw new ConvexError({
-      code: 'INVALID_INPUT',
-      message: `Category must be 1-${MAX_FOOD_CATEGORY_LENGTH} characters`,
-    });
   }
   if (args.allergenTags.length > MAX_ALLERGEN_TAGS) {
     throw new ConvexError({ code: 'INVALID_INPUT', message: `Max ${MAX_ALLERGEN_TAGS} allergen tags allowed` });
@@ -262,9 +255,9 @@ export const addCustomFood = mutation({
   args: {
     allergenTags: v.array(allergenValidator),
     carbPer100g: v.number(),
-    category: v.string(),
+    category: foodCategoryValidator,
     fatPer100g: v.number(),
-    foodType: v.union(v.literal('animale'), v.literal('vegetale')),
+    foodType: foodTypeValidator,
     kcalPer100g: v.number(),
     name: v.string(),
     proteinPer100g: v.number(),

@@ -1,17 +1,20 @@
 'use client';
 
 import { api } from '@ratio-diet/backend/convex/_generated/api';
+import type { FoodCategory, FoodType } from '@ratio-diet/backend/convex/lib/validators';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
+import { NativeSelect, NativeSelectOption } from '@ratio-diet/ui/components/native-select';
+import { ToggleGroup, ToggleGroupItem } from '@ratio-diet/ui/components/toggle-group';
 import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
 
-type FoodType = 'animale' | 'vegetale';
+import { FOOD_CATEGORY_OPTIONS } from '@/lib/profile-options';
 
 interface CustomFoodFormState {
   name: string;
-  category: string;
+  category: FoodCategory | '';
   kcal: string;
   protein: string;
   carbs: string;
@@ -64,12 +67,17 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
       setError('Inserisci valori numerici validi per i macronutrienti');
       return;
     }
+    if (!form.category) {
+      setError('Seleziona una categoria');
+      return;
+    }
+    const category = form.category as FoodCategory;
     setIsSubmitting(true);
     try {
       await addCustomFood({
         allergenTags: [],
         carbPer100g: carbs,
-        category: form.category,
+        category,
         fatPer100g: fat,
         foodType: form.foodType,
         kcalPer100g: kcal,
@@ -83,10 +91,6 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const toggleFoodType = () => {
-    setForm((prev) => ({ ...prev, foodType: prev.foodType === 'animale' ? 'vegetale' : 'animale' }));
   };
 
   return (
@@ -110,13 +114,19 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
         </div>
         <div className="space-y-1">
           <Label htmlFor="cf-category">Categoria</Label>
-          <Input
+          <NativeSelect
             id="cf-category"
             value={form.category}
-            onChange={(e) => setField('category', e.target.value)}
+            onChange={(e) => setField('category', e.target.value as FoodCategory)}
             required
-            placeholder="Es. carni"
-          />
+          >
+            <NativeSelectOption value="">Seleziona categoria</NativeSelectOption>
+            {FOOD_CATEGORY_OPTIONS.map((opt) => (
+              <NativeSelectOption key={opt.value} value={opt.value}>
+                {opt.label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
         </div>
         <div className="space-y-1">
           <Label htmlFor="cf-kcal">Kcal/100g</Label>
@@ -163,11 +173,20 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
           />
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={toggleFoodType}>
-          {form.foodType === 'animale' ? 'Animale' : 'Vegetale'}
-        </Button>
-        <span className="text-muted-foreground text-xs">Tipo alimento</span>
+      <div className="space-y-1">
+        <Label>Tipo alimento</Label>
+        <ToggleGroup
+          variant="outline"
+          value={[form.foodType]}
+          onValueChange={(val: string[]) => {
+            const last = val[val.length - 1] as FoodType | undefined;
+            if (last) setField('foodType', last);
+          }}
+        >
+          <ToggleGroupItem value="animale" aria-label="Animale">Animale</ToggleGroupItem>
+          <ToggleGroupItem value="vegetale" aria-label="Vegetale">Vegetale</ToggleGroupItem>
+          <ToggleGroupItem value="ittico" aria-label="Ittico">Ittico</ToggleGroupItem>
+        </ToggleGroup>
       </div>
       {error && <p className="text-destructive text-xs">{error}</p>}
       {customCount != null && customCount.count >= customCount.limit && (
