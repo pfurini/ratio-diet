@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "build:vercel": "sh -c 'test -n \"${CONVEX_DEPLOY_KEY:-}\" || { echo \"Missing CONVEX_DEPLOY_KEY\"; exit 1; }; pnpm --dir packages/backend dlx convex deploy --cmd \"pnpm -w build\"'",
+    "build:vercel": "pnpm --dir packages/backend exec convex deploy --cmd 'pnpm -w build'",
     "test": "turbo test",
     "check-types": "turbo check-types",
     "dev:web": "turbo -F web dev",
