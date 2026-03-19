@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "build:vercel": "pnpm --dir packages/backend exec convex deploy --cmd 'pnpm --dir ../.. build'",
+    "build:vercel": "pnpm --dir packages/backend exec convex deploy --cmd 'pnpm build'",
     "test": "turbo test",
     "check-types": "turbo check-types",
     "dev:web": "turbo -F web dev",
