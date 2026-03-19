@@ -48,19 +48,29 @@ interface FoodItemRowProps {
 
 const FoodItemRow = ({ item, index, onConstraintChange, onRemove }: FoodItemRowProps) => {
   const food = useQuery(api.foods.getById, { foodId: item.foodId });
+  const hasQuantity = item.quantityGrams !== undefined && item.quantityGrams > 0;
 
   return (
     <div className="bg-muted/50 flex flex-col gap-2 rounded-md p-2">
-      <div className="flex items-center justify-between">
-        {food ? (
-          <FoodName
-            name={food.name}
-            source={food.source}
-            className="text-sm font-medium"
-          />
-        ) : (
-          <span className="text-muted-foreground text-sm" role="status" aria-live="polite" aria-busy="true">Caricamento...</span>
-        )}
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {food ? (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <FoodName
+                name={food.name}
+                source={food.source}
+                className="text-sm font-medium"
+              />
+              {hasQuantity && (
+                <span className="text-muted-foreground text-sm font-medium tabular-nums">
+                  — {Math.round(item.quantityGrams ?? 0)} g
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="text-muted-foreground text-sm" role="status" aria-live="polite" aria-busy="true">Caricamento...</span>
+          )}
+        </div>
         <Button
           type="button"
           variant="ghost"
