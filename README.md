@@ -97,10 +97,11 @@ ratio-diet/
 - `pnpm run check-types`: Check TypeScript types across all apps
 - `pnpm run format`: Format with Oxfmt
 - `pnpm run format:check`: Check formatting with Oxfmt
-- `pnpm run lint`: Lint with Oxlint
-- `pnpm run lint:fix`: Auto-fix lint issues with Oxlint
+- `pnpm run lint`: Auto-fix lint issues with Oxlint
+- `pnpm run lint:check`: Lint with Oxlint
 - `pnpm run check`: Run format check then lint
 - `pnpm run fix`: Run formatter then lint auto-fix
-- `pnpm run check:ultracite`: Run the original Ultracite check pipeline
-- `pnpm run fix:ultracite`: Run the original Ultracite fix pipeline
+- `pnpm run ultracite:check`: Run the original Ultracite check pipeline
+- `pnpm run ultracite`: Run the original Ultracite fix pipeline
+- `pnpm run deploy`: Deploy the Convex backend and build all apps. **Intended for Vercel CI only — never run this on a dev machine.** Vercel invokes this as its build command so that Convex functions are deployed before the frontend is built.
 - `cd apps/web && pnpm run generate-pwa-assets`: Generate PWA assets
