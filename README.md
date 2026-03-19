@@ -103,5 +103,5 @@ ratio-diet/
 - `pnpm run fix`: Run formatter then lint auto-fix
 - `pnpm run ultracite:check`: Run the original Ultracite check pipeline
 - `pnpm run ultracite`: Run the original Ultracite fix pipeline
-- `pnpm run deploy:web`: Deploy Convex from `packages/backend`, then build from monorepo root (`pnpm --dir ../.. build`). **Intended for Vercel CI only — never run this on a dev machine.** Vercel invokes this as its build command so Convex functions are deployed before the frontend build starts.
+- `pnpm run build:vercel`: Deploy Convex from `packages/backend`, then build from monorepo root (`pnpm --dir ../.. build`). **Intended for Vercel CI only — never run this on a dev machine.** Vercel invokes this as its build command so Convex functions are deployed before the frontend build starts.
 - `cd apps/web && pnpm run generate-pwa-assets`: Generate PWA assets
