@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "deploy:web": "pnpm -F @ratio-diet/backend exec convex deploy --cmd 'pnpm build'",
+    "deploy:web": "pnpm --dir packages/backend exec convex deploy --cmd 'pnpm --dir ../.. build'",
     "test": "turbo test",
     "check-types": "turbo check-types",
     "dev:web": "turbo -F web dev",
