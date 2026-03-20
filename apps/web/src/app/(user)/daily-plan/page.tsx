@@ -177,7 +177,7 @@ const DailyPlanPage = () => {
         {showSpuntini ? 'Rimuovi spuntini' : 'Aggiungi spuntini'}
       </Button>
       <OptimizeButton
-        meals={meals}
+        meals={visibleMeals}
         date={date}
         onOptimized={(id) => {
           lastSyncedPlanKeyRef.current = null;

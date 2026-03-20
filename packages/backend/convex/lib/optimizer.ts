@@ -38,6 +38,7 @@ const DEFAULT_MAX_GRAMS = 500;
 const MAX_ITERATIONS = 100;
 const LEARNING_RATE = 0.5;
 const GAP_THRESHOLD = 0.08;
+const GRADIENT_NORM_THRESHOLD = 50;
 
 const WEIGHTS = { carb: 0.8, fat: 0.8, protein: 1 };
 
@@ -79,6 +80,16 @@ const computeErrors = (
   protein: (target.proteinGrams - achieved.proteinGrams) * WEIGHTS.protein,
 });
 
+const computeTotalError = (
+  foods: FoodNutrition[],
+  quantities: Record<FoodId, number>,
+  macroTarget: MacroTarget
+): number => {
+  const achieved = computeAchieved(foods, quantities);
+  const errors = computeErrors(macroTarget, achieved);
+  return Math.abs(errors.protein) + Math.abs(errors.carb) + Math.abs(errors.fat);
+};
+
 const adjustQuantities = (
   foods: FoodNutrition[],
   quantities: Record<FoodId, number>,
@@ -92,7 +103,8 @@ const adjustQuantities = (
       errors.protein * (food.proteinPer100g / 100) +
       errors.carb * (food.carbPer100g / 100) +
       errors.fat * (food.fatPer100g / 100);
-    const newQty = quantities[food.id] + gradient * LEARNING_RATE;
+    const adaptiveLr = LEARNING_RATE / Math.max(1, Math.abs(gradient) / GRADIENT_NORM_THRESHOLD);
+    const newQty = quantities[food.id] + gradient * adaptiveLr;
     quantities[food.id] = Math.min(max, Math.max(min, newQty));
   }
 };
@@ -124,16 +136,23 @@ const runOptimizationLoop = (
   quantities: Record<FoodId, number>,
   macroTarget: MacroTarget,
   constraints: Record<FoodId, Constraint>
-): void => {
+): Record<FoodId, number> => {
+  let bestQuantities = { ...quantities };
+  let bestError = computeTotalError(foods, quantities, macroTarget);
   for (let iter = 0; iter < MAX_ITERATIONS; iter += 1) {
     const achieved = computeAchieved(foods, quantities);
     const errors = computeErrors(macroTarget, achieved);
     const totalError = Math.abs(errors.protein) + Math.abs(errors.carb) + Math.abs(errors.fat);
+    if (totalError < bestError) {
+      bestError = totalError;
+      bestQuantities = { ...quantities };
+    }
     if (totalError < 1) {
       break;
     }
     adjustQuantities(foods, quantities, errors, constraints);
   }
+  return bestQuantities;
 };
 
 const computeMacroGap = (targetG: number, achievedG: number): number => {
@@ -162,8 +181,8 @@ const isConstraintBound = (
     return false;
   }
   const relaxedQuantities = initializeQuantities(foods, {});
-  runOptimizationLoop(foods, relaxedQuantities, macroTarget, {});
-  const relaxedAchieved = computeAchieved(foods, relaxedQuantities);
+  const relaxedBest = runOptimizationLoop(foods, relaxedQuantities, macroTarget, {});
+  const relaxedAchieved = computeAchieved(foods, relaxedBest);
   const relaxedGap = computeGap(macroTarget, relaxedAchieved);
   const maxRelaxedGap = Math.max(Math.abs(relaxedGap.protein), Math.abs(relaxedGap.carb), Math.abs(relaxedGap.fat));
   return maxRelaxedGap <= GAP_THRESHOLD;
@@ -201,7 +220,8 @@ export const optimizeMealQuantities = (input: OptimizerInput): OptimizerResult =
   }
 
   const quantities = initializeQuantities(foods, constraints);
-  runOptimizationLoop(foods, quantities, macroTarget, constraints);
+  const best = runOptimizationLoop(foods, quantities, macroTarget, constraints);
+  Object.assign(quantities, best);
   roundQuantities(quantities, constraints);
   return buildResult(quantities, foods, macroTarget, constraints);
 };
@@ -237,7 +257,12 @@ export const distributeMacrosToMeals = (dailyMacros: MacroTarget, mealTypes: str
       );
       throw new ConvexError('Unrecognized meal type encountered during optimization');
     }
-    const factor = distribution[mealType as keyof typeof distribution];
+  }
+
+  const totalWeight = mealTypes.reduce((sum, mealType) => sum + distribution[mealType as keyof typeof distribution], 0);
+
+  for (const mealType of mealTypes) {
+    const factor = distribution[mealType as keyof typeof distribution] / totalWeight;
     result[mealType] = {
       carbGrams: dailyMacros.carbGrams * factor,
       fatGrams: dailyMacros.fatGrams * factor,

@@ -37,6 +37,22 @@ const parseNum = (val: string): number => {
   return Number.isNaN(n) ? Number.NaN : n;
 };
 
+const MAX_MACRO_PER_100G = 100;
+const KCAL_CONSISTENCY_TOLERANCE = 50;
+
+const validateNutritionValues = (protein: number, carbs: number, fat: number, kcal: number): string | null => {
+  if (protein > MAX_MACRO_PER_100G) return 'Le proteine non possono superare 100g per 100g di alimento';
+  if (carbs > MAX_MACRO_PER_100G) return 'I carboidrati non possono superare 100g per 100g di alimento';
+  if (fat > MAX_MACRO_PER_100G) return 'I grassi non possono superare 100g per 100g di alimento';
+  const sum = protein + carbs + fat;
+  if (sum > MAX_MACRO_PER_100G) return 'La somma di proteine, carboidrati e grassi non può superare 100g per 100g di alimento';
+  const expectedKcal = protein * 4 + carbs * 4 + fat * 9;
+  if (Math.abs(kcal - expectedKcal) > KCAL_CONSISTENCY_TOLERANCE) {
+    return `Le calorie (${kcal} kcal) non sono coerenti con i macronutrienti (atteso ~${Math.round(expectedKcal)} kcal)`;
+  }
+  return null;
+};
+
 interface CustomFoodFormProps {
   onAdded: () => void;
 }
@@ -65,6 +81,11 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
     const fat = parseNum(form.fat);
     if ([kcal, protein, carbs, fat].some(Number.isNaN)) {
       setError('Inserisci valori numerici validi per i macronutrienti');
+      return;
+    }
+    const nutritionError = validateNutritionValues(protein, carbs, fat, kcal);
+    if (nutritionError) {
+      setError(nutritionError);
       return;
     }
     if (!form.category) {

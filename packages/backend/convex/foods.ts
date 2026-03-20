@@ -174,6 +174,42 @@ const assertFoodStringLengths = (args: AddCustomFoodArgs): void => {
   }
 };
 
+const MAX_MACRO_PER_100G = 100;
+const KCAL_CONSISTENCY_TOLERANCE = 50;
+
+const assertMacrosWithinPhysicalLimits = (args: AddCustomFoodArgs): void => {
+  const macros = [
+    { field: 'proteinPer100g', value: args.proteinPer100g },
+    { field: 'carbPer100g', value: args.carbPer100g },
+    { field: 'fatPer100g', value: args.fatPer100g },
+  ];
+  for (const macro of macros) {
+    if (macro.value > MAX_MACRO_PER_100G) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: `${macro.field} cannot exceed ${MAX_MACRO_PER_100G}g per 100g`,
+      });
+    }
+  }
+  const sum = args.proteinPer100g + args.carbPer100g + args.fatPer100g;
+  if (sum > MAX_MACRO_PER_100G) {
+    throw new ConvexError({
+      code: 'INVALID_ARGUMENT',
+      message: `Total macros (protein + carbs + fat) cannot exceed ${MAX_MACRO_PER_100G}g per 100g`,
+    });
+  }
+};
+
+const assertCalorieConsistency = (args: AddCustomFoodArgs): void => {
+  const expectedKcal = args.proteinPer100g * 4 + args.carbPer100g * 4 + args.fatPer100g * 9;
+  if (Math.abs(args.kcalPer100g - expectedKcal) > KCAL_CONSISTENCY_TOLERANCE) {
+    throw new ConvexError({
+      code: 'INVALID_ARGUMENT',
+      message: `Calorie value (${args.kcalPer100g} kcal) is inconsistent with macros (expected ~${Math.round(expectedKcal)} kcal)`,
+    });
+  }
+};
+
 const assertCustomFoodLimitNotReached = async (ctx: MutationCtx, userId: string): Promise<void> => {
   const existing = await ctx.db
     .query('foods')
@@ -266,6 +302,8 @@ export const addCustomFood = mutation({
     const userId = await requireAuthenticatedUserId(ctx);
     assertFoodStringLengths(args);
     assertNonNegativeNutritionValues(args);
+    assertMacrosWithinPhysicalLimits(args);
+    assertCalorieConsistency(args);
     await assertCustomFoodLimitNotReached(ctx, userId);
     return ctx.db.insert('foods', {
       ...args,

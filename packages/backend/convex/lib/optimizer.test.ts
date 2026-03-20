@@ -1,4 +1,28 @@
-import { optimizeMealQuantities } from './optimizer';
+import { distributeMacrosToMeals, optimizeMealQuantities } from './optimizer';
+
+describe(distributeMacrosToMeals, () => {
+  const dailyMacros = { carbGrams: 200, fatGrams: 60, proteinGrams: 150 };
+
+  it('distributes 100% of macros when only 2 of 3 meals are present', () => {
+    const result = distributeMacrosToMeals(dailyMacros, ['pranzo', 'cena']);
+
+    const totalCarbs = result.pranzo.carbGrams + result.cena.carbGrams;
+    const totalFat = result.pranzo.fatGrams + result.cena.fatGrams;
+    const totalProtein = result.pranzo.proteinGrams + result.cena.proteinGrams;
+
+    expect(totalCarbs).toBeCloseTo(dailyMacros.carbGrams, 5);
+    expect(totalFat).toBeCloseTo(dailyMacros.fatGrams, 5);
+    expect(totalProtein).toBeCloseTo(dailyMacros.proteinGrams, 5);
+  });
+
+  it('gives the single meal 100% of macros', () => {
+    const result = distributeMacrosToMeals(dailyMacros, ['pranzo']);
+
+    expect(result.pranzo.carbGrams).toBeCloseTo(dailyMacros.carbGrams, 5);
+    expect(result.pranzo.fatGrams).toBeCloseTo(dailyMacros.fatGrams, 5);
+    expect(result.pranzo.proteinGrams).toBeCloseTo(dailyMacros.proteinGrams, 5);
+  });
+});
 
 // eslint-disable-next-line jest/valid-title
 describe(optimizeMealQuantities, () => {
@@ -84,6 +108,42 @@ describe(optimizeMealQuantities, () => {
 
     expect(result.success).toBeFalsy();
     expect(result.gap).toBeDefined();
+  });
+
+  it('converges for high-density foods without oscillation', () => {
+    const caramelCake = {
+      carbPer100g: 60,
+      fatPer100g: 20,
+      id: 'food_dense',
+      kcalPer100g: 420,
+      proteinPer100g: 5,
+    };
+    const result = optimizeMealQuantities({
+      constraints: {},
+      foods: [caramelCake],
+      macroTarget: { carbGrams: 50, fatGrams: 15, proteinGrams: 30 },
+    });
+
+    expect(result.quantities[caramelCake.id]).toBeGreaterThanOrEqual(0);
+    expect(result.macrosAchieved.carbGrams).toBeLessThan(100);
+  });
+
+  it('returns best solution found across iterations', () => {
+    const denseFood = {
+      carbPer100g: 80,
+      fatPer100g: 10,
+      id: 'food_best',
+      kcalPer100g: 450,
+      proteinPer100g: 5,
+    };
+    const result = optimizeMealQuantities({
+      constraints: {},
+      foods: [denseFood],
+      macroTarget: { carbGrams: 50, fatGrams: 5, proteinGrams: 10 },
+    });
+
+    expect(result.quantities[denseFood.id]).toBeGreaterThanOrEqual(20);
+    expect(result.quantities[denseFood.id]).toBeLessThanOrEqual(200);
   });
 
   it('reports overshoot when target macro is zero but achieved > 0', () => {
