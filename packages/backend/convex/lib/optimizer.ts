@@ -219,11 +219,10 @@ export const optimizeMealQuantities = (input: OptimizerInput): OptimizerResult =
     return EMPTY_RESULT;
   }
 
-  const quantities = initializeQuantities(foods, constraints);
-  const best = runOptimizationLoop(foods, quantities, macroTarget, constraints);
-  Object.assign(quantities, best);
-  roundQuantities(quantities, constraints);
-  return buildResult(quantities, foods, macroTarget, constraints);
+  const initialQuantities = initializeQuantities(foods, constraints);
+  const optimizedQuantities = runOptimizationLoop(foods, initialQuantities, macroTarget, constraints);
+  roundQuantities(optimizedQuantities, constraints);
+  return buildResult(optimizedQuantities, foods, macroTarget, constraints);
 };
 
 export const MEAL_DISTRIBUTION = {

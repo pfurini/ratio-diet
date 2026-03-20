@@ -3,15 +3,18 @@ import { ConvexError, v } from 'convex/values';
 // eslint-disable-next-line import/no-relative-parent-imports
 import creaDatabaseFoods from '../data/crea-foods.json';
 import type { Id } from './_generated/dataModel';
-import { internalMutation, mutation, query } from './_generated/server';
+import { internalMutation, internalQuery, mutation, query } from './_generated/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { authComponent } from './auth';
-import { allergenValidator, foodCategoryValidator, foodTypeValidator } from './lib/validators';
+import { KCAL_CONSISTENCY_TOLERANCE, MAX_MACRO_PER_100G } from './lib/nutrition-constants';
+import { FOOD_CATEGORY_VALUES, allergenValidator, foodCategoryValidator, foodTypeValidator } from './lib/validators';
 import type { AllergenTag, FoodCategory, FoodType } from './lib/validators';
 
 const CUSTOM_FOOD_LIMIT = 100;
 const CREA_SEED_BATCH_SIZE = 25;
 const UNFILTERED_CREA_SEARCH_LIMIT = 120;
+// max CREA foods in AI prompt — not the DB total
+const AI_PLAN_FOOD_BUDGET = 120;
 
 const HIDDEN_CATEGORIES: Record<string, string[]> = {
   onnivoro: [],
@@ -174,9 +177,6 @@ const assertFoodStringLengths = (args: AddCustomFoodArgs): void => {
   }
 };
 
-const MAX_MACRO_PER_100G = 100;
-const KCAL_CONSISTENCY_TOLERANCE = 50;
-
 const assertMacrosWithinPhysicalLimits = (args: AddCustomFoodArgs): void => {
   const macros = [
     { field: 'proteinPer100g', value: args.proteinPer100g },
@@ -254,7 +254,7 @@ export const search = query({
     } else {
       creaResults = await ctx.db
         .query('foods')
-        .withIndex('by_source', (q) => q.eq('source', 'crea'))
+        .withIndex('by_source_category', (q) => q.eq('source', 'crea').eq('category', category as FoodCategory))
         .collect();
     }
 
@@ -276,14 +276,7 @@ export const getCategories = query({
     if (!user) {
       throw new ConvexError('Unauthenticated');
     }
-
-    const foods = await ctx.db
-      .query('foods')
-      .withIndex('by_source', (q) => q.eq('source', 'crea'))
-      .collect();
-
-    const categories = new Set(foods.map((f) => f.category));
-    return [...categories].toSorted((a, b) => a.localeCompare(b));
+    return [...FOOD_CATEGORY_VALUES].toSorted((a, b) => a.localeCompare(b));
   },
 });
 
@@ -368,26 +361,11 @@ export const deleteCustomFood = mutation({
   },
 });
 
-const fetchAllCreaFoods = (ctx: QueryCtx) =>
-  ctx.db
-    .query('foods')
-    .withIndex('by_source', (q) => q.eq('source', 'crea'))
-    .collect();
-
-const isNotAllergen = (food: FoodDoc, userAllergens: string[]): boolean => filterByAllergens(food, userAllergens);
-
-const filterFoodsForSuggest = (allFoods: FoodDoc[], userAllergens: string[], dietPref: string): FoodDoc[] =>
-  allFoods.filter((f) => isNotAllergen(f, userAllergens) && filterByDietaryPreference(f, dietPref));
-
-const sortFieldForMacro = (macro: 'protein' | 'carb' | 'fat'): keyof FoodDoc => {
-  if (macro === 'protein') {
-    return 'proteinPer100g';
-  }
-  if (macro === 'carb') {
-    return 'carbPer100g';
-  }
-  return 'fatPer100g';
-};
+const MACRO_INDEX_MAP = {
+  carb: 'by_source_carb',
+  fat: 'by_source_fat',
+  protein: 'by_source_protein',
+} as const;
 
 export const suggestForMacro = query({
   args: {
@@ -404,16 +382,20 @@ export const suggestForMacro = query({
       .withIndex('by_userId', (q) => q.eq('userId', user._id))
       .unique();
 
-    const allFoods = await fetchAllCreaFoods(ctx);
+    const limit = args.limit ?? 5;
     const userAllergens = profile?.allergies ?? [];
     const dietPref = profile?.dietaryPreference ?? 'onnivoro';
-    const filtered = filterFoodsForSuggest(allFoods as FoodDoc[], userAllergens, dietPref);
-    const sortField = sortFieldForMacro(args.macro);
+    const indexName = MACRO_INDEX_MAP[args.macro];
 
-    const sorted = [...filtered].toSorted(
-      (a: FoodDoc, b: FoodDoc) => (b[sortField] as number) - (a[sortField] as number)
-    );
-    return sorted.slice(0, args.limit ?? 5);
+    const candidates = await ctx.db
+      .query('foods')
+      .withIndex(indexName, (q) => q.eq('source', 'crea'))
+      .order('desc')
+      .take(Math.max(limit * 10, 50));
+
+    return (candidates as FoodDoc[])
+      .filter((f) => filterByDietaryPreference(f, dietPref) && filterByAllergens(f, userAllergens))
+      .slice(0, limit);
   },
 });
 
@@ -430,5 +412,38 @@ export const listCustom = query({
       .withIndex('by_userId', (q) => q.eq('userId', user._id))
       .filter((q) => q.eq(q.field('source'), 'custom'))
       .collect();
+  },
+});
+
+export const fetchFoodsForAIPlan = internalQuery({
+  args: {
+    dietaryPreference: v.string(),
+    excludeAllergens: v.array(allergenValidator),
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const hiddenCats = HIDDEN_CATEGORIES[args.dietaryPreference] ?? [];
+    const allowedCats = FOOD_CATEGORY_VALUES.filter((c) => !hiddenCats.includes(c));
+    const perCategory = Math.ceil(AI_PLAN_FOOD_BUDGET / allowedCats.length);
+
+    const catResults = await Promise.all(
+      allowedCats.map((cat) =>
+        ctx.db
+          .query('foods')
+          .withIndex('by_source_category', (q) => q.eq('source', 'crea').eq('category', cat))
+          .take(perCategory + 10)
+      )
+    );
+
+    const creaFoods = catResults.flatMap((catFoods) =>
+      catFoods.filter((f) => filterByAllergens(f, args.excludeAllergens)).slice(0, perCategory)
+    );
+
+    const customFoods = await ctx.db
+      .query('foods')
+      .withIndex('by_userId', (q) => q.eq('userId', args.userId))
+      .collect();
+
+    return [...creaFoods, ...customFoods];
   },
 });

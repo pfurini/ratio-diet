@@ -8,7 +8,8 @@ import { authComponent } from './auth';
 import { assertDateOnly } from './lib/dateOnly';
 import { hasPremiumAccess } from './lib/premiumAccess';
 import { addFoodToShoppingMap, buildShoppingList, buildShoppingListFromMap } from './lib/shoppingList';
-import { calcItemsMacros, findFood, generateWithRetry } from './lib/weeklyPlanGenerator';
+import type { AllergenTag } from './lib/validators';
+import { buildFoodLookupMap, calcItemsMacros, findFood, generateWithRetry } from './lib/weeklyPlanGenerator';
 import type { DayPlan, FoodDoc, MacroTarget, MealItem, WeeklyPlanResult } from './lib/weeklyPlanGenerator';
 import { buildWeeklyPlanPrompt } from './lib/weeklyPlanPrompt';
 import { mealTypeValidator } from './schema';
@@ -37,19 +38,22 @@ const addDays = (dateStr: string, days: number): string => {
 
 // --- Shopping list helpers ---
 
-const addMealItemsToMap = (items: MealItem[], foods: FoodDoc[], map: Map<string, ShoppingEntry>): void => {
+const addMealItemsToMap = (items: MealItem[], foodMap: Map<string, FoodDoc>, map: Map<string, ShoppingEntry>): void => {
   for (const item of items) {
-    const food = findFood(foods, item.foodName);
+    const food = findFood(foodMap, item.foodName);
     if (food) {
       addFoodToShoppingMap(food, item.grams, map);
     }
   }
 };
 
-const buildMealItems = (items: MealItem[], foods: FoodDoc[]): { foodId: Id<'foods'>; quantityGrams: number }[] => {
+const buildMealItems = (
+  items: MealItem[],
+  foodMap: Map<string, FoodDoc>
+): { foodId: Id<'foods'>; quantityGrams: number }[] => {
   const result: { foodId: Id<'foods'>; quantityGrams: number }[] = [];
   for (const item of items) {
-    const food = findFood(foods, item.foodName);
+    const food = findFood(foodMap, item.foodName);
     if (food) {
       result.push({ foodId: food._id, quantityGrams: item.grams });
     }
@@ -57,10 +61,10 @@ const buildMealItems = (items: MealItem[], foods: FoodDoc[]): { foodId: Id<'food
   return result;
 };
 
-const buildDayMeals = (day: DayPlan, foods: FoodDoc[]) => [
-  { items: buildMealItems(day.colazione, foods), type: 'colazione' as const },
-  { items: buildMealItems(day.pranzo, foods), type: 'pranzo' as const },
-  { items: buildMealItems(day.cena, foods), type: 'cena' as const },
+const buildDayMeals = (day: DayPlan, foodMap: Map<string, FoodDoc>) => [
+  { items: buildMealItems(day.colazione, foodMap), type: 'colazione' as const },
+  { items: buildMealItems(day.pranzo, foodMap), type: 'pranzo' as const },
+  { items: buildMealItems(day.cena, foodMap), type: 'cena' as const },
 ];
 
 // --- Internal queries ---
@@ -177,32 +181,17 @@ const fetchProfileForPlan = async (ctx: ActionCtx) => {
   return profile;
 };
 
-const isFoodDoc = (value: unknown): value is FoodDoc => {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const food = value as Record<string, unknown>;
-  return (
-    typeof food._id === 'string' &&
-    typeof food.name === 'string' &&
-    typeof food.category === 'string' &&
-    typeof food.kcalPer100g === 'number' &&
-    typeof food.proteinPer100g === 'number' &&
-    typeof food.carbPer100g === 'number' &&
-    typeof food.fatPer100g === 'number' &&
-    Array.isArray(food.allergenTags) &&
-    food.allergenTags.every((tag) => typeof tag === 'string')
-  );
-};
-
-const isFoodDocArray = (value: unknown): value is FoodDoc[] => Array.isArray(value) && value.every(isFoodDoc);
-
-const fetchFoodsForPlan = async (ctx: ActionCtx): Promise<FoodDoc[]> => {
-  const foods = await ctx.runQuery(api.foods.search, {});
-  if (!isFoodDocArray(foods)) {
-    throw new ConvexError({ code: 'INTERNAL_ERROR', message: 'Formato alimenti non valido' });
-  }
-  return foods;
+const fetchFoodsForPlan = async (
+  ctx: ActionCtx,
+  userId: string,
+  profile: { dietaryPreference: string; allergies: AllergenTag[] }
+): Promise<FoodDoc[]> => {
+  const foods = await ctx.runQuery(internal.foods.fetchFoodsForAIPlan, {
+    dietaryPreference: profile.dietaryPreference,
+    excludeAllergens: profile.allergies,
+    userId,
+  });
+  return foods as FoodDoc[];
 };
 
 const processDayForPlan = async (
@@ -211,14 +200,14 @@ const processDayForPlan = async (
   weekStart: string,
   day: DayPlan,
   index: number,
-  foods: FoodDoc[],
+  foodMap: Map<string, FoodDoc>,
   macros: MacroTarget,
   shoppingMap: Map<string, ShoppingEntry>
 ): Promise<Id<'dailyPlans'>> => {
   const date = index === 0 ? weekStart : addDays(weekStart, index);
   const allItems = [...day.colazione, ...day.pranzo, ...day.cena];
-  const macrosAchieved = calcItemsMacros(allItems, foods);
-  const meals = buildDayMeals(day, foods);
+  const macrosAchieved = calcItemsMacros(allItems, foodMap);
+  const meals = buildDayMeals(day, foodMap);
 
   const planId = await ctx.runMutation(internal.weeklyPlans.createDailyPlan, {
     date,
@@ -233,7 +222,7 @@ const processDayForPlan = async (
     userId,
   });
 
-  addMealItemsToMap(allItems, foods, shoppingMap);
+  addMealItemsToMap(allItems, foodMap, shoppingMap);
   return planId;
 };
 
@@ -242,7 +231,7 @@ const createDailyPlansFromAI = async (
   userId: string,
   weekStart: string,
   result: WeeklyPlanResult,
-  foods: FoodDoc[],
+  foodMap: Map<string, FoodDoc>,
   macros: MacroTarget
 ): Promise<{ dailyPlanIds: Id<'dailyPlans'>[]; shoppingMap: Map<string, ShoppingEntry> }> => {
   const dailyPlanIds: Id<'dailyPlans'>[] = [];
@@ -250,7 +239,7 @@ const createDailyPlansFromAI = async (
 
   for (let i = 0; i < result.days.length; i += 1) {
     const day = result.days[i] as DayPlan;
-    const planId = await processDayForPlan(ctx, userId, weekStart, day, i, foods, macros, shoppingMap);
+    const planId = await processDayForPlan(ctx, userId, weekStart, day, i, foodMap, macros, shoppingMap);
     dailyPlanIds.push(planId);
   }
 
@@ -280,10 +269,10 @@ const saveWeeklyPlan = async (
   userId: string,
   weekStart: string,
   result: WeeklyPlanResult,
-  foods: FoodDoc[],
+  foodMap: Map<string, FoodDoc>,
   macros: MacroTarget
 ): Promise<Id<'weeklyPlans'>> => {
-  const { dailyPlanIds, shoppingMap } = await createDailyPlansFromAI(ctx, userId, weekStart, result, foods, macros);
+  const { dailyPlanIds, shoppingMap } = await createDailyPlansFromAI(ctx, userId, weekStart, result, foodMap, macros);
   const shoppingList = buildShoppingListFromMap(shoppingMap);
   return ctx.runMutation(internal.weeklyPlans.create, { dailyPlanIds, shoppingList, userId, weekStartDate: weekStart });
 };
@@ -296,18 +285,19 @@ export const generate = action({
     const userId = await validateSubscription(ctx);
     await assertRateLimitNotExceeded(ctx, userId);
     const profile = await fetchProfileForPlan(ctx);
-    const foods = await fetchFoodsForPlan(ctx);
+    const foods = await fetchFoodsForPlan(ctx, userId, profile);
 
     if (foods.length === 0) {
       throw new ConvexError({ code: 'NOT_FOUND', message: 'Nessun alimento disponibile' });
     }
 
     const macros: MacroTarget = { ...profile.macros };
+    const foodMap = buildFoodLookupMap(foods);
     const prompt = buildPromptForProfile(profile, foods);
-    const result = await generateWithRetry(prompt, foods, macros);
+    const result = await generateWithRetry(prompt, foodMap, macros);
     const weekStart = getWeekStartDate(args.weekStartDate);
 
-    return saveWeeklyPlan(ctx, userId, weekStart, result, foods, macros);
+    return saveWeeklyPlan(ctx, userId, weekStart, result, foodMap, macros);
   },
 });
 

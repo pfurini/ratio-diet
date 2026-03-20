@@ -1,6 +1,7 @@
 'use client';
 
 import { api } from '@ratio-diet/backend/convex/_generated/api';
+import { KCAL_CONSISTENCY_TOLERANCE, MAX_MACRO_PER_100G } from '@ratio-diet/backend/convex/lib/nutrition-constants';
 import type { FoodCategory, FoodType } from '@ratio-diet/backend/convex/lib/validators';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
@@ -36,9 +37,6 @@ const parseNum = (val: string): number => {
   const n = parseFloat(val);
   return Number.isNaN(n) ? Number.NaN : n;
 };
-
-const MAX_MACRO_PER_100G = 100;
-const KCAL_CONSISTENCY_TOLERANCE = 50;
 
 const validateNutritionValues = (protein: number, carbs: number, fat: number, kcal: number): string | null => {
   if (protein > MAX_MACRO_PER_100G) return 'Le proteine non possono superare 100g per 100g di alimento';

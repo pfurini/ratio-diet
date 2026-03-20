@@ -77,7 +77,10 @@ export default defineSchema({
   })
     .index('by_source', ['source'])
     .index('by_userId', ['userId'])
-    .index('by_category', ['category'])
+    .index('by_source_category', ['source', 'category'])
+    .index('by_source_protein', ['source', 'proteinPer100g'])
+    .index('by_source_carb', ['source', 'carbPer100g'])
+    .index('by_source_fat', ['source', 'fatPer100g'])
     .searchIndex('search_name', { filterFields: ['source', 'userId', 'category'], searchField: 'name' }),
 
   stripeWebhookEvents: defineTable({
