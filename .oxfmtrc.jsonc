@@ -4,6 +4,22 @@
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   // Ignore all hidden directories, all jsonc files, and all root files
   "ignorePatterns": [
+    ".agent/**",
+    ".agents/**",
+    ".augment/**",
+    ".claude/**",
+    ".codex/**",
+    ".cursor/**",
+    ".devcontainer/**",
+    ".goose/**",
+    ".husky/**",
+    ".kilocode/**",
+    ".kiro/**",
+    ".pnpm-store/**",
+    ".superpowers/**",
+    ".turbo/**",
+    ".vscode/**",
+    ".zencoder/**",
     ".*/**",
     "**/.*/**",
     "**/_generated/**",
@@ -45,10 +61,5 @@
   "arrowParens": "always",
   "endOfLine": "lf",
   "proseWrap": "never",
-  "experimentalSortPackageJson": true,
-  "experimentalSortImports": {
-    "ignoreCase": true,
-    "newlinesBetween": true,
-    "order": "asc",
-  },
+  "sortPackageJson": false
 }

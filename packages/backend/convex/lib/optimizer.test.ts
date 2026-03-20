@@ -1,6 +1,6 @@
 import { distributeMacrosToMeals, optimizeMealQuantities } from './optimizer';
 
-describe(distributeMacrosToMeals, () => {
+describe('distributeMacrosToMeals test cases', () => {
   const dailyMacros = { carbGrams: 200, fatGrams: 60, proteinGrams: 150 };
 
   it('distributes 100% of macros when only 2 of 3 meals are present', () => {
@@ -24,7 +24,7 @@ describe(distributeMacrosToMeals, () => {
   });
 });
 
-describe(optimizeMealQuantities, () => {
+describe('optimizeMealQuantities test cases', () => {
   const chickenBreast = {
     carbPer100g: 0,
     fatPer100g: 3.6,
