@@ -11,7 +11,8 @@
     "dev": "convex dev",
     "dev:setup": "convex dev --configure --until-success",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed": "convex run internal.foods.seedCREA"
   },
   "dependencies": {
     "@ratio-diet/common": "workspace:*",

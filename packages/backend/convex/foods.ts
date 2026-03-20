@@ -11,7 +11,7 @@ import { FOOD_CATEGORY_VALUES, allergenValidator, foodCategoryValidator, foodTyp
 import type { AllergenTag, FoodCategory, FoodType } from './lib/validators';
 
 const CUSTOM_FOOD_LIMIT = 100;
-const CREA_SEED_BATCH_SIZE = 25;
+const CREA_SEED_BATCH_SIZE = 50;
 const UNFILTERED_CREA_SEARCH_LIMIT = 120;
 // max CREA foods in AI prompt — not the DB total
 const AI_PLAN_FOOD_BUDGET = 120;
@@ -91,37 +91,44 @@ const chunkArray = <T>(items: T[], chunkSize: number): T[][] => {
   return chunks;
 };
 
+const insertCreaFoodsBatch = async (ctx: MutationCtx, foods: typeof creaDatabaseFoods): Promise<number> => {
+  const batches = chunkArray(foods, CREA_SEED_BATCH_SIZE);
+  for (const batch of batches) {
+    for (const food of batch) {
+      await ctx.db.insert('foods', {
+        allergenTags: food.allergenTags as AllergenTag[],
+        carbPer100g: food.carbPer100g,
+        category: food.category as FoodCategory,
+        fatPer100g: food.fatPer100g,
+        foodType: food.foodType as FoodType,
+        kcalPer100g: food.kcalPer100g,
+        name: food.name,
+        proteinPer100g: food.proteinPer100g,
+        source: 'crea',
+      });
+    }
+  }
+  return foods.length;
+};
+
 export const seedCREA = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const existing = await ctx.db
+    const existingFoods = await ctx.db
       .query('foods')
       .withIndex('by_source', (q) => q.eq('source', 'crea'))
-      .first();
+      .collect();
 
-    if (existing !== null) {
-      return { seeded: 0, skipped: true };
+    const existingNames = new Set(existingFoods.map((f) => f.name.toLowerCase()));
+
+    const newFoods = creaDatabaseFoods.filter((food) => !existingNames.has(food.name.toLowerCase()));
+
+    if (newFoods.length === 0) {
+      return { seeded: 0, skipped: existingFoods.length };
     }
 
-    const batches = chunkArray(creaDatabaseFoods, CREA_SEED_BATCH_SIZE);
-    for (const batch of batches) {
-      const insertPromises = batch.map((food) =>
-        ctx.db.insert('foods', {
-          allergenTags: food.allergenTags as AllergenTag[],
-          carbPer100g: food.carbPer100g,
-          category: food.category as FoodCategory,
-          fatPer100g: food.fatPer100g,
-          foodType: food.foodType as FoodType,
-          kcalPer100g: food.kcalPer100g,
-          name: food.name,
-          proteinPer100g: food.proteinPer100g,
-          source: 'crea',
-        })
-      );
-      await Promise.all(insertPromises);
-    }
-
-    return { seeded: creaDatabaseFoods.length, skipped: false };
+    const seeded = await insertCreaFoodsBatch(ctx, newFoods);
+    return { seeded, skipped: existingFoods.length };
   },
 });
 
