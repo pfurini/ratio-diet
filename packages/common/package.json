@@ -1,0 +1,17 @@
+{
+  "name": "@ratio-diet/common",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/nutrition-constants.ts",
+    "./nutrition-constants": "./src/nutrition-constants.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@ratio-diet/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

@@ -1,3 +1,4 @@
+import { KCAL_CONSISTENCY_TOLERANCE, MAX_MACRO_PER_100G } from '@ratio-diet/common';
 import { ConvexError, v } from 'convex/values';
 
 // eslint-disable-next-line import/no-relative-parent-imports
@@ -6,7 +7,6 @@ import type { Id } from './_generated/dataModel';
 import { internalMutation, internalQuery, mutation, query } from './_generated/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { authComponent } from './auth';
-import { KCAL_CONSISTENCY_TOLERANCE, MAX_MACRO_PER_100G } from './lib/nutrition-constants';
 import { FOOD_CATEGORY_VALUES, allergenValidator, foodCategoryValidator, foodTypeValidator } from './lib/validators';
 import type { AllergenTag, FoodCategory, FoodType } from './lib/validators';
 

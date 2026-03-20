@@ -1,7 +1,7 @@
 'use client';
 
 import { api } from '@ratio-diet/backend/convex/_generated/api';
-import { KCAL_CONSISTENCY_TOLERANCE, MAX_MACRO_PER_100G } from '@ratio-diet/backend/convex/lib/nutrition-constants';
+import { KCAL_CONSISTENCY_TOLERANCE, MAX_MACRO_PER_100G } from '@ratio-diet/common';
 import type { FoodCategory, FoodType } from '@ratio-diet/backend/convex/lib/validators';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
