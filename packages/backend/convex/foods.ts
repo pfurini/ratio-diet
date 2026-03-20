@@ -444,6 +444,8 @@ export const fetchFoodsForAIPlan = internalQuery({
       .withIndex('by_userId', (q) => q.eq('userId', args.userId))
       .collect();
 
-    return [...creaFoods, ...customFoods];
+    const customFoodsFiltered = customFoods.filter((f) => filterByAllergens(f, args.excludeAllergens));
+
+    return [...creaFoods, ...customFoodsFiltered];
   },
 });
