@@ -10,6 +10,11 @@ export const ALLERGEN_VALUES = [
   'arachidi',
   'soia',
   'molluschi',
+  'sedano',
+  'senape',
+  'sesamo',
+  'solfiti',
+  'lupini',
   'other',
 ] as const;
 

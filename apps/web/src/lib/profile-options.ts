@@ -25,6 +25,11 @@ export const ALLERGEN_OPTIONS = [
   { label: 'Arachidi', value: 'arachidi' },
   { label: 'Soia', value: 'soia' },
   { label: 'Molluschi', value: 'molluschi' },
+  { label: 'Sedano', value: 'sedano' },
+  { label: 'Senape', value: 'senape' },
+  { label: 'Sesamo', value: 'sesamo' },
+  { label: 'Solfiti', value: 'solfiti' },
+  { label: 'Lupini', value: 'lupini' },
 ] as const;
 
 export const GOAL_OPTIONS = [
