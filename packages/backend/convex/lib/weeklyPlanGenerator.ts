@@ -64,8 +64,16 @@ interface MacroAccumulator {
 
 // --- Food lookup ---
 
-export const findFood = (foods: FoodDoc[], foodName: string): FoodDoc | undefined =>
-  foods.find((f) => f.name.toLowerCase() === foodName.toLowerCase());
+export const buildFoodLookupMap = (foods: FoodDoc[]): Map<string, FoodDoc> => {
+  const map = new Map<string, FoodDoc>();
+  for (const food of foods) {
+    map.set(food.name.toLowerCase(), food);
+  }
+  return map;
+};
+
+export const findFood = (foodMap: Map<string, FoodDoc>, foodName: string): FoodDoc | undefined =>
+  foodMap.get(foodName.toLowerCase());
 
 // --- Macro calculation ---
 
@@ -82,12 +90,12 @@ export interface DayMacroResult {
   unknownFoods: string[];
 }
 
-const calcDayMacros = (day: DayPlan, foods: FoodDoc[]): DayMacroResult => {
+const calcDayMacros = (day: DayPlan, foodMap: Map<string, FoodDoc>): DayMacroResult => {
   const allItems = [...day.colazione, ...day.pranzo, ...day.cena];
   const acc: MacroAccumulator = { carb: 0, fat: 0, kcal: 0, protein: 0 };
   const unknownFoods = new Set<string>();
   for (const item of allItems) {
-    const food = findFood(foods, item.foodName);
+    const food = findFood(foodMap, item.foodName);
     if (food) {
       addItemToAccumulator(acc, item, food);
     } else {
@@ -125,9 +133,9 @@ const isDayMacroValid = (macros: MacroAccumulator, target: MacroTarget): boolean
   return kcalOk && proteinOk && carbOk && fatOk;
 };
 
-const validateWeeklyPlan = (plan: WeeklyPlanResult, foods: FoodDoc[], target: MacroTarget): boolean => {
+const validateWeeklyPlan = (plan: WeeklyPlanResult, foodMap: Map<string, FoodDoc>, target: MacroTarget): boolean => {
   for (const day of plan.days) {
-    const { macros, unknownFoods } = calcDayMacros(day, foods);
+    const { macros, unknownFoods } = calcDayMacros(day, foodMap);
     if (unknownFoods.length > 0) {
       return false;
     }
@@ -145,10 +153,10 @@ export const accToMacroSnapshot = (acc: MacroAccumulator): MacroSnapshot => ({
   proteinGrams: acc.protein,
 });
 
-export const calcItemsMacros = (items: MealItem[], foods: FoodDoc[]): MacroSnapshot => {
+export const calcItemsMacros = (items: MealItem[], foodMap: Map<string, FoodDoc>): MacroSnapshot => {
   const acc: MacroAccumulator = { carb: 0, fat: 0, kcal: 0, protein: 0 };
   for (const item of items) {
-    const food = findFood(foods, item.foodName);
+    const food = findFood(foodMap, item.foodName);
     if (food) {
       addItemToAccumulator(acc, item, food);
     }
@@ -181,14 +189,14 @@ const assertValidRetries = (maxRetries: number): void => {
 
 const runGenerationAttempt = async (
   prompt: string,
-  foods: FoodDoc[],
+  foodMap: Map<string, FoodDoc>,
   macros: MacroTarget,
   attempt: number,
   maxRetries: number
 ): Promise<{ isValid: boolean; result: WeeklyPlanResult | null }> => {
   try {
     const result = await runAiGeneration(prompt);
-    return { isValid: validateWeeklyPlan(result, foods, macros), result };
+    return { isValid: validateWeeklyPlan(result, foodMap, macros), result };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.warn(`generateWithRetry attempt ${attempt + 1}/${maxRetries} failed:`, msg);
@@ -198,14 +206,14 @@ const runGenerationAttempt = async (
 
 const runGenerationAttempts = async (
   prompt: string,
-  foods: FoodDoc[],
+  foodMap: Map<string, FoodDoc>,
   macros: MacroTarget,
   maxRetries: number
 ): Promise<{ isValid: boolean; result: WeeklyPlanResult | null }> => {
   let lastResult: WeeklyPlanResult | null = null;
   let lastResultValid = false;
   for (let attempt = 0; attempt < maxRetries; attempt += 1) {
-    const attemptResult = await runGenerationAttempt(prompt, foods, macros, attempt, maxRetries);
+    const attemptResult = await runGenerationAttempt(prompt, foodMap, macros, attempt, maxRetries);
     if (attemptResult.result) {
       lastResult = attemptResult.result;
       lastResultValid = attemptResult.isValid;
@@ -219,12 +227,12 @@ const runGenerationAttempts = async (
 
 export const generateWithRetry = async (
   prompt: string,
-  foods: FoodDoc[],
+  foodMap: Map<string, FoodDoc>,
   macros: MacroTarget,
   maxRetries = 3
 ): Promise<WeeklyPlanResult> => {
   assertValidRetries(maxRetries);
-  const { isValid, result } = await runGenerationAttempts(prompt, foods, macros, maxRetries);
+  const { isValid, result } = await runGenerationAttempts(prompt, foodMap, macros, maxRetries);
   if (result === null || !isValid) {
     throw new Error(`Failed to generate weekly plan after ${maxRetries} attempts`);
   }

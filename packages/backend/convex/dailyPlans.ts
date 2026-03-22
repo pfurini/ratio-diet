@@ -239,6 +239,16 @@ const upsertDailyPlan = async (
   });
 };
 
+// --- Helper: filter meals to non-empty ones ---
+
+const filterNonEmptyMeals = (meals: Meal[]): Meal[] => {
+  const nonEmpty = meals.filter((m) => m.items.length > 0);
+  if (nonEmpty.length === 0) {
+    throw new ConvexError({ code: 'INVALID_INPUT', message: 'Nessun pasto con alimenti da ottimizzare' });
+  }
+  return nonEmpty;
+};
+
 // --- Helper: fetch profile and return macro target ---
 
 const fetchProfileMacros = async (ctx: MutationCtx, userId: string) => {
@@ -284,12 +294,13 @@ export const optimize = mutation({
       proteinGrams: profileMacros.proteinGrams,
     };
 
+    const mealsToOptimize = filterNonEmptyMeals(args.meals as Meal[]);
     const mealTargets = distributeMacrosToMeals(
       dailyTarget,
-      args.meals.map((m) => m.type)
+      mealsToOptimize.map((m) => m.type)
     );
     const mealResults = await Promise.all(
-      args.meals.map((meal) => optimizeSingleMeal(ctx, meal as Meal, mealTargets[meal.type] ?? dailyTarget))
+      mealsToOptimize.map((meal) => optimizeSingleMeal(ctx, meal, mealTargets[meal.type] ?? dailyTarget))
     );
 
     return upsertDailyPlan(ctx, user._id, args.date, {

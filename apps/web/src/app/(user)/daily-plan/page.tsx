@@ -68,7 +68,15 @@ const OptimizeButton = ({ meals, date, onOptimized }: OptimizeButtonProps) => {
   const handleOptimize = async () => {
     setLoading(true);
     try {
-      const id = await optimize({ date, meals });
+      const cleanedMeals = meals.map((meal) => ({
+        ...meal,
+        items: meal.items.map(({ foodId, constraintMin, constraintMax }) => ({
+          constraintMax,
+          constraintMin,
+          foodId,
+        })),
+      }));
+      const id = await optimize({ date, meals: cleanedMeals });
       onOptimized(id);
     } catch (error) {
       console.error('Optimize failed:', error);
@@ -168,7 +176,14 @@ const DailyPlanPage = () => {
       <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => setShowSpuntini((v) => !v)}>
         {showSpuntini ? 'Rimuovi spuntini' : 'Aggiungi spuntini'}
       </Button>
-      <OptimizeButton meals={meals} date={date} onOptimized={(id) => setOptimizedPlan({ date, id })} />
+      <OptimizeButton
+        meals={visibleMeals}
+        date={date}
+        onOptimized={(id) => {
+          lastSyncedPlanKeyRef.current = null;
+          setOptimizedPlan({ date, id });
+        }}
+      />
       {macrosAchieved && macrosTarget && (
         <PlanMacroSummary
           achieved={{ ...macrosAchieved, calories: getAchievedCalories(macrosAchieved) }}

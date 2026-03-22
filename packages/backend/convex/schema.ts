@@ -1,7 +1,7 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
-import { allergenValidator } from './lib/validators';
+import { allergenValidator, foodCategoryValidator, foodTypeValidator } from './lib/validators';
 
 export const mealTypeValidator = v.union(
   v.literal('colazione'),
@@ -66,9 +66,9 @@ export default defineSchema({
   foods: defineTable({
     allergenTags: v.array(allergenValidator),
     carbPer100g: v.number(),
-    category: v.string(),
+    category: foodCategoryValidator,
     fatPer100g: v.number(),
-    foodType: v.union(v.literal('animale'), v.literal('vegetale')),
+    foodType: foodTypeValidator,
     kcalPer100g: v.number(),
     name: v.string(),
     proteinPer100g: v.number(),
@@ -77,7 +77,10 @@ export default defineSchema({
   })
     .index('by_source', ['source'])
     .index('by_userId', ['userId'])
-    .index('by_category', ['category'])
+    .index('by_source_category', ['source', 'category'])
+    .index('by_source_protein', ['source', 'proteinPer100g'])
+    .index('by_source_carb', ['source', 'carbPer100g'])
+    .index('by_source_fat', ['source', 'fatPer100g'])
     .searchIndex('search_name', { filterFields: ['source', 'userId', 'category'], searchField: 'name' }),
 
   stripeWebhookEvents: defineTable({

@@ -1,17 +1,22 @@
 'use client';
 
 import { api } from '@ratio-diet/backend/convex/_generated/api';
+import { KCAL_CONSISTENCY_TOLERANCE, MAX_MACRO_PER_100G } from '@ratio-diet/common';
+import type { FoodCategory, FoodType } from '@ratio-diet/backend/convex/lib/validators';
 import { Button } from '@ratio-diet/ui/components/button';
 import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
+import { NativeSelect, NativeSelectOption } from '@ratio-diet/ui/components/native-select';
+import { ToggleGroup, ToggleGroupItem } from '@ratio-diet/ui/components/toggle-group';
+import { ConvexError } from 'convex/values';
 import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
 
-type FoodType = 'animale' | 'vegetale';
+import { FOOD_CATEGORY_OPTIONS } from '@/lib/profile-options';
 
 interface CustomFoodFormState {
   name: string;
-  category: string;
+  category: FoodCategory | '';
   kcal: string;
   protein: string;
   carbs: string;
@@ -34,9 +39,41 @@ const parseNum = (val: string): number => {
   return Number.isNaN(n) ? Number.NaN : n;
 };
 
+const validateNutritionValues = (protein: number, carbs: number, fat: number, kcal: number): string | null => {
+  if (protein > MAX_MACRO_PER_100G) return 'Le proteine non possono superare 100g per 100g di alimento';
+  if (carbs > MAX_MACRO_PER_100G) return 'I carboidrati non possono superare 100g per 100g di alimento';
+  if (fat > MAX_MACRO_PER_100G) return 'I grassi non possono superare 100g per 100g di alimento';
+  const sum = protein + carbs + fat;
+  if (sum > MAX_MACRO_PER_100G) return 'La somma di proteine, carboidrati e grassi non può superare 100g per 100g di alimento';
+  const expectedKcal = protein * 4 + carbs * 4 + fat * 9;
+  if (Math.abs(kcal - expectedKcal) > KCAL_CONSISTENCY_TOLERANCE) {
+    return `Le calorie (${kcal} kcal) non sono coerenti con i macronutrienti (atteso ~${Math.round(expectedKcal)} kcal)`;
+  }
+  return null;
+};
+
 interface CustomFoodFormProps {
   onAdded: () => void;
 }
+
+const getAddCustomFoodErrorMessage = (error: unknown): string => {
+  if (error instanceof ConvexError) {
+    const data = error.data;
+    if (typeof data === 'string') {
+      return data;
+    }
+    if (data && typeof data === 'object' && 'message' in data) {
+      const msg = (data as { message: unknown }).message;
+      if (typeof msg === 'string' && msg.length > 0) {
+        return msg;
+      }
+    }
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return 'Impossibile aggiungere l\'alimento. Riprova.';
+};
 
 const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
   const [form, setForm] = useState<CustomFoodFormState>(initialState);
@@ -64,12 +101,22 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
       setError('Inserisci valori numerici validi per i macronutrienti');
       return;
     }
+    const nutritionError = validateNutritionValues(protein, carbs, fat, kcal);
+    if (nutritionError) {
+      setError(nutritionError);
+      return;
+    }
+    if (!form.category) {
+      setError('Seleziona una categoria');
+      return;
+    }
+    const category = form.category as FoodCategory;
     setIsSubmitting(true);
     try {
       await addCustomFood({
         allergenTags: [],
         carbPer100g: carbs,
-        category: form.category,
+        category,
         fatPer100g: fat,
         foodType: form.foodType,
         kcalPer100g: kcal,
@@ -78,15 +125,11 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
       });
       setForm(initialState);
       onAdded();
-    } catch {
-      setError('Impossibile aggiungere alimento');
+    } catch (caught) {
+      setError(getAddCustomFoodErrorMessage(caught));
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const toggleFoodType = () => {
-    setForm((prev) => ({ ...prev, foodType: prev.foodType === 'animale' ? 'vegetale' : 'animale' }));
   };
 
   return (
@@ -110,13 +153,19 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
         </div>
         <div className="space-y-1">
           <Label htmlFor="cf-category">Categoria</Label>
-          <Input
+          <NativeSelect
             id="cf-category"
             value={form.category}
-            onChange={(e) => setField('category', e.target.value)}
+            onChange={(e) => setField('category', e.target.value as FoodCategory)}
             required
-            placeholder="Es. carni"
-          />
+          >
+            <NativeSelectOption value="">Seleziona categoria</NativeSelectOption>
+            {FOOD_CATEGORY_OPTIONS.map((opt) => (
+              <NativeSelectOption key={opt.value} value={opt.value}>
+                {opt.label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
         </div>
         <div className="space-y-1">
           <Label htmlFor="cf-kcal">Kcal/100g</Label>
@@ -163,11 +212,20 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
           />
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={toggleFoodType}>
-          {form.foodType === 'animale' ? 'Animale' : 'Vegetale'}
-        </Button>
-        <span className="text-muted-foreground text-xs">Tipo alimento</span>
+      <div className="space-y-1">
+        <Label>Tipo alimento</Label>
+        <ToggleGroup
+          variant="outline"
+          value={[form.foodType]}
+          onValueChange={(val: string[]) => {
+            const last = val[val.length - 1] as FoodType | undefined;
+            if (last) setField('foodType', last);
+          }}
+        >
+          <ToggleGroupItem value="animale" aria-label="Animale">Animale</ToggleGroupItem>
+          <ToggleGroupItem value="vegetale" aria-label="Vegetale">Vegetale</ToggleGroupItem>
+          <ToggleGroupItem value="ittico" aria-label="Ittico">Ittico</ToggleGroupItem>
+        </ToggleGroup>
       </div>
       {error && <p className="text-destructive text-xs">{error}</p>}
       {customCount != null && customCount.count >= customCount.limit && (

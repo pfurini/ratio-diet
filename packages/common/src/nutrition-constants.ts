@@ -1,0 +1,2 @@
+export const MAX_MACRO_PER_100G = 100;
+export const KCAL_CONSISTENCY_TOLERANCE = 50;
