@@ -8,6 +8,7 @@ import { Input } from '@ratio-diet/ui/components/input';
 import { Label } from '@ratio-diet/ui/components/label';
 import { NativeSelect, NativeSelectOption } from '@ratio-diet/ui/components/native-select';
 import { ToggleGroup, ToggleGroupItem } from '@ratio-diet/ui/components/toggle-group';
+import { ConvexError } from 'convex/values';
 import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
 
@@ -54,6 +55,25 @@ const validateNutritionValues = (protein: number, carbs: number, fat: number, kc
 interface CustomFoodFormProps {
   onAdded: () => void;
 }
+
+const getAddCustomFoodErrorMessage = (error: unknown): string => {
+  if (error instanceof ConvexError) {
+    const data = error.data;
+    if (typeof data === 'string') {
+      return data;
+    }
+    if (data && typeof data === 'object' && 'message' in data) {
+      const msg = (data as { message: unknown }).message;
+      if (typeof msg === 'string' && msg.length > 0) {
+        return msg;
+      }
+    }
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return 'Impossibile aggiungere l\'alimento. Riprova.';
+};
 
 const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
   const [form, setForm] = useState<CustomFoodFormState>(initialState);
@@ -105,8 +125,8 @@ const CustomFoodForm = ({ onAdded }: CustomFoodFormProps) => {
       });
       setForm(initialState);
       onAdded();
-    } catch {
-      setError('Impossibile aggiungere alimento');
+    } catch (caught) {
+      setError(getAddCustomFoodErrorMessage(caught));
     } finally {
       setIsSubmitting(false);
     }

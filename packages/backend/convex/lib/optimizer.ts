@@ -152,6 +152,11 @@ const runOptimizationLoop = (
     }
     adjustQuantities(foods, quantities, errors, constraints);
   }
+  const finalTotalError = computeTotalError(foods, quantities, macroTarget);
+  if (finalTotalError < bestError) {
+    bestError = finalTotalError;
+    bestQuantities = { ...quantities };
+  }
   return bestQuantities;
 };
 

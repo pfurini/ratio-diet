@@ -13,6 +13,9 @@ import type { AllergenTag, FoodCategory, FoodType } from './lib/validators';
 const CUSTOM_FOOD_LIMIT = 100;
 const CREA_SEED_BATCH_SIZE = 50;
 const UNFILTERED_CREA_SEARCH_LIMIT = 120;
+const MACRO_SUGGEST_LIMIT_DEFAULT = 5;
+const MACRO_SUGGEST_LIMIT_MAX = 100;
+const MACRO_SUGGEST_SCAN_MAX = 1000;
 // max CREA foods in AI prompt — not the DB total
 const AI_PLAN_FOOD_BUDGET = 120;
 
@@ -227,6 +230,22 @@ const assertCustomFoodLimitNotReached = async (ctx: MutationCtx, userId: string)
   }
 };
 
+const assertCustomFoodNameUnique = async (ctx: MutationCtx, userId: string, name: string): Promise<void> => {
+  const normalized = name.toLowerCase();
+  const existing = await ctx.db
+    .query('foods')
+    .withIndex('by_userId', (q) => q.eq('userId', userId))
+    .filter((q) => q.eq(q.field('source'), 'custom'))
+    .collect();
+  const hasDuplicate = existing.some((food) => food.name.toLowerCase() === normalized);
+  if (hasDuplicate) {
+    throw new ConvexError({
+      code: 'DUPLICATE_NAME',
+      message: 'Esiste già un alimento personalizzato con questo nome (anche con maiuscole diverse)',
+    });
+  }
+};
+
 export const search = query({
   args: {
     category: v.optional(v.string()),
@@ -305,6 +324,7 @@ export const addCustomFood = mutation({
     assertMacrosWithinPhysicalLimits(args);
     assertCalorieConsistency(args);
     await assertCustomFoodLimitNotReached(ctx, userId);
+    await assertCustomFoodNameUnique(ctx, userId, args.name);
     return ctx.db.insert('foods', {
       ...args,
       source: 'custom',
@@ -389,7 +409,10 @@ export const suggestForMacro = query({
       .withIndex('by_userId', (q) => q.eq('userId', user._id))
       .unique();
 
-    const limit = args.limit ?? 5;
+    const rawLimit = args.limit ?? MACRO_SUGGEST_LIMIT_DEFAULT;
+    const finiteBase = Number.isFinite(rawLimit) ? Math.floor(rawLimit) : MACRO_SUGGEST_LIMIT_DEFAULT;
+    const clampedLimit = Math.min(MACRO_SUGGEST_LIMIT_MAX, Math.max(1, finiteBase));
+    const scanSize = Math.min(MACRO_SUGGEST_SCAN_MAX, Math.max(clampedLimit * 10, 50));
     const userAllergens = profile?.allergies ?? [];
     const dietPref = profile?.dietaryPreference ?? 'onnivoro';
     const indexName = MACRO_INDEX_MAP[args.macro];
@@ -398,11 +421,11 @@ export const suggestForMacro = query({
       .query('foods')
       .withIndex(indexName, (q) => q.eq('source', 'crea'))
       .order('desc')
-      .take(Math.max(limit * 10, 50));
+      .take(scanSize);
 
     return (candidates as FoodDoc[])
       .filter((f) => filterByDietaryPreference(f, dietPref) && filterByAllergens(f, userAllergens))
-      .slice(0, limit);
+      .slice(0, clampedLimit);
   },
 });
 
@@ -431,19 +454,22 @@ export const fetchFoodsForAIPlan = internalQuery({
   handler: async (ctx, args) => {
     const hiddenCats = HIDDEN_CATEGORIES[args.dietaryPreference] ?? [];
     const allowedCats = FOOD_CATEGORY_VALUES.filter((c) => !hiddenCats.includes(c));
-    const perCategory = Math.ceil(AI_PLAN_FOOD_BUDGET / allowedCats.length);
+    const catCount = allowedCats.length;
+    const basePer = catCount > 0 ? Math.floor(AI_PLAN_FOOD_BUDGET / catCount) : 0;
+    const remainder = catCount > 0 ? AI_PLAN_FOOD_BUDGET % catCount : 0;
+    const limits = allowedCats.map((_, index) => basePer + (index < remainder ? 1 : 0));
 
     const catResults = await Promise.all(
-      allowedCats.map((cat) =>
+      allowedCats.map((cat, index) =>
         ctx.db
           .query('foods')
           .withIndex('by_source_category', (q) => q.eq('source', 'crea').eq('category', cat))
-          .take(perCategory + 10)
+          .take(limits[index] + 10)
       )
     );
 
-    const creaFoods = catResults.flatMap((catFoods) =>
-      catFoods.filter((f) => filterByAllergens(f, args.excludeAllergens)).slice(0, perCategory)
+    const creaFoods = catResults.flatMap((catFoods, index) =>
+      catFoods.filter((f) => filterByAllergens(f, args.excludeAllergens)).slice(0, limits[index])
     );
 
     const customFoods = await ctx.db
@@ -451,7 +477,9 @@ export const fetchFoodsForAIPlan = internalQuery({
       .withIndex('by_userId', (q) => q.eq('userId', args.userId))
       .collect();
 
-    const customFoodsFiltered = customFoods.filter((f) => filterByAllergens(f, args.excludeAllergens));
+    const customFoodsFiltered = customFoods.filter(
+      (f) => filterByDietaryPreference(f, args.dietaryPreference) && filterByAllergens(f, args.excludeAllergens)
+    );
 
     return [...creaFoods, ...customFoodsFiltered];
   },
