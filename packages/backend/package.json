@@ -5,7 +5,6 @@
   "license": "ISC",
   "author": "",
   "scripts": {
-    "build": "pnpm run codegen",
     "codegen": "convex codegen",
     "check-types": "tsc --noEmit --project convex/tsconfig.json",
     "dev": "convex dev",
