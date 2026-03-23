@@ -17,14 +17,14 @@
     "convex": "convex --"
   },
   "dependencies": {
-    "@ratio-diet/common": "workspace:*",
     "@convex-dev/better-auth": "catalog:",
+    "@convex-dev/stripe": "0.1.4",
     "@openrouter/ai-sdk-provider": "1.5.4",
+    "@ratio-diet/common": "workspace:*",
     "ai": "^5.0.117",
     "better-auth": "catalog:",
     "convex": "catalog:",
     "dotenv": "catalog:",
-    "stripe": "20.4.1",
     "zod": "catalog:"
   },
   "devDependencies": {

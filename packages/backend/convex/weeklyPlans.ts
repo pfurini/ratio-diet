@@ -1,6 +1,6 @@
 import { ConvexError, v } from 'convex/values';
 
-import { api, internal } from './_generated/api';
+import { api, components, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
 import type { ActionCtx, MutationCtx } from './_generated/server';
@@ -345,11 +345,11 @@ const verifyEditAccess = async (ctx: MutationCtx, weeklyPlanId: Id<'weeklyPlans'
     throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
   }
 
-  const sub = await ctx.db
-    .query('subscriptions')
-    .withIndex('by_userId', (q) => q.eq('userId', user._id))
-    .unique();
-  if (!sub || !hasPremiumAccess(sub.status)) {
+  const subs = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+    userId: user._id,
+  });
+  const activeSub = subs.find((s) => hasPremiumAccess(s.status));
+  if (!activeSub) {
     throw new ConvexError({ code: 'FORBIDDEN', message: 'Abbonamento attivo richiesto per modificare il piano' });
   }
 
