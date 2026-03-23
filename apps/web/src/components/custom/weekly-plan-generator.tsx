@@ -42,7 +42,7 @@ const WeeklyPlanGenerator = ({ onGenerated }: WeeklyPlanGeneratorProps) => {
         <h2 className="text-lg font-semibold">Genera piano settimanale</h2>
         <p className="text-sm text-muted-foreground mt-1">
           L&apos;AI creerà un piano alimentare personalizzato per la prossima settimana
-          basato sul tuo profilo e sulle tue preferenze. Questo può richiedere 10-30 secondi.
+          basato sul tuo profilo e sulle tue preferenze. Questo può richiedere qualche minuto.
         </p>
       </div>
       {error && (

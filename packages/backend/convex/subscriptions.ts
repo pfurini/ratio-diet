@@ -43,22 +43,16 @@ const STATUS_MAP: Record<string, SubscriptionStatus> = {
 
 const mapSubscriptionStatus = (raw: string): SubscriptionStatus => STATUS_MAP[raw] ?? 'past_due';
 
-interface ComponentSubscription {
-  currentPeriodEnd: number;
-  priceId: string;
-  status: string;
-}
+/** Single row from Stripe component `listSubscriptionsByUserId` (matches generated `components.stripe` API). */
+export type StripeUserSubscription = (typeof components.stripe.public.listSubscriptionsByUserId)['_returnType'][number];
 
-export const pickPrimarySubscription = (subs: ComponentSubscription[]): ComponentSubscription | null => {
+export const pickPrimarySubscription = (subs: StripeUserSubscription[]): StripeUserSubscription | null => {
   if (subs.length === 0) {
     return null;
   }
   const premium = subs.filter((s) => hasPremiumAccess(s.status));
   const pool = premium.length > 0 ? premium : subs;
   const [first] = pool;
-  if (!first) {
-    return null;
-  }
   let best = first;
   for (const s of pool) {
     if (s.currentPeriodEnd > best.currentPeriodEnd) {
@@ -92,6 +86,25 @@ const getPriceId = () => {
   return priceId;
 };
 
+const DEFAULT_CHECKOUT_RETURN_PATH = '/dashboard';
+
+/** Internal path only — rejects open-redirect patterns. */
+const checkoutReturnPath = (path: string | undefined): string => {
+  if (!path) {
+    return DEFAULT_CHECKOUT_RETURN_PATH;
+  }
+  if (!path.startsWith('/') || path.startsWith('//')) {
+    return DEFAULT_CHECKOUT_RETURN_PATH;
+  }
+  if (path.includes('://') || path.includes('\\')) {
+    return DEFAULT_CHECKOUT_RETURN_PATH;
+  }
+  if (!/^\/[\w/-]*$/.test(path)) {
+    return DEFAULT_CHECKOUT_RETURN_PATH;
+  }
+  return path;
+};
+
 export const getStatus = query({
   args: {},
   handler: async (ctx) => {
@@ -108,34 +121,40 @@ export const getStatus = query({
       return null;
     }
 
+    const status = mapSubscriptionStatus(sub.status);
+    const isCanceledForUi = status === 'canceled' || sub.cancelAtPeriodEnd;
+
     return {
-      nextRenewalDate: toNextRenewalDate(sub.currentPeriodEnd),
-      status: mapSubscriptionStatus(sub.status),
+      cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
+      nextRenewalDate: isCanceledForUi ? null : toNextRenewalDate(sub.currentPeriodEnd),
+      status,
     };
   },
   returns: v.union(
     v.null(),
     v.object({
-      nextRenewalDate: v.string(),
+      cancelAtPeriodEnd: v.boolean(),
+      nextRenewalDate: v.union(v.string(), v.null()),
       status: subscriptionStatusValidator,
     })
   ),
 });
 
-const userHasActivePrice = (subs: ComponentSubscription[], priceId: string): boolean =>
+const userHasActivePrice = (subs: StripeUserSubscription[], priceId: string): boolean =>
   subs.some((s) => hasPremiumAccess(s.status) && s.priceId === priceId);
 
 export const createCheckoutSession = action({
-  args: {},
-  handler: async (ctx): Promise<{ url: string | null }> => {
+  args: { returnPath: v.optional(v.string()) },
+  handler: async (ctx, args): Promise<{ url: string | null }> => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user) {
       throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
     const siteUrl = getSiteUrl();
+    const returnPath = checkoutReturnPath(args.returnPath);
     const priceId = getPriceId();
-    const subs = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+    const subs: StripeUserSubscription[] = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
       userId: user._id,
     });
     if (userHasActivePrice(subs, priceId)) {
@@ -149,13 +168,13 @@ export const createCheckoutSession = action({
     });
 
     const { url } = await stripeClient.createCheckoutSession(ctx, {
-      cancelUrl: `${siteUrl}/dashboard?subscription=cancelled`,
+      cancelUrl: `${siteUrl}${returnPath}?subscription=cancelled`,
       customerId,
       metadata: { userId: user._id },
       mode: 'subscription',
       priceId,
       subscriptionMetadata: { userId: user._id },
-      successUrl: `${siteUrl}/dashboard?subscription=success`,
+      successUrl: `${siteUrl}${returnPath}?subscription=success`,
     });
 
     return { url };
@@ -171,7 +190,7 @@ export const createPortalSession = action({
       throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
-    const subs = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+    const subs: StripeUserSubscription[] = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
       userId: user._id,
     });
     if (subs.length === 0) {

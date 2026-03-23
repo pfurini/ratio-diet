@@ -17,6 +17,31 @@ const formatRenewalDate = (dateStr: string): string => {
   return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('it-IT');
 };
 
+const subscriptionStatusLabelIt = (status: string, cancelAtPeriodEnd: boolean): string => {
+  if (status === 'canceled' || cancelAtPeriodEnd) {
+    return 'Annullato';
+  }
+  if (status === 'active') {
+    return 'Attivo';
+  }
+  if (status === 'trialing') {
+    return 'Prova';
+  }
+  if (status === 'past_due') {
+    return 'Pagamento in sospeso';
+  }
+  if (status === 'paused') {
+    return 'In pausa';
+  }
+  if (status === 'unpaid') {
+    return 'Non pagato';
+  }
+  if (status === 'incomplete' || status === 'incomplete_expired') {
+    return 'Incompleto';
+  }
+  return status;
+};
+
 const SubscriptionSection = () => {
   const subscription = useQuery(api.subscriptions.getStatus);
   const createPortalSession = useAction(api.subscriptions.createPortalSession);
@@ -53,13 +78,14 @@ const SubscriptionSection = () => {
       ) : (
         <div className="space-y-1">
           <p className="text-sm">
-            Stato: <span className="font-medium">{subscription.status}</span>
+            Stato:{' '}
+            <span className="font-medium">
+              {subscriptionStatusLabelIt(subscription.status, subscription.cancelAtPeriodEnd)}
+            </span>
           </p>
-          {subscription.nextRenewalDate && (
-            <p className="text-muted-foreground text-sm">
-              Prossimo rinnovo: {formatRenewalDate(subscription.nextRenewalDate)}
-            </p>
-          )}
+          <p className="text-muted-foreground text-sm">
+            Prossimo rinnovo: {subscription.nextRenewalDate ? formatRenewalDate(subscription.nextRenewalDate) : '—'}
+          </p>
         </div>
       )}
       <Button variant="outline" onClick={handleManage} disabled={loading}>

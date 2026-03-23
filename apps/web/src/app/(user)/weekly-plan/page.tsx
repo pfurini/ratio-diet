@@ -30,7 +30,7 @@ const useCheckoutRedirect = () => {
     setCheckoutLoading(true);
     setError(null);
     try {
-      const result = await createSession({});
+      const result = await createSession({ returnPath: '/weekly-plan' });
       if (result?.url) {
         // Keep loading state during navigation.
         window.location.href = result.url;
