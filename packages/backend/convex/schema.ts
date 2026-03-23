@@ -83,32 +83,6 @@ export default defineSchema({
     .index('by_source_fat', ['source', 'fatPer100g'])
     .searchIndex('search_name', { filterFields: ['source', 'userId', 'category'], searchField: 'name' }),
 
-  stripeWebhookEvents: defineTable({
-    eventId: v.string(),
-    processedAt: v.number(),
-  }).index('by_eventId', ['eventId']),
-
-  subscriptions: defineTable({
-    nextRenewalDate: v.string(),
-    startDate: v.string(),
-    status: v.union(
-      v.literal('incomplete'),
-      v.literal('incomplete_expired'),
-      v.literal('trialing'),
-      v.literal('active'),
-      v.literal('past_due'),
-      v.literal('canceled'),
-      v.literal('unpaid'),
-      v.literal('paused')
-    ),
-    stripeCustomerId: v.string(),
-    stripeSubscriptionId: v.string(),
-    userId: v.string(),
-  })
-    .index('by_userId', ['userId'])
-    .index('by_stripeSubscriptionId', ['stripeSubscriptionId'])
-    .index('by_stripeCustomerId', ['stripeCustomerId']),
-
   templates: defineTable({
     meals: v.array(templateMealValidator),
     name: v.string(),

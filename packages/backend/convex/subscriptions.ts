@@ -1,17 +1,79 @@
+import { StripeSubscriptions } from '@convex-dev/stripe';
 import { ConvexError, v } from 'convex/values';
-import type { Stripe } from 'stripe';
 
-import { api } from './_generated/api';
-import { action, internalMutation, internalQuery, query } from './_generated/server';
+import { components } from './_generated/api';
+import { action, query } from './_generated/server';
 import { authComponent } from './auth';
-import { importStripe } from './lib/stripe';
+import { hasPremiumAccess } from './lib/premiumAccess';
 
-const getStripeKey = () => {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) {
-    throw new Error('STRIPE_SECRET_KEY is not set');
+const stripeClient = new StripeSubscriptions(components.stripe, {});
+
+const subscriptionStatusValidator = v.union(
+  v.literal('incomplete'),
+  v.literal('incomplete_expired'),
+  v.literal('trialing'),
+  v.literal('active'),
+  v.literal('past_due'),
+  v.literal('canceled'),
+  v.literal('unpaid'),
+  v.literal('paused')
+);
+
+type SubscriptionStatus =
+  | 'active'
+  | 'canceled'
+  | 'incomplete'
+  | 'incomplete_expired'
+  | 'past_due'
+  | 'paused'
+  | 'trialing'
+  | 'unpaid';
+
+const STATUS_MAP: Record<string, SubscriptionStatus> = {
+  active: 'active',
+  canceled: 'canceled',
+  cancelled: 'canceled',
+  incomplete: 'incomplete',
+  incomplete_expired: 'incomplete_expired',
+  past_due: 'past_due',
+  paused: 'paused',
+  trialing: 'trialing',
+  unpaid: 'unpaid',
+};
+
+const mapSubscriptionStatus = (raw: string): SubscriptionStatus => STATUS_MAP[raw] ?? 'past_due';
+
+interface ComponentSubscription {
+  currentPeriodEnd: number;
+  priceId: string;
+  status: string;
+}
+
+export const pickPrimarySubscription = (subs: ComponentSubscription[]): ComponentSubscription | null => {
+  if (subs.length === 0) {
+    return null;
   }
-  return key;
+  const premium = subs.filter((s) => hasPremiumAccess(s.status));
+  const pool = premium.length > 0 ? premium : subs;
+  const [first] = pool;
+  if (!first) {
+    return null;
+  }
+  let best = first;
+  for (const s of pool) {
+    if (s.currentPeriodEnd > best.currentPeriodEnd) {
+      best = s;
+    }
+  }
+  return best;
+};
+
+const toNextRenewalDate = (currentPeriodEnd: number): string => {
+  const [dateString] = new Date(currentPeriodEnd * 1000).toISOString().split('T');
+  if (!dateString) {
+    throw new Error('Unable to convert period end to date string');
+  }
+  return dateString;
 };
 
 const getSiteUrl = () => {
@@ -30,22 +92,6 @@ const getPriceId = () => {
   return priceId;
 };
 
-type CheckoutSessionCreateParams = Stripe.Checkout.SessionCreateParams;
-
-export const buildCheckoutSessionCreateParams = (
-  userId: string,
-  siteUrl: string,
-  priceId: string
-): CheckoutSessionCreateParams => ({
-  cancel_url: `${siteUrl}/dashboard?subscription=cancelled`,
-  client_reference_id: userId,
-  line_items: [{ price: priceId, quantity: 1 }],
-  metadata: { userId },
-  mode: 'subscription',
-  subscription_data: { metadata: { userId } },
-  success_url: `${siteUrl}/dashboard?subscription=success`,
-});
-
 export const getStatus = query({
   args: {},
   handler: async (ctx) => {
@@ -54,40 +100,30 @@ export const getStatus = query({
       return null;
     }
 
-    const sub = await ctx.db
-      .query('subscriptions')
-      .withIndex('by_userId', (q) => q.eq('userId', user._id))
-      .unique();
+    const subs = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+      userId: user._id,
+    });
+    const sub = pickPrimarySubscription(subs);
+    if (!sub) {
+      return null;
+    }
 
-    return sub ? { nextRenewalDate: sub.nextRenewalDate, status: sub.status } : null;
+    return {
+      nextRenewalDate: toNextRenewalDate(sub.currentPeriodEnd),
+      status: mapSubscriptionStatus(sub.status),
+    };
   },
+  returns: v.union(
+    v.null(),
+    v.object({
+      nextRenewalDate: v.string(),
+      status: subscriptionStatusValidator,
+    })
+  ),
 });
 
-const ACTIVE_TRIALING_STATUSES = new Set(['active', 'trialing']);
-
-const hasActiveSubscriptionForPrice = async (
-  stripe: Stripe,
-  stripeCustomerId: string,
-  priceId: string
-): Promise<boolean> => {
-  const subscriptions = await stripe.subscriptions.list({
-    customer: stripeCustomerId,
-    status: 'all',
-  });
-  for (const sub of subscriptions.data) {
-    if (!ACTIVE_TRIALING_STATUSES.has(sub.status)) {
-      continue;
-    }
-    const hasMatchingPrice = sub.items.data.some((item) => {
-      const p = item.price;
-      return (typeof p === 'string' ? p : p?.id) === priceId;
-    });
-    if (hasMatchingPrice) {
-      return true;
-    }
-  }
-  return false;
-};
+const userHasActivePrice = (subs: ComponentSubscription[], priceId: string): boolean =>
+  subs.some((s) => hasPremiumAccess(s.status) && s.priceId === priceId);
 
 export const createCheckoutSession = action({
   args: {},
@@ -97,26 +133,32 @@ export const createCheckoutSession = action({
       throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
-    const Stripe = await importStripe();
-    const stripe = new Stripe(getStripeKey());
     const siteUrl = getSiteUrl();
     const priceId = getPriceId();
-
-    const existingSub = await ctx.runQuery(api.subscriptions.getSubscriptionForPortal, {});
-    if (existingSub?.stripeCustomerId) {
-      const alreadyActive = await hasActiveSubscriptionForPrice(stripe, existingSub.stripeCustomerId, priceId);
-      if (alreadyActive) {
-        return { url: null };
-      }
+    const subs = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+      userId: user._id,
+    });
+    if (userHasActivePrice(subs, priceId)) {
+      return { url: null };
     }
 
-    const sessionParams = buildCheckoutSessionCreateParams(user._id, siteUrl, priceId);
-    if (existingSub?.stripeCustomerId) {
-      sessionParams.customer = existingSub.stripeCustomerId;
-    }
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    const { customerId } = await stripeClient.getOrCreateCustomer(ctx, {
+      email: user.email,
+      name: user.name,
+      userId: user._id,
+    });
 
-    return { url: session.url };
+    const { url } = await stripeClient.createCheckoutSession(ctx, {
+      cancelUrl: `${siteUrl}/dashboard?subscription=cancelled`,
+      customerId,
+      metadata: { userId: user._id },
+      mode: 'subscription',
+      priceId,
+      subscriptionMetadata: { userId: user._id },
+      successUrl: `${siteUrl}/dashboard?subscription=success`,
+    });
+
+    return { url };
   },
   returns: v.object({ url: v.union(v.string(), v.null()) }),
 });
@@ -129,111 +171,19 @@ export const createPortalSession = action({
       throw new ConvexError({ code: 'UNAUTHENTICATED', message: 'Non autenticato' });
     }
 
-    const sub = await ctx.runQuery(api.subscriptions.getSubscriptionForPortal, {});
-    if (!sub) {
+    const subs = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+      userId: user._id,
+    });
+    if (subs.length === 0) {
       throw new ConvexError({ code: 'NOT_FOUND', message: 'Nessun abbonamento trovato' });
     }
 
-    const Stripe = await importStripe();
-    const stripe = new Stripe(getStripeKey());
-
-    const session = await stripe.billingPortal.sessions.create({
-      customer: sub.stripeCustomerId,
-      return_url: `${getSiteUrl()}/settings`,
+    const { url } = await stripeClient.createCustomerPortalSession(ctx, {
+      customerId: subs[0].stripeCustomerId,
+      returnUrl: `${getSiteUrl()}/settings`,
     });
 
-    return { url: session.url };
+    return { url };
   },
   returns: v.object({ url: v.union(v.string(), v.null()) }),
-});
-
-export const getSubscriptionForPortal = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) {
-      return null;
-    }
-
-    return await ctx.db
-      .query('subscriptions')
-      .withIndex('by_userId', (q) => q.eq('userId', user._id))
-      .unique();
-  },
-});
-
-export const upsertFromWebhook = internalMutation({
-  args: {
-    nextRenewalDate: v.string(),
-    startDate: v.string(),
-    status: v.union(
-      v.literal('incomplete'),
-      v.literal('incomplete_expired'),
-      v.literal('trialing'),
-      v.literal('active'),
-      v.literal('past_due'),
-      v.literal('canceled'),
-      v.literal('unpaid'),
-      v.literal('paused')
-    ),
-    stripeCustomerId: v.string(),
-    stripeSubscriptionId: v.string(),
-    userId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query('subscriptions')
-      .withIndex('by_stripeSubscriptionId', (q) => q.eq('stripeSubscriptionId', args.stripeSubscriptionId))
-      .unique();
-
-    await (existing
-      ? ctx.db.patch(existing._id, {
-          nextRenewalDate: args.nextRenewalDate,
-          startDate: args.startDate,
-          status: args.status,
-          stripeCustomerId: args.stripeCustomerId,
-          userId: args.userId,
-        })
-      : ctx.db.insert('subscriptions', args));
-  },
-});
-
-export const getUserIdByStripeSubscriptionId = internalQuery({
-  args: { stripeSubscriptionId: v.string() },
-  handler: async (ctx, args) => {
-    const subscription = await ctx.db
-      .query('subscriptions')
-      .withIndex('by_stripeSubscriptionId', (q) => q.eq('stripeSubscriptionId', args.stripeSubscriptionId))
-      .unique();
-    return subscription?.userId ?? null;
-  },
-});
-
-export const claimWebhookEvent = internalMutation({
-  args: { eventId: v.string() },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query('stripeWebhookEvents')
-      .withIndex('by_eventId', (q) => q.eq('eventId', args.eventId))
-      .unique();
-    if (existing) {
-      return { alreadyProcessed: true };
-    }
-    await ctx.db.insert('stripeWebhookEvents', {
-      eventId: args.eventId,
-      processedAt: Date.now(),
-    });
-    return { alreadyProcessed: false };
-  },
-});
-
-export const getUserIdByStripeCustomerId = internalQuery({
-  args: { stripeCustomerId: v.string() },
-  handler: async (ctx, args) => {
-    const subscription = await ctx.db
-      .query('subscriptions')
-      .withIndex('by_stripeCustomerId', (q) => q.eq('stripeCustomerId', args.stripeCustomerId))
-      .first();
-    return subscription?.userId ?? null;
-  },
 });
